@@ -5,6 +5,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -20,9 +22,8 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -31,7 +32,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -156,32 +159,133 @@ fun AddButton() {
 }
 @Composable
 fun listItem(itemList: List<ItemData>) {
+    var btnAdd = ItemData(-1, "")
+    var extendedItemList = itemList + btnAdd
+
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
         modifier = Modifier
             .fillMaxSize()
-            .padding(start = 24.dp, top = 190.dp, end = 24.dp, bottom = 100.dp)
+            .padding(start = 24.dp, top = 190.dp, end = 24.dp, bottom = 86.dp),
+        verticalArrangement = Arrangement.spacedBy(25.dp)
     ) {
-        items(itemList) {item ->
-            Item(item)
+        items(extendedItemList) {item ->
+
+            if (item.imageId != -1) {
+                Item(item)
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(150.dp, 150.dp)
+                        .padding(end = 24.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            // 버튼을 클릭했을 때 수행할 동작 작성
+                        },
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .border(1.dp, Color(0x20000000), RectangleShape)
+                            .background(color = Color.Transparent),
+                        colors = ButtonDefaults.buttonColors(Color.Transparent)
+                    ) {
+                        Icon(
+                            painterResource(id = R.drawable.ic_add_bucket),
+                            contentDescription = null,
+                            tint = Color(0xffa0a0a0)
+                        )
+                    }
+                }
+
+            }
         }
     }
 }
 @Composable
 fun Item(itemData: ItemData) {
-    Card(
-        elevation = CardDefaults.cardElevation(8.dp),
-        modifier = Modifier.padding(16.dp)
+    Box(
+        modifier = Modifier.size(150.dp, 165.dp)
     ) {
         Image(
             painterResource(id = itemData.imageId),
-            contentDescription = null
+            contentDescription = null,
+            modifier = Modifier
+                .size(150.dp, 150.dp)
+                .border(1.dp, Color(0xff123485), RectangleShape)
         )
-        Spacer(modifier = Modifier.size(16.dp))
-        Text(
-            text = itemData.description
+
+        Box(
+            modifier = Modifier
+                .size(120.dp, 40.dp)
+                .align(Alignment.BottomStart)
+                .border(1.dp, Color(0xff123485), RectangleShape)
+                .background(color = Color(0xff5dcc83)),
+        ) {
+            Text(
+                modifier = Modifier
+                    .width(120.dp)
+                    .align(Alignment.Center)
+                    .padding(start = 5.dp),
+                textAlign = TextAlign.Start,
+                text = itemData.description,
+                fontSize = 10.sp,
+                color = Color(0xff123485)
+            )
+        }
+
+    }
+}
+@Composable
+fun BottomBar() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .fillMaxWidth()
+                .height(76.dp)
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(Color(0xfff3fff4), Color(0xffc2ffd3)),
+                        startY = 0f,
+                        endY = 500f
+                    )
+                )
+                .padding(start = 270.dp, top = 15.dp)
+        ) {
+            Image(
+                painterResource(id = R.drawable.ic_noti),
+                contentDescription = null
+            )
+
+            Spacer(modifier = Modifier.size(25.dp))
+            
+            Image(
+                painterResource(id = R.drawable.ic_setting),
+                contentDescription = null
+            )
+        }
+    }
+}
+@Composable
+fun StampButton() {
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(start = 20.dp, bottom = 18.dp)
+    ) {
+        Image(
+            painterResource(id = R.drawable.ic_btn_stamp),
+            contentDescription = null,
+            modifier = Modifier
+                .size(72.dp, 72.dp)
+                .align(Alignment.BottomStart)
         )
     }
+
 }
 @Composable
 fun DrawSingleView() {
@@ -197,18 +301,9 @@ fun DrawSingleView() {
 
         TitleBar()
         AddButton()
-
         listItem(items)
-
-        Image(
-            painterResource(id = R.drawable.ic_btn_stamp),
-            contentDescription = null,
-            modifier = Modifier
-                .size(72.dp, 72.dp)
-                .align(Alignment.BottomStart)
-                .padding(start = 20.dp, bottom = 20.dp)
-        )
-
+        BottomBar()
+        StampButton()
     }
 
 
