@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -30,6 +31,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -37,10 +42,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import com.too.onions.dojang.R
 import com.too.onions.dojang.ui.theme.DojangTheme
 
@@ -61,6 +69,9 @@ class SingleActivity : ComponentActivity() {
         }
     }
 }
+
+// region
+// Composable 영역
 
 @Composable
 fun TitleBar() {
@@ -162,6 +173,8 @@ fun listItem(itemList: List<ItemData>) {
     var btnAdd = ItemData(-1, "")
     var extendedItemList = itemList + btnAdd
 
+    var isNeedInit by remember { mutableStateOf(false) }
+
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
         modifier = Modifier
@@ -182,6 +195,9 @@ fun listItem(itemList: List<ItemData>) {
                     Button(
                         onClick = {
                             // 버튼을 클릭했을 때 수행할 동작 작성
+
+                            // 타이틀영역이 작성되지 않았을경우
+                            isNeedInit = true
                         },
                         modifier = Modifier
                             .fillMaxSize()
@@ -196,9 +212,12 @@ fun listItem(itemList: List<ItemData>) {
                         )
                     }
                 }
-
             }
         }
+    }
+    // 초기 세팅이 필요한 경우 다이얼로그 발생
+    if (isNeedInit) {
+        InitTitleDialog(onDismiss = { isNeedInit = false })
     }
 }
 @Composable
@@ -285,8 +304,74 @@ fun StampButton() {
                 .align(Alignment.BottomStart)
         )
     }
-
 }
+@Composable
+fun InitTitleDialog(onDismiss: () -> Unit) {
+    Dialog(
+        onDismissRequest = onDismiss
+    ) {
+        Column(
+            modifier = Modifier
+                .size(320.dp, 220.dp)
+                .background(color = Color(0xfff3f2f4), shape = RectangleShape)
+                .border(2.dp, color = Color(0xff242424)),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Image(
+                painterResource(id = R.drawable.bg_pattern_dialog_png),
+                contentDescription = null,
+                modifier = Modifier.size(312.dp, 20.dp)
+            )
+
+            Spacer(modifier = Modifier.size(50.dp))
+
+            Text(
+                text = "도장깨기 페이지명을\n먼저 등록해 주세요",
+                fontSize = 18.sp,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.size(50.dp))
+
+            Row {
+                Button(
+                    onClick = onDismiss,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent
+                    ),
+                    modifier = Modifier.size(120.dp, 46.dp)
+                        .background(color = Color(0xff61b476), shape = RectangleShape)
+                        .border(2.dp, color = Color(0xff17274e))
+                ) {
+                    Text(
+                        text = "닫기",
+                        fontSize = 14.sp,
+                        fontFamily = FontFamily(Font(R.font.neo_dunggeunmo_pro))
+                    )
+                }
+
+                Spacer(modifier = Modifier.size(10.dp))
+
+                Button(
+                    onClick = onDismiss,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent
+                    ),
+                    modifier = Modifier.size(120.dp, 46.dp)
+                        .background(color = Color(0xff123485), shape = RectangleShape)
+                        .border(2.dp, color = Color(0xff17274e))
+                ) {
+                    Text(
+                        text = "등록하기",
+                        fontSize = 14.sp,
+                        fontFamily = FontFamily(Font(R.font.neo_dunggeunmo_pro))
+                    )
+                }
+            }
+        }
+    }
+}
+
 @Composable
 fun DrawSingleView() {
     Box(
@@ -305,9 +390,6 @@ fun DrawSingleView() {
         BottomBar()
         StampButton()
     }
-
-
-
 }
 
 @Preview(showBackground = true)
@@ -344,3 +426,5 @@ val items = listOf(
         description = "여섯번째 샘플 입니다."
     )
 )
+
+// endregion
