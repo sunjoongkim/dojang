@@ -67,6 +67,8 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1")
+
     implementation("androidx.emoji2:emoji2-emojipicker:1.4.0-beta05")
 
     implementation("androidx.emoji2:emoji2:1.3.0")
