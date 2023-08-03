@@ -28,19 +28,24 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -48,15 +53,27 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
+import androidx.emoji2.emojipicker.EmojiPickerView
+import androidx.emoji2.emojipicker.EmojiViewItem
 import com.too.onions.dojang.R
 import com.too.onions.dojang.ui.theme.DojangTheme
+import kotlinx.coroutines.delay
 
 
 data class ItemData (
     var imageId: Int,
     var description: String
 )
+
+enum class ScreenMode {
+    NORMAL,
+    INPUT_TITLE,
+    ADD_CONTENT
+}
+
+
 
 class SingleActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
@@ -74,7 +91,7 @@ class SingleActivity : ComponentActivity() {
 // Composable 영역
 
 @Composable
-fun TitleBar() {
+fun TitleBar(emoji: MutableState<EmojiViewItem>) {
     Surface(
         tonalElevation = 15.dp,
         color = Color(0xfff2f1f3),
@@ -95,19 +112,31 @@ fun TitleBar() {
                 verticalAlignment = Alignment.CenterVertically
 
             ) {
-                Spacer(modifier = Modifier.size(width = 5.dp, height = 40.dp))
-                Image(
-                    painterResource(id = R.drawable.ic_emoticon_1),
-                    contentScale = ContentScale.None,
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp, 24.dp)
-                )
-                Spacer(modifier = Modifier.size(width = 5.dp, height = 40.dp))
+                Spacer(modifier = Modifier.size(width = 10.dp, height = 40.dp))
+
+                if (emoji.value.emoji == "") {
+                    Image(
+                        painterResource(id = R.drawable.ic_default_emoticon),
+                        contentDescription = null,
+                        modifier = Modifier.size(22.dp)
+                    )
+                } else {
+                    Text(
+                        modifier = Modifier.size(22.dp, 27.dp)
+                            .padding(top = 5.dp),
+                        text = emoji.value.emoji,
+                        textAlign = TextAlign.Center,
+                        fontSize = 18.sp
+                    )
+                }
+
+                Spacer(modifier = Modifier.size(width = 10.dp, height = 40.dp))
                 Text (
-                    text = "페이지명 이 페이지에 대한 설명을 적는 곳입니다. 두줄까지 지원합니다.",
-                    modifier = Modifier.size(width = 192.dp, height = 26.dp),
-                    color = Color.White,
-                    fontSize = 9.sp,
+                    text = "페이지명이 없어요.",
+                    modifier = Modifier.width(192.dp)
+                        .align(Alignment.CenterVertically),
+                    color = Color(0xffa3a3a3),
+                    fontSize = 13.sp,
                     maxLines = 2,
                     textAlign = TextAlign.Left,
                     lineHeight = 12.sp
@@ -150,10 +179,16 @@ fun TitleBar() {
         }
     }
 }
+// =================================================================================================
+// ========================================== Normal ===============================================
+// =================================================================================================
 @Composable
-fun AddButton() {
+fun AddButton(screenMode: MutableState<ScreenMode>, isNeedInit: MutableState<Boolean>) {
     ElevatedButton(
-        onClick = { System.out.println("친구 추가") },
+        onClick = {
+            // 초기 설정 필요한지 체크 함수 필요
+            isNeedInit.value = true
+        },
         shape = CircleShape,
         contentPadding = PaddingValues(0.dp),
         elevation = ButtonDefaults.buttonElevation(20.dp, 15.dp, 0.dp, 15.dp, 10.dp),
@@ -169,11 +204,9 @@ fun AddButton() {
     }
 }
 @Composable
-fun listItem(itemList: List<ItemData>) {
+fun listItem(itemList: List<ItemData>, isNeedInit: MutableState<Boolean>) {
     var btnAdd = ItemData(-1, "")
     var extendedItemList = itemList + btnAdd
-
-    var isNeedInit by remember { mutableStateOf(false) }
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
@@ -197,7 +230,7 @@ fun listItem(itemList: List<ItemData>) {
                             // 버튼을 클릭했을 때 수행할 동작 작성
 
                             // 타이틀영역이 작성되지 않았을경우
-                            isNeedInit = true
+                            isNeedInit.value = true
                         },
                         modifier = Modifier
                             .fillMaxSize()
@@ -214,10 +247,6 @@ fun listItem(itemList: List<ItemData>) {
                 }
             }
         }
-    }
-    // 초기 세팅이 필요한 경우 다이얼로그 발생
-    if (isNeedInit) {
-        InitTitleDialog(onDismiss = { isNeedInit = false })
     }
 }
 @Composable
@@ -305,8 +334,136 @@ fun StampButton() {
         )
     }
 }
+// =================================================================================================
+// ===================================== Input Title ===============================================
+// =================================================================================================
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun InitTitleDialog(onDismiss: () -> Unit) {
+fun AddEmoticon(emoji: MutableState<EmojiViewItem>) {
+
+    Column (
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(top = 130.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Spacer(modifier = Modifier.size(70.dp))
+
+        Box(
+            modifier = Modifier.size(87.dp, 87.dp)
+        ) {
+
+            if (emoji.value.emoji == "") {
+                Image(
+                    painterResource(id = R.drawable.ic_default_emoticon),
+                    contentDescription = null
+                )
+            } else {
+                Text(
+                    modifier = Modifier.fillMaxSize(),
+                    text = emoji.value.emoji,
+                    textAlign = TextAlign.Center,
+                    fontSize = 70.sp
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.size(50.dp))
+
+        Text(
+            text = "사용할 이모티콘을 선택하세요",
+            fontSize = 14.sp,
+            color = Color(0xffa8a8a8)
+        )
+
+        Spacer(modifier = Modifier.size(70.dp))
+
+        Row {
+            Button(
+                onClick = {  },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent
+                ),
+                modifier = Modifier
+                    .size(120.dp, 46.dp)
+                    .background(color = Color(0xff61b476), shape = RectangleShape)
+                    .border(2.dp, color = Color(0xff17274e))
+            ) {
+                Text(
+                    text = "취소",
+                    fontSize = 14.sp,
+                    fontFamily = FontFamily(Font(R.font.neo_dunggeunmo_pro))
+                )
+            }
+
+            Spacer(modifier = Modifier.size(10.dp))
+
+            Button(
+                onClick = {  },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent
+                ),
+                modifier = Modifier
+                    .size(120.dp, 46.dp)
+                    .background(color = Color(0xff123485), shape = RectangleShape)
+                    .border(2.dp, color = Color(0xff17274e))
+            ) {
+                Text(
+                    text = "다음",
+                    fontSize = 14.sp,
+                    fontFamily = FontFamily(Font(R.font.neo_dunggeunmo_pro))
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.size(20.dp))
+
+        AndroidView(
+            factory = { context ->
+                EmojiPickerView(context).apply {
+                    setOnEmojiPickedListener {
+                        emoji.value = it
+                    }
+                }
+            },
+            modifier = Modifier
+                .fillMaxSize()
+                .background(color = Color(0xffedecee))
+        )
+    }
+}
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
+@Composable
+fun ShowKeyboard() {
+    val showKeyboard = remember { mutableStateOf(true) }
+    val focusRequester = remember { FocusRequester() }
+    val keyboard = LocalSoftwareKeyboardController.current
+
+    OutlinedTextField(
+        modifier = Modifier
+            .fillMaxWidth()
+            .focusRequester(focusRequester),
+        value = "dd",
+        onValueChange = { }
+    )
+
+// LaunchedEffect prevents endless focus request
+    LaunchedEffect(focusRequester) {
+        if (showKeyboard.equals(true)) {
+            focusRequester.requestFocus()
+            delay(100) // Make sure you have delay here
+            keyboard?.show()
+        }
+    }
+}
+
+@Composable
+fun AddPageTitle() {
+
+}
+
+@Composable
+fun InitTitleDialog(onDismiss: () -> Unit, onRegist: () -> Unit) {
     Dialog(
         onDismissRequest = onDismiss
     ) {
@@ -323,7 +480,7 @@ fun InitTitleDialog(onDismiss: () -> Unit) {
                 modifier = Modifier.size(312.dp, 20.dp)
             )
 
-            Spacer(modifier = Modifier.size(50.dp))
+            Spacer(modifier = Modifier.size(47.dp))
 
             Text(
                 text = "도장깨기 페이지명을\n먼저 등록해 주세요",
@@ -331,7 +488,7 @@ fun InitTitleDialog(onDismiss: () -> Unit) {
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.size(50.dp))
+            Spacer(modifier = Modifier.size(47.dp))
 
             Row {
                 Button(
@@ -339,7 +496,8 @@ fun InitTitleDialog(onDismiss: () -> Unit) {
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Transparent
                     ),
-                    modifier = Modifier.size(120.dp, 46.dp)
+                    modifier = Modifier
+                        .size(120.dp, 46.dp)
                         .background(color = Color(0xff61b476), shape = RectangleShape)
                         .border(2.dp, color = Color(0xff17274e))
                 ) {
@@ -353,11 +511,12 @@ fun InitTitleDialog(onDismiss: () -> Unit) {
                 Spacer(modifier = Modifier.size(10.dp))
 
                 Button(
-                    onClick = onDismiss,
+                    onClick = onRegist,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Transparent
                     ),
-                    modifier = Modifier.size(120.dp, 46.dp)
+                    modifier = Modifier
+                        .size(120.dp, 46.dp)
                         .background(color = Color(0xff123485), shape = RectangleShape)
                         .border(2.dp, color = Color(0xff17274e))
                 ) {
@@ -374,6 +533,12 @@ fun InitTitleDialog(onDismiss: () -> Unit) {
 
 @Composable
 fun DrawSingleView() {
+
+    var screenMode = remember { mutableStateOf(ScreenMode.NORMAL) }
+    var isNeedInit = remember { mutableStateOf(false) }
+
+    var emoji = remember { mutableStateOf(EmojiViewItem("", emptyList())) }
+
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -384,11 +549,33 @@ fun DrawSingleView() {
             modifier = Modifier.fillMaxSize()
         )
 
-        TitleBar()
-        AddButton()
-        listItem(items)
-        BottomBar()
-        StampButton()
+        TitleBar(emoji)
+
+        when (screenMode.value) {
+            ScreenMode.NORMAL -> {
+                AddButton(screenMode, isNeedInit)
+                listItem(items, isNeedInit)
+                BottomBar()
+                StampButton()
+            }
+            ScreenMode.INPUT_TITLE -> {
+                AddEmoticon(emoji)
+            }
+            ScreenMode.ADD_CONTENT -> {
+
+            }
+        }
+    }
+
+    // 초기 세팅이 필요한 경우 다이얼로그 발생
+    if (isNeedInit.value) {
+        InitTitleDialog(
+            onDismiss = { isNeedInit.value = false },
+            onRegist = {
+                isNeedInit.value = false
+                screenMode.value = ScreenMode.INPUT_TITLE
+            }
+        )
     }
 }
 

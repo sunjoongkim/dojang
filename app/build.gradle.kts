@@ -66,4 +66,10 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+
+    implementation("androidx.emoji2:emoji2-emojipicker:1.4.0-beta05")
+
+    implementation("androidx.emoji2:emoji2:1.3.0")
+    implementation("androidx.emoji2:emoji2-views:1.3.0")
+    implementation("androidx.emoji2:emoji2-views-helper:1.3.0")
 }
