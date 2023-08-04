@@ -12,10 +12,19 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Dojang"
         tools:targetApi="31">
+        <activity
+            android:name=".ui.main.AddContentView"
+            android:exported="false"
+            android:label="@string/title_activity_add_content_view"
+            android:theme="@style/Theme.Dojang" />
+        <activity
+            android:name=".ui.main.AddContentActivity"
+            android:exported="false" />
+
         <service
             android:name=".service.MainService"
             android:enabled="true"
-            android:exported="false"/>
+            android:exported="false" />
 
         <activity
             android:name=".ui.MainActivity"
@@ -28,8 +37,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <activity android:name=".ui.main.SingleActivity"/>
+        <activity android:name=".ui.main.SingleActivity" />
     </application>
 
 </manifest>

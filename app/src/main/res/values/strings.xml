@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Dojang</string>
+    <string name="title_activity_add_content_view">AddContentView</string>
 </resources>

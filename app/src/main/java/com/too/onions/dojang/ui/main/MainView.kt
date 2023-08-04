@@ -1,8 +1,5 @@
 package com.too.onions.dojang.ui.main
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -26,12 +23,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -42,128 +37,49 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
-import androidx.emoji2.emojipicker.EmojiPickerView
 import androidx.emoji2.emojipicker.EmojiViewItem
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import com.too.onions.dojang.R
-import com.too.onions.dojang.ui.theme.DojangTheme
-
-
-data class ItemData (
-    var imageId: Int,
-    var description: String
-)
-
-enum class ScreenMode {
-    NORMAL,
-    INPUT_EMOJI,
-    INPUT_TITLE,
-    ADD_CONTENT
-}
-
-val items = listOf(
-    ItemData(
-        imageId = R.drawable.sample_1,
-        description = "첫번째 샘플 입니다."
-    ),
-    ItemData(
-        imageId = R.drawable.sample_2,
-        description = "두번째 샘플 입니다."
-    ),
-    ItemData(
-        imageId = R.drawable.sample_3,
-        description = "세번째 샘플 입니다."
-    ),
-    ItemData(
-        imageId = R.drawable.sample_4,
-        description = "네번째 샘플 입니다."
-    ),
-    ItemData(
-        imageId = R.drawable.sample_5,
-        description = "다섯번째 샘플 입니다."
-    ),
-    ItemData(
-        imageId = R.drawable.sample_6,
-        description = "여섯번째 샘플 입니다."
-    )
-)
-
-class SingleViewModel: ViewModel() {
-    val screenMode = mutableStateOf(ScreenMode.NORMAL)
-    val isNeedInit = mutableStateOf(false)
-
-    val emoji = mutableStateOf(EmojiViewItem("", emptyList()))
-    val title = mutableStateOf("")
-
-    val itemList = mutableStateOf( items )
-
-    val onInitCancel: () -> Unit = {
-        isNeedInit.value = false
-    }
-
-    val onInitRegist: () -> Unit = {
-        isNeedInit.value = false
-        screenMode.value = ScreenMode.INPUT_EMOJI
-    }
-
-    val onEmojiCancel: () -> Unit = {
-        emoji.value = EmojiViewItem("", emptyList())
-        screenMode.value = ScreenMode.NORMAL
-    }
-
-    val onEmojiConfirm: () -> Unit = {
-        screenMode.value = ScreenMode.INPUT_TITLE
-    }
-
-    val onTitleCancel: () -> Unit = {
-        screenMode.value = ScreenMode.INPUT_EMOJI
-    }
-
-    val onTitleConfirm: () -> Unit = {
-        screenMode.value = ScreenMode.NORMAL
-    }
-}
-
-
-class SingleActivity : ComponentActivity() {
-
-    lateinit var viewModel: SingleViewModel
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            DojangTheme {
-                viewModel = viewModel()
-                DrawSingleView(viewModel)
-            }
-        }
-    }
-
-    override fun onBackPressed() {
-        when (viewModel.screenMode.value) {
-            ScreenMode.NORMAL -> finish()
-            ScreenMode.INPUT_EMOJI -> {
-                viewModel.emoji.value = EmojiViewItem("", emptyList())
-                viewModel.screenMode.value = ScreenMode.NORMAL
-            }
-            ScreenMode.INPUT_TITLE -> viewModel.screenMode.value = ScreenMode.INPUT_EMOJI
-            ScreenMode.ADD_CONTENT -> viewModel.screenMode.value = ScreenMode.NORMAL
-        }
-
-    }
-}
-
-// region
-// Composable 영역
+import com.too.onions.dojang.ui.AddTitleMode
+import com.too.onions.dojang.ui.ItemData
+import com.too.onions.dojang.ui.Screen
+import com.too.onions.dojang.viewmodel.MainViewModel
 
 @Composable
-fun TitleBar(viewModel: SingleViewModel) {
+fun SingleView(
+    viewModel: MainViewModel,
+    navController: NavHostController
+) {
+
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Image(
+            painterResource(id = R.drawable.bg_single),
+            contentDescription = null,
+            contentScale = ContentScale.FillBounds,
+            modifier = Modifier.fillMaxSize()
+        )
+
+        TitleBar(viewModel)
+
+        AddButton(viewModel, navController)
+        listItem(viewModel, navController)
+        BottomBar()
+        StampButton()
+    }
+
+    // 초기 세팅이 필요한 경우 다이얼로그 발생
+    if (viewModel.isNeedInit.value) {
+        InitTitleDialog(viewModel, navController)
+    }
+}
+
+@Composable
+fun TitleBar(viewModel: MainViewModel) {
     Surface(
         tonalElevation = 15.dp,
         color = Color(0xfff2f1f3),
@@ -204,8 +120,17 @@ fun TitleBar(viewModel: SingleViewModel) {
                 }
 
                 Spacer(modifier = Modifier.size(width = 10.dp, height = 40.dp))
+
+                var title = ""
+
+                if (viewModel.title.value == "") {
+                    title = "페이지명이 없어요."
+                } else {
+                    title = viewModel.title.value
+                }
+
                 Text (
-                    text = "페이지명이 없어요.",
+                    text = title,
                     modifier = Modifier
                         .width(192.dp)
                         .align(Alignment.CenterVertically),
@@ -253,11 +178,11 @@ fun TitleBar(viewModel: SingleViewModel) {
         }
     }
 }
-// =================================================================================================
-// ========================================== Normal ===============================================
-// =================================================================================================
 @Composable
-fun AddButton(viewModel: SingleViewModel) {
+fun AddButton(
+    viewModel: MainViewModel,
+    navController: NavHostController
+) {
     ElevatedButton(
         onClick = {
             // 초기 설정 필요한지 체크 함수 필요
@@ -278,7 +203,10 @@ fun AddButton(viewModel: SingleViewModel) {
     }
 }
 @Composable
-fun listItem(viewModel: SingleViewModel) {
+fun listItem(
+    viewModel: MainViewModel,
+    navController: NavHostController
+) {
     var btnAdd = ItemData(-1, "")
     var extendedItemList = viewModel.itemList.value + btnAdd
 
@@ -304,7 +232,10 @@ fun listItem(viewModel: SingleViewModel) {
                             // 버튼을 클릭했을 때 수행할 동작 작성
 
                             // 타이틀영역이 작성되지 않았을경우
-                            viewModel.isNeedInit.value = true
+                            //viewModel.isNeedInit.value = true
+
+                            // 타이틀 영역이 작성됐을 경우 컨텐츠 추가 화면 이동
+                            navController.navigate(Screen.AddContent.route)
                         },
                         modifier = Modifier
                             .fillMaxSize()
@@ -383,7 +314,7 @@ fun BottomBar() {
             )
 
             Spacer(modifier = Modifier.size(25.dp))
-            
+
             Image(
                 painterResource(id = R.drawable.ic_setting),
                 contentDescription = null
@@ -408,115 +339,13 @@ fun StampButton() {
         )
     }
 }
-// =================================================================================================
-// ===================================== Input Title ===============================================
-// =================================================================================================
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddEmoji(viewModel: SingleViewModel) {
-
-    Column (
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(top = 130.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(modifier = Modifier.size(70.dp))
-
-        Box(
-            modifier = Modifier.size(87.dp, 87.dp)
-        ) {
-
-            if (viewModel.emoji.value.emoji == "") {
-                Image(
-                    painterResource(id = R.drawable.ic_default_emoticon),
-                    contentDescription = null
-                )
-            } else {
-                Text(
-                    modifier = Modifier.fillMaxSize(),
-                    text = viewModel.emoji.value.emoji,
-                    textAlign = TextAlign.Center,
-                    fontSize = 70.sp
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.size(50.dp))
-
-        Text(
-            text = "사용할 이모티콘을 선택하세요",
-            fontSize = 14.sp,
-            color = Color(0xffa8a8a8)
-        )
-
-        Spacer(modifier = Modifier.size(70.dp))
-
-        Row {
-            Button(
-                onClick = viewModel.onEmojiCancel,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent
-                ),
-                modifier = Modifier
-                    .size(120.dp, 46.dp)
-                    .background(color = Color(0xff61b476), shape = RectangleShape)
-                    .border(2.dp, color = Color(0xff17274e))
-            ) {
-                Text(
-                    text = "취소",
-                    fontSize = 14.sp,
-                    fontFamily = FontFamily(Font(R.font.neo_dunggeunmo_pro))
-                )
-            }
-
-            Spacer(modifier = Modifier.size(10.dp))
-
-            Button(
-                onClick = viewModel.onEmojiConfirm,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent
-                ),
-                modifier = Modifier
-                    .size(120.dp, 46.dp)
-                    .background(color = Color(0xff123485), shape = RectangleShape)
-                    .border(2.dp, color = Color(0xff17274e)),
-                enabled = !(viewModel.emoji.value.emoji == "")
-            ) {
-                Text(
-                    text = "다음",
-                    fontSize = 14.sp,
-                    fontFamily = FontFamily(Font(R.font.neo_dunggeunmo_pro))
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.size(20.dp))
-
-        AndroidView(
-            factory = { context ->
-                EmojiPickerView(context).apply {
-                    setOnEmojiPickedListener {
-                        viewModel.emoji.value = it
-                    }
-                }
-            },
-            modifier = Modifier
-                .fillMaxSize()
-                .background(color = Color(0xffedecee))
-        )
-    }
-}
-
-@Composable
-fun AddPageTitle(viewModel: SingleViewModel) {
-
-}
-
-@Composable
-fun InitTitleDialog(viewModel: SingleViewModel) {
+fun InitTitleDialog(
+    viewModel: MainViewModel,
+    navController: NavHostController
+) {
     Dialog(
-        onDismissRequest = viewModel.onInitCancel
+        onDismissRequest = { viewModel.isNeedInit.value = false }
     ) {
         Column(
             modifier = Modifier
@@ -543,7 +372,7 @@ fun InitTitleDialog(viewModel: SingleViewModel) {
 
             Row {
                 Button(
-                    onClick = viewModel.onInitCancel,
+                    onClick = { viewModel.isNeedInit.value = false },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Transparent
                     ),
@@ -562,7 +391,15 @@ fun InitTitleDialog(viewModel: SingleViewModel) {
                 Spacer(modifier = Modifier.size(10.dp))
 
                 Button(
-                    onClick = viewModel.onInitRegist,
+                    onClick = {
+                        viewModel.isNeedInit.value = false
+
+                        viewModel.addTitleMode.value = AddTitleMode.INPUT_EMOJI
+                        viewModel.emoji.value = EmojiViewItem("", emptyList())
+                        viewModel.title.value = ""
+
+                        navController.navigate(Screen.AddTitle.route)
+                    },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Transparent
                     ),
@@ -581,53 +418,3 @@ fun InitTitleDialog(viewModel: SingleViewModel) {
         }
     }
 }
-
-@Composable
-fun DrawSingleView(viewModel: SingleViewModel) {
-
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        Image(
-            painterResource(id = R.drawable.bg_single),
-            contentDescription = null,
-            contentScale = ContentScale.FillBounds,
-            modifier = Modifier.fillMaxSize()
-        )
-
-        TitleBar(viewModel)
-
-        when (viewModel.screenMode.value) {
-            ScreenMode.NORMAL -> {
-                AddButton(viewModel)
-                listItem(viewModel)
-                BottomBar()
-                StampButton()
-            }
-            ScreenMode.INPUT_EMOJI -> {
-                AddEmoji(viewModel)
-            }
-            ScreenMode.INPUT_TITLE -> {
-                AddPageTitle(viewModel)
-            }
-            ScreenMode.ADD_CONTENT -> {
-
-            }
-        }
-    }
-
-    // 초기 세팅이 필요한 경우 다이얼로그 발생
-    if (viewModel.isNeedInit.value) {
-        InitTitleDialog(viewModel)
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DefaultPreview() {
-    DojangTheme {
-        DrawSingleView(viewModel = viewModel())
-    }
-}
-
-// endregion
