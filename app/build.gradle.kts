@@ -73,10 +73,10 @@ dependencies {
 
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1")
 
+    implementation("io.coil-kt:coil-compose:2.4.0")
     implementation("androidx.navigation:navigation-compose:2.6.0")
 
     implementation("androidx.emoji2:emoji2-emojipicker:1.4.0-beta05")
-
     implementation("androidx.emoji2:emoji2:1.3.0")
     implementation("androidx.emoji2:emoji2-views:1.3.0")
     implementation("androidx.emoji2:emoji2-views-helper:1.3.0")

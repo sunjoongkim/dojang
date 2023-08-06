@@ -8,7 +8,6 @@ import com.too.onions.dojang.ui.AddTitleMode
 import com.too.onions.dojang.ui.items
 
 class MainViewModel: ViewModel() {
-    val isReadyView = mutableStateOf(false)
 
     val addTitleMode = mutableStateOf(AddTitleMode.INPUT_EMOJI)
     val isNeedInit = mutableStateOf(false)

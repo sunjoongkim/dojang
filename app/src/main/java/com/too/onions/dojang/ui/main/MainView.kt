@@ -27,6 +27,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -41,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.emoji2.emojipicker.EmojiViewItem
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.too.onions.dojang.R
 import com.too.onions.dojang.ui.AddTitleMode
@@ -53,24 +56,19 @@ fun SingleView(
     viewModel: MainViewModel,
     navController: NavHostController
 ) {
-
-    Box(
+    Image(
+        painterResource(id = R.drawable.bg_single),
+        contentDescription = null,
+        contentScale = ContentScale.FillBounds,
         modifier = Modifier.fillMaxSize()
-    ) {
-        Image(
-            painterResource(id = R.drawable.bg_single),
-            contentDescription = null,
-            contentScale = ContentScale.FillBounds,
-            modifier = Modifier.fillMaxSize()
-        )
+    )
 
-        TitleBar(viewModel)
+    TitleBar(viewModel)
 
-        AddButton(viewModel, navController)
-        listItem(viewModel, navController)
-        BottomBar()
-        StampButton()
-    }
+    AddButton(viewModel, navController)
+    listItem(viewModel, navController)
+    BottomBar()
+    StampButton()
 
     // 초기 세팅이 필요한 경우 다이얼로그 발생
     if (viewModel.isNeedInit.value) {
@@ -285,7 +283,6 @@ fun Item(itemData: ItemData) {
                 color = Color(0xff123485)
             )
         }
-
     }
 }
 @Composable

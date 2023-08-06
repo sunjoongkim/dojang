@@ -1,6 +1,7 @@
 package com.too.onions.dojang.ui.main
 
 import android.accessibilityservice.AccessibilityService.SoftKeyboardController
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -74,6 +75,9 @@ fun AddTitleView(
             AddTitleMode.INPUT_TITLE -> {
                 AddPageTitle(viewModel, navController)
             }
+            AddTitleMode.INPUT_DONE -> {
+                InputDone(viewModel)
+            }
         }
     }
 }
@@ -124,7 +128,10 @@ fun AddEmoji(
             Button(
                 onClick = {
                     viewModel.emoji.value = EmojiViewItem("", emptyList())
-                    navController.navigate(Screen.Main.route)
+                    navController.navigate(Screen.Main.route) {
+                        popUpTo(Screen.Main.route)
+                        launchSingleTop = true
+                    }
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Transparent
@@ -187,12 +194,6 @@ fun AddPageTitle(
     viewModel: MainViewModel,
     navController: NavHostController
 ) {
-    val keyboard = LocalSoftwareKeyboardController.current
-
-    LaunchedEffect(Unit) {
-        viewModel.focusRequester.requestFocus()
-    }
-
     Column (
         modifier = Modifier
             .fillMaxSize()
@@ -235,7 +236,7 @@ fun AddPageTitle(
                 unfocusedIndicatorColor = Color.Transparent
             )
         )
-        Spacer(modifier = Modifier.size(70.dp))
+        Spacer(modifier = Modifier.size(79.dp))
 
         Row {
             Button(
@@ -262,10 +263,80 @@ fun AddPageTitle(
 
             Button(
                 onClick = {
-                    viewModel.focusRequester.freeFocus()
-                    keyboard?.hide()
-                    navController.navigate(Screen.Main.route)
+                    viewModel.addTitleMode.value = AddTitleMode.INPUT_DONE
+
+                    navController.navigate(Screen.Main.route) {
+                        popUpTo(Screen.Main.route)
+                        launchSingleTop = true
+                    }
                 },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent
+                ),
+                modifier = Modifier
+                    .size(120.dp, 46.dp)
+                    .background(color = Color(0xff123485), shape = RectangleShape)
+                    .border(2.dp, color = Color(0xff17274e)),
+                enabled = !(viewModel.title.value == "")
+            ) {
+                Text(
+                    text = "입력 완료",
+                    fontSize = 14.sp,
+                    fontFamily = FontFamily(Font(R.font.neo_dunggeunmo_pro))
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.size(20.dp))
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.focusRequester.requestFocus()
+    }
+}
+
+@Composable
+fun InputDone(viewModel: MainViewModel) {
+
+    Column (
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(top = 130.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Spacer(modifier = Modifier.size(49.dp))
+
+        Text(
+            modifier = Modifier.size(330.dp, 164.dp).wrapContentHeight(),
+            text = viewModel.title.value,
+            fontSize = 24.sp,
+            color = Color(0xff000000),
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.size(79.dp))
+
+        Row {
+            Button(
+                onClick = {},
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent
+                ),
+                modifier = Modifier
+                    .size(120.dp, 46.dp)
+                    .background(color = Color(0xff61b476), shape = RectangleShape)
+                    .border(2.dp, color = Color(0xff17274e))
+            ) {
+                Text(
+                    text = "< 뒤로",
+                    fontSize = 14.sp,
+                    fontFamily = FontFamily(Font(R.font.neo_dunggeunmo_pro))
+                )
+            }
+
+            Spacer(modifier = Modifier.size(10.dp))
+
+            Button(
+                onClick = {},
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Transparent
                 ),

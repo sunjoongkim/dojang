@@ -10,6 +10,8 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -43,7 +45,8 @@ data class ItemData (
 
 enum class AddTitleMode {
     INPUT_EMOJI,
-    INPUT_TITLE
+    INPUT_TITLE,
+    INPUT_DONE
 }
 
 val items = listOf(
@@ -75,29 +78,15 @@ val items = listOf(
 
 class MainActivity : ComponentActivity() {
 
-    private lateinit var viewModel: MainViewModel
-
     private var service: MainService? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             DojangTheme {
-                viewModel = viewModel()
-
-                if (!viewModel.isReadyView.value) {
-                    Image(
-                        painterResource(id = R.drawable.bg_single),
-                        contentDescription = null,
-                        contentScale = ContentScale.FillBounds,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                } else {
-                    MainNavHost(viewModel = viewModel)
-                }
+                MainNavHost()
             }
         }
-
         checkServiceStarted()
     }
 
@@ -132,28 +121,31 @@ class MainActivity : ComponentActivity() {
             when (msg.what) {
                 MSG_CHECK_START_SERVICE -> checkServiceStarted()
 
-                MSG_SHOW_MAIN_VIEW -> viewModel.isReadyView.value = true
+                MSG_SHOW_MAIN_VIEW -> {
+
+                }
             }
         }
     }
 }
 
-
 @Composable
 fun MainNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
-    viewModel: MainViewModel
+    viewModel: MainViewModel = viewModel()
 ) {
+    val viewModel = remember { mutableStateOf(viewModel)}
+
     NavHost(navController = navController, startDestination = Screen.Main.route, modifier = modifier) {
         composable(Screen.Main.route) {
-            SingleView(viewModel, navController)
+            SingleView(viewModel.value, navController)
         }
         composable(Screen.AddTitle.route) {
-            AddTitleView(viewModel, navController)
+            AddTitleView(viewModel.value, navController)
         }
         composable(Screen.AddContent.route) {
-            AddContentView(viewModel, navController)
+            AddContentView(viewModel.value, navController)
         }
     }
 }
