@@ -1,7 +1,7 @@
 package com.too.onions.dojang.ui.main
 
+import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -48,7 +48,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.emoji2.emojipicker.EmojiViewItem
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
 import com.too.onions.dojang.R
 import com.too.onions.dojang.db.data.Content
 import com.too.onions.dojang.ui.AddTitleMode
@@ -226,7 +225,7 @@ fun listItem(
 
             if (index < contentList.size) {
                 Log.e("@@@@@", "contents[${index}] uri : ${contentList[index].imageUri}")
-                ContentItem(contentList[index])
+                ContentListItem(contentList[index], index, viewModel, navController)
             } else {
                 AddContentButton(viewModel, navController)
             }
@@ -269,10 +268,19 @@ fun AddContentButton(
 
 }
 @Composable
-fun ContentItem(content: Content) {
+fun ContentListItem(
+    content: Content,
+    index: Int,
+    viewModel: MainViewModel,
+    navController: NavHostController
+) {
 
     Box(
         modifier = Modifier.size(150.dp, 165.dp)
+            .clickable(onClick = {
+                viewModel.contentPage.value = index
+                navController.navigate(Screen.ContentDetail.route)
+            })
     ) {
         AsyncImage(
             model = content.imageUri,

@@ -38,6 +38,7 @@ class MainViewModel(context: Context): ViewModel() {
         }
     }
     // =================
+    val contentPage = mutableStateOf(0)
 
     val addTitleMode = mutableStateOf(AddTitleMode.INPUT_EMOJI)
     val isNeedInit = mutableStateOf(false)
@@ -46,5 +47,4 @@ class MainViewModel(context: Context): ViewModel() {
     val title = mutableStateOf("")
 
     val focusRequester = FocusRequester()
-
 }

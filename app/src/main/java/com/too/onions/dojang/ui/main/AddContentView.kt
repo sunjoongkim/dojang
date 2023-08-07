@@ -2,7 +2,6 @@ package com.too.onions.dojang.ui.main
 
 import android.net.Uri
 import android.provider.DocumentsContract
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -36,6 +35,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
@@ -62,7 +62,7 @@ fun AddContentView(
     val contentName = remember { mutableStateOf("") }
     val contentDescription = remember { mutableStateOf("") }
     val address = remember { mutableStateOf("") }
-
+    
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -93,7 +93,7 @@ fun AddContentView(
         InputAddress(address)
     }
 
-    RegistButton(onClick = {
+    RegistButton(contentName, contentDescription) {
         val content = Content(
             color = selectedColor.value.toArgb(),
             imageUri = checkAndReplaceUri(selectedImageUri.value).toString(),
@@ -108,7 +108,7 @@ fun AddContentView(
             popUpTo(Screen.Main.route)
             launchSingleTop = true
         }
-    })
+    }
 }
 fun checkAndReplaceUri(uri: Uri?) : String? {
     if (uri == null) return null
@@ -377,8 +377,6 @@ fun InputName(contentName: MutableState<String>) {
 @Composable
 fun InputDescription(contentDescription: MutableState<String>) {
 
-    var height by remember { mutableStateOf(0) }
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -493,6 +491,8 @@ fun InputAddress(address: MutableState<String>) {
 
 @Composable
 fun RegistButton(
+    contentName: MutableState<String>,
+    contentDescription: MutableState<String>,
     onClick: () -> Unit
 ) {
     Box(
@@ -513,12 +513,15 @@ fun RegistButton(
                     .align(Alignment.TopCenter)
                     .padding(top = 15.dp)
                     .background(color = Color(0xff123485))
-                    .clickable(onClick = onClick)
+                    .clickable(
+                        onClick = onClick,
+                        enabled = !(contentName.value.isEmpty() || contentDescription.value.isEmpty())
+                    )
             ) {
                 Text(
                     text = "등록 하기",
                     fontSize = 16.sp,
-                    color = Color.White,
+                    color = if (contentName.value.isEmpty() || contentDescription.value.isEmpty()) Color.Gray else Color.White,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.align(Alignment.Center)
                 )

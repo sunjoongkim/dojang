@@ -30,6 +30,7 @@ import androidx.navigation.compose.rememberNavController
 import com.too.onions.dojang.service.MainService
 import com.too.onions.dojang.ui.main.AddContentView
 import com.too.onions.dojang.ui.main.AddTitleView
+import com.too.onions.dojang.ui.main.ContentDetailView
 import com.too.onions.dojang.ui.main.SingleView
 import com.too.onions.dojang.ui.theme.DojangTheme
 import com.too.onions.dojang.viewmodel.MainViewModel
@@ -41,6 +42,7 @@ sealed class Screen(val route: String) {
     object AddContent : Screen("add_content")
     object AddFriend : Screen("add_friend")
     object AddPage : Screen("add_page")
+    object ContentDetail : Screen("content_detail")
 
 }
 
@@ -173,6 +175,9 @@ fun MainNavHost(
         }
         composable(Screen.AddContent.route) {
             AddContentView(viewModel.value, navController)
+        }
+        composable(Screen.ContentDetail.route) {
+            ContentDetailView(viewModel.value, navController)
         }
     }
 }
