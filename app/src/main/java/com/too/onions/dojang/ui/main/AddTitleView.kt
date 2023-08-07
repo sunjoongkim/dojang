@@ -76,6 +76,7 @@ fun AddTitleView(
                 AddPageTitle(viewModel, navController)
             }
             AddTitleMode.INPUT_DONE -> {
+                // 키보드 내린후 화면전환을 위해 만든 화면
                 InputDone(viewModel)
             }
         }
@@ -297,7 +298,6 @@ fun AddPageTitle(
 
 @Composable
 fun InputDone(viewModel: MainViewModel) {
-
     Column (
         modifier = Modifier
             .fillMaxSize()

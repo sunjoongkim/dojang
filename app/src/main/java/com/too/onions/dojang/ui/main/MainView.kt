@@ -1,8 +1,11 @@
 package com.too.onions.dojang.ui.main
 
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,7 +21,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -27,8 +29,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -43,11 +46,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.emoji2.emojipicker.EmojiViewItem
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
 import com.too.onions.dojang.R
+import com.too.onions.dojang.db.data.Content
 import com.too.onions.dojang.ui.AddTitleMode
-import com.too.onions.dojang.ui.ItemData
 import com.too.onions.dojang.ui.Screen
 import com.too.onions.dojang.viewmodel.MainViewModel
 
@@ -65,9 +69,9 @@ fun SingleView(
 
     TitleBar(viewModel)
 
-    AddButton(viewModel, navController)
+    AddFriendButton(viewModel, navController)
     listItem(viewModel, navController)
-    BottomBar()
+    BottomBar(viewModel)
     StampButton()
 
     // 초기 세팅이 필요한 경우 다이얼로그 발생
@@ -177,7 +181,7 @@ fun TitleBar(viewModel: MainViewModel) {
     }
 }
 @Composable
-fun AddButton(
+fun AddFriendButton(
     viewModel: MainViewModel,
     navController: NavHostController
 ) {
@@ -205,64 +209,78 @@ fun listItem(
     viewModel: MainViewModel,
     navController: NavHostController
 ) {
-    var btnAdd = ItemData(-1, "")
-    var extendedItemList = viewModel.itemList.value + btnAdd
+    val contentList by viewModel.contentList.observeAsState(emptyList())
+
+    LaunchedEffect(viewModel) {
+        viewModel.refreshContentList()
+    }
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
         modifier = Modifier
             .fillMaxSize()
-            .padding(start = 24.dp, top = 190.dp, end = 24.dp, bottom = 86.dp),
+            .padding(start = 24.dp, top = 200.dp, end = 24.dp, bottom = 86.dp),
         verticalArrangement = Arrangement.spacedBy(25.dp)
     ) {
-        items(extendedItemList) {item ->
+        items(contentList.size + 1) {index ->
 
-            if (item.imageId != -1) {
-                Item(item)
+            if (index < contentList.size) {
+                Log.e("@@@@@", "contents[${index}] uri : ${contentList[index].imageUri}")
+                ContentItem(contentList[index])
             } else {
-                Box(
-                    modifier = Modifier
-                        .size(150.dp, 150.dp)
-                        .padding(end = 24.dp)
-                ) {
-                    Button(
-                        onClick = {
-                            // 버튼을 클릭했을 때 수행할 동작 작성
-
-                            // 타이틀영역이 작성되지 않았을경우
-                            //viewModel.isNeedInit.value = true
-
-                            // 타이틀 영역이 작성됐을 경우 컨텐츠 추가 화면 이동
-                            navController.navigate(Screen.AddContent.route)
-                        },
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .border(1.dp, Color(0x20000000), RectangleShape)
-                            .background(color = Color.Transparent),
-                        colors = ButtonDefaults.buttonColors(Color.Transparent)
-                    ) {
-                        Icon(
-                            painterResource(id = R.drawable.ic_add_bucket),
-                            contentDescription = null,
-                            tint = Color(0xffa0a0a0)
-                        )
-                    }
-                }
+                AddContentButton(viewModel, navController)
             }
         }
     }
 }
 @Composable
-fun Item(itemData: ItemData) {
+fun AddContentButton(
+    viewModel: MainViewModel,
+    navController: NavHostController
+) {
+    Box(
+        modifier = Modifier
+            .size(150.dp, 150.dp)
+            .padding(end = 24.dp)
+    ) {
+        Button(
+            onClick = {
+                // 버튼을 클릭했을 때 수행할 동작 작성
+
+                // 타이틀영역이 작성되지 않았을경우
+                //viewModel.isNeedInit.value = true
+
+                // 타이틀 영역이 작성됐을 경우 컨텐츠 추가 화면 이동
+                navController.navigate(Screen.AddContent.route)
+            },
+            modifier = Modifier
+                .fillMaxSize()
+                .border(1.dp, Color(0x20000000), RectangleShape)
+                .background(color = Color.Transparent),
+            colors = ButtonDefaults.buttonColors(Color.Transparent)
+        ) {
+            Icon(
+                painterResource(id = R.drawable.ic_add_bucket),
+                contentDescription = null,
+                tint = Color(0xffa0a0a0)
+            )
+        }
+    }
+
+}
+@Composable
+fun ContentItem(content: Content) {
+
     Box(
         modifier = Modifier.size(150.dp, 165.dp)
     ) {
-        Image(
-            painterResource(id = itemData.imageId),
+        AsyncImage(
+            model = content.imageUri,
             contentDescription = null,
             modifier = Modifier
                 .size(150.dp, 150.dp)
                 .border(1.dp, Color(0xff123485), RectangleShape)
+                .background(color = Color(content.color))
         )
 
         Box(
@@ -278,7 +296,7 @@ fun Item(itemData: ItemData) {
                     .align(Alignment.Center)
                     .padding(start = 5.dp),
                 textAlign = TextAlign.Start,
-                text = itemData.description,
+                text = content.description,
                 fontSize = 10.sp,
                 color = Color(0xff123485)
             )
@@ -286,7 +304,7 @@ fun Item(itemData: ItemData) {
     }
 }
 @Composable
-fun BottomBar() {
+fun BottomBar(viewModel: MainViewModel) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -314,7 +332,11 @@ fun BottomBar() {
 
             Image(
                 painterResource(id = R.drawable.ic_setting),
-                contentDescription = null
+                contentDescription = null,
+                modifier = Modifier.clickable {
+                    viewModel.deleteAllContent()
+                    viewModel.refreshContentList()
+                }
             )
         }
     }

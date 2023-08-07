@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -12,14 +15,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Dojang"
         tools:targetApi="31">
-        <activity
-            android:name=".ui.main.AddContentView"
-            android:exported="false"
-            android:label="@string/title_activity_add_content_view"
-            android:theme="@style/Theme.Dojang" />
-        <activity
-            android:name=".ui.main.AddContentActivity"
-            android:exported="false" />
 
         <service
             android:name=".service.MainService"
@@ -37,7 +32,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ui.main.SingleActivity" />
     </application>
 
 </manifest>

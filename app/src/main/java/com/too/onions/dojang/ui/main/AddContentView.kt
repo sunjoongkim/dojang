@@ -1,11 +1,11 @@
 package com.too.onions.dojang.ui.main
 
 import android.net.Uri
+import android.provider.DocumentsContract
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -39,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
@@ -47,6 +48,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.too.onions.dojang.R
+import com.too.onions.dojang.db.data.Content
 import com.too.onions.dojang.ui.Screen
 import com.too.onions.dojang.viewmodel.MainViewModel
 
@@ -91,7 +93,43 @@ fun AddContentView(
         InputAddress(address)
     }
 
-    RegistButton()
+    RegistButton(onClick = {
+        val content = Content(
+            color = selectedColor.value.toArgb(),
+            imageUri = checkAndReplaceUri(selectedImageUri.value).toString(),
+            title = contentName.value,
+            description = contentDescription.value,
+            address = address.value
+        )
+
+        viewModel.insertContent(content)
+
+        navController.navigate(Screen.Main.route) {
+            popUpTo(Screen.Main.route)
+            launchSingleTop = true
+        }
+    })
+}
+fun checkAndReplaceUri(uri: Uri?) : String? {
+    if (uri == null) return null
+
+    if (isDocumentUri(uri)) {
+        return getUriFromDocumentUri(uri)
+    } else {
+        return uri.toString()
+    }
+}
+fun isDocumentUri(uri: Uri?): Boolean {
+    return uri.toString().startsWith("content://com.android.providers.media.documents/document/")
+}
+fun getUriFromDocumentUri(documentUri: Uri): String? {
+
+    val documentId = DocumentsContract.getDocumentId(documentUri).split(":")
+
+    if (documentId.size > 1) {
+        return "content://media/external/images/media/" + documentId[1]
+    }
+    return null
 }
 @Composable
 fun ContentTitleBar(navController: NavHostController) {
@@ -454,7 +492,9 @@ fun InputAddress(address: MutableState<String>) {
 }
 
 @Composable
-fun RegistButton() {
+fun RegistButton(
+    onClick: () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -473,11 +513,7 @@ fun RegistButton() {
                     .align(Alignment.TopCenter)
                     .padding(top = 15.dp)
                     .background(color = Color(0xff123485))
-                    .clickable(
-                        onClick = {
-
-                        }
-                    )
+                    .clickable(onClick = onClick)
             ) {
                 Text(
                     text = "등록 하기",
