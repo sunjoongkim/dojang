@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -115,17 +116,17 @@ fun AddPageTitleBar(
         color = Color(0xfff2f1f3),
         modifier = Modifier
             .fillMaxWidth()
-            .height(100.dp)
+            .height(116.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth().height(40.dp)
-                .padding(start = 24.dp, top = 60.dp, end = 24.dp, bottom = 10.dp)
+                .offset(y = 60.dp)
+                .padding(start = 24.dp, end = 24.dp)
         ) {
             Row(
                 modifier = Modifier
-                    .width(254.dp)
-                    .fillMaxHeight()
+                    .size(254.dp, 40.dp)
                     .background(color = Color.Black),
                 verticalAlignment = Alignment.CenterVertically
 
@@ -141,8 +142,8 @@ fun AddPageTitleBar(
                 } else {
                     Text(
                         modifier = Modifier
-                            .size(22.dp, 27.dp)
-                            .padding(top = 5.dp),
+                            .wrapContentHeight()
+                            .size(22.dp),
                         text = emoji.value.emoji,
                         textAlign = TextAlign.Center,
                         fontSize = 18.sp

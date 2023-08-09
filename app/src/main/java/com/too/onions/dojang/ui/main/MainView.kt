@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -28,6 +27,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -36,6 +37,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -46,16 +48,15 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.emoji2.emojipicker.EmojiViewItem
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
+import com.google.accompanist.pager.PagerState
 import com.google.accompanist.pager.rememberPagerState
 import com.too.onions.dojang.R
 import com.too.onions.dojang.db.data.Content
@@ -63,7 +64,9 @@ import com.too.onions.dojang.db.data.Page
 import com.too.onions.dojang.ui.AddPageMode
 import com.too.onions.dojang.ui.Screen
 import com.too.onions.dojang.viewmodel.MainViewModel
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalPagerApi::class)
 @Composable
 fun SingleView(
     addPageMode: MutableState<AddPageMode>,
@@ -72,11 +75,20 @@ fun SingleView(
 ) {
     val isNeedInit = remember { mutableStateOf(false) }
     val isShowContentDetail = remember { mutableStateOf(false) }
-    val pagerIndex = remember { mutableStateOf(0) }
+    val contentPageIndex = remember { mutableStateOf(0) }
 
     LaunchedEffect(viewModel) {
         viewModel.refreshPageList()
     }
+
+    val pages: List<Page> by viewModel.pageList.observeAsState(emptyList())
+    val page = if (pages.isEmpty()) null else pages[viewModel.currentPage.value]
+
+    val pagerState = rememberPagerState(
+        pageCount = if (pages.isEmpty()) 1 else pages.size,
+        initialPage = viewModel.currentPage.value
+    )
+
 
     Image(
         painterResource(id = R.drawable.bg_single),
@@ -85,124 +97,180 @@ fun SingleView(
         modifier = Modifier.fillMaxSize()
     )
 
-    TitleBar(viewModel)
+    TitleBar(pages, pagerState)
 
     AddFriendButton(isNeedInit)
-    listItem(viewModel, navController,isShowContentDetail, pagerIndex)
+
+    ListItemPager(
+        pagerState,
+        pages,
+        isNeedInit,
+        viewModel,
+        navController,
+        isShowContentDetail,
+        contentPageIndex
+    )
     BottomBar(viewModel)
     StampButton()
 
     if (isNeedInit.value) {
-        InitTitleDialog(isNeedInit, addPageMode, navController)
+        InitTitleDialog(
+            isNeedInit,
+            addPageMode,
+            navController
+        )
     }
     if (isShowContentDetail.value) {
         ContentDetailView(
             isShowContentDetail = isShowContentDetail,
-            index = pagerIndex.value,
+            index = contentPageIndex.value,
             viewModel = viewModel
         )
     }
 }
 
+@OptIn(ExperimentalPagerApi::class)
 @Composable
-fun TitleBar(viewModel: MainViewModel) {
+fun TitleBar(
+    pages: List<Page>,
+    pagerState: PagerState
+) {
 
-    val pages: List<Page> by viewModel.pageList.observeAsState(emptyList())
-    val page = if (pages.isEmpty()) null else pages[viewModel.currentPage.value]
+    val scope = rememberCoroutineScope()
 
     Surface(
         color = Color(0xfff2f1f3),
         modifier = Modifier
             .fillMaxWidth()
-            .height(100.dp)
+            .height(110.dp)
     ) {
         Row(
             modifier = Modifier
-                .fillMaxWidth().height(40.dp)
-                .offset(y = 50.dp)
+                .fillMaxWidth()
+                .height(40.dp)
+                .offset(y = 60.dp)
                 .padding(start = 24.dp, end = 24.dp)
         ) {
-            Row(
-                modifier = Modifier
-                    .width(254.dp)
-                    .fillMaxHeight()
-                    .background(color = Color.Black),
-                verticalAlignment = Alignment.CenterVertically
 
-            ) {
-                Spacer(modifier = Modifier.size(width = 10.dp, height = 40.dp))
+            if (pages.isEmpty()) {
+                DefaultTitleBar()
+            } else {
+                TabRow(
+                    selectedTabIndex = pagerState.currentPage,
+                    contentColor = Color.Black,
+                    modifier = Modifier.height(40.dp)
+                ) {
+                    pages.forEachIndexed { index, page ->
+                        Tab(
+                            selected = pagerState.currentPage == index,
+                            onClick = {
+                                scope.launch {
+                                    pagerState.animateScrollToPage(index)
+                                }
+                            },
+                            modifier = if (pagerState.currentPage == index) {
+                                Modifier
+                                    .weight(5f).height(40.dp)
+                                    .background(Color(0xffdddddd))
+                            } else {
+                                Modifier
+                                    .weight(1f).height(40.dp)
+                                    .background(Color(0xffdddddd))
+                            },
 
-                val title: String
+                            ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Start
+                            ) {
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Text(text = page.emoji)
 
-                if (page == null) {
-                    title = "페이지명이 없어요."
+                                if (pagerState.currentPage == index) {
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Text(text = page.title)
 
-                    Image(
-                        painterResource(id = R.drawable.ic_default_emoticon),
-                        contentDescription = null,
-                        modifier = Modifier.size(22.dp)
-                    )
-                } else {
-                    title = page.title
-
-                    Text(
-                        modifier = Modifier
-                            .size(22.dp, 27.dp),
-                        text = page.emoji,
-                        textAlign = TextAlign.Center,
-                        fontSize = 18.sp
-                    )
+                                    Image(
+                                        painterResource(id = R.drawable.ic_btn_side_menu),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(24.dp, 24.dp),
+                                        alignment = Alignment.CenterEnd
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
-
-                Spacer(modifier = Modifier.size(width = 10.dp, height = 40.dp))
-
-                Text (
-                    text = title,
-                    modifier = Modifier
-                        .width(192.dp)
-                        .align(Alignment.CenterVertically),
-                    color = Color(0xffa3a3a3),
-                    fontSize = 13.sp,
-                    maxLines = 2,
-                    textAlign = TextAlign.Left,
-                    lineHeight = 12.sp
-                )
-                Image(
-                    painterResource(id = R.drawable.ic_btn_side_menu),
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp, 24.dp),
-                    alignment = Alignment.CenterEnd
-                )
-            }
-            Spacer(modifier = Modifier.size(width = 4.dp, height = 40.dp))
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(color = Color(0xffdddddd))
-            ) {
-                Image(
-                    painterResource(id = R.drawable.ic_emoticon_2),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(24.dp, 24.dp)
-                        .align(Alignment.Center)
-                )
-            }
-            Spacer(modifier = Modifier.size(width = 4.dp, height = 40.dp))
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(color = Color(0xffdddddd))
-            ) {
-                Image(
-                    painterResource(id = R.drawable.ic_add),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(24.dp, 24.dp)
-                        .align(Alignment.Center)
-                )
+                if (pages.size < 3) {
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(color = Color(0xffdddddd))
+                    ) {
+                        Image(
+                            painterResource(id = R.drawable.ic_add),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(24.dp, 24.dp)
+                                .align(Alignment.Center)
+                        )
+                    }
+                }
             }
         }
+    }
+}
+@Composable
+fun DefaultTitleBar() {
+    Row(
+        modifier = Modifier
+            .size(298.dp, 40.dp)
+            .background(color = Color.Black),
+        verticalAlignment = Alignment.CenterVertically
+
+    ) {
+        Spacer(modifier = Modifier.size(width = 10.dp, height = 40.dp))
+
+        Image(
+            painterResource(id = R.drawable.ic_default_emoticon),
+            contentDescription = null,
+            modifier = Modifier.size(22.dp)
+        )
+
+        Spacer(modifier = Modifier.size(width = 10.dp, height = 40.dp))
+
+        Text (
+            text = "페이지명이 없어요.",
+            modifier = Modifier
+                .width(192.dp)
+                .align(Alignment.CenterVertically),
+            color = Color(0xffa3a3a3),
+            fontSize = 13.sp,
+            maxLines = 2,
+            textAlign = TextAlign.Left,
+            lineHeight = 12.sp
+        )
+        Image(
+            painterResource(id = R.drawable.ic_btn_side_menu),
+            contentDescription = null,
+            modifier = Modifier.size(24.dp, 24.dp),
+            alignment = Alignment.CenterEnd
+        )
+    }
+    Spacer(modifier = Modifier.size(width = 4.dp, height = 40.dp))
+    Box(
+        modifier = Modifier
+            .size(40.dp)
+            .background(color = Color(0xffdddddd))
+    ) {
+        Image(
+            painterResource(id = R.drawable.ic_add),
+            contentDescription = null,
+            modifier = Modifier
+                .size(24.dp, 24.dp)
+                .align(Alignment.Center)
+        )
     }
 }
 @Composable
@@ -217,7 +285,7 @@ fun AddFriendButton(isNeedInit: MutableState<Boolean>) {
         elevation = ButtonDefaults.buttonElevation(20.dp, 15.dp, 0.dp, 15.dp, 10.dp),
         modifier = Modifier
             .size(65.dp, 170.dp)
-            .padding(start = 25.dp, top = 120.dp)
+            .padding(start = 25.dp, top = 130.dp)
 
     ) {
         Icon(
@@ -226,12 +294,48 @@ fun AddFriendButton(isNeedInit: MutableState<Boolean>) {
         )
     }
 }
+@OptIn(ExperimentalPagerApi::class)
 @Composable
-fun listItem(
+fun ListItemPager(
+    pagerState: PagerState,
+    pages: List<Page>,
+    isNeedInit: MutableState<Boolean>,
     viewModel: MainViewModel,
     navController: NavHostController,
     isShowContentDetail: MutableState<Boolean>,
-    pagerIndex: MutableState<Int>
+    contentPageIndex: MutableState<Int>
+) {
+    HorizontalPager(
+        state = pagerState,
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(start = 24.dp, top = 200.dp, end = 24.dp, bottom = 86.dp),
+
+    ) { page ->
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            ListItem(
+                pages,
+                isNeedInit,
+                viewModel,
+                navController,
+                isShowContentDetail,
+                contentPageIndex
+            )
+
+        }
+    }
+}
+@Composable
+fun ListItem(
+    pages: List<Page>,
+    isNeedInit: MutableState<Boolean>,
+    viewModel: MainViewModel,
+    navController: NavHostController,
+    isShowContentDetail: MutableState<Boolean>,
+    contentPageIndex: MutableState<Int>
 ) {
     val contentList by viewModel.contentList.observeAsState(emptyList())
 
@@ -242,27 +346,32 @@ fun listItem(
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
         modifier = Modifier
-            .fillMaxSize()
-            .padding(start = 24.dp, top = 190.dp, end = 24.dp, bottom = 86.dp),
+            .fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(25.dp)
     ) {
         items(contentList.size + 1) {index ->
 
             if (index < contentList.size) {
-
                 ContentListItem(
                     isShowContentDetail = isShowContentDetail,
-                    pagerIndex = pagerIndex,
+                    pagerIndex = contentPageIndex,
                     content = contentList[index],
                     index = index)
             } else {
-                AddContentButton(viewModel, navController)
+                AddContentButton(
+                    pages,
+                    isNeedInit,
+                    viewModel,
+                    navController
+                )
             }
         }
     }
 }
 @Composable
 fun AddContentButton(
+    pages: List<Page>,
+    isNeedInit: MutableState<Boolean>,
     viewModel: MainViewModel,
     navController: NavHostController
 ) {
@@ -275,11 +384,11 @@ fun AddContentButton(
             onClick = {
                 // 버튼을 클릭했을 때 수행할 동작 작성
 
-                // 타이틀영역이 작성되지 않았을경우
-                //viewModel.isNeedInit.value = true
-
-                // 타이틀 영역이 작성됐을 경우 컨텐츠 추가 화면 이동
-                navController.navigate(Screen.AddContent.route)
+                if (pages.isEmpty()) {
+                    isNeedInit.value = true
+                } else {
+                    navController.navigate(Screen.AddContent.route)
+                }
             },
             modifier = Modifier
                 .fillMaxSize()

@@ -1,4 +1,4 @@
-package com.too.onions.dojang.db.room
+package com.too.onions.dojang.db
 
 import android.content.Context
 import androidx.room.Database

@@ -8,7 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.too.onions.dojang.db.data.Content
 import com.too.onions.dojang.db.data.Page
-import com.too.onions.dojang.db.room.DojangDB
+import com.too.onions.dojang.db.DojangDB
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
