@@ -1,7 +1,5 @@
 package com.too.onions.dojang.ui.main
 
-import android.accessibilityservice.AccessibilityService.SoftKeyboardController
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -9,31 +7,36 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -48,19 +51,21 @@ import androidx.emoji2.emojipicker.EmojiPickerView
 import androidx.emoji2.emojipicker.EmojiViewItem
 import androidx.navigation.NavHostController
 import com.too.onions.dojang.R
-import com.too.onions.dojang.ui.AddTitleMode
+import com.too.onions.dojang.db.data.Page
+import com.too.onions.dojang.ui.AddPageMode
 import com.too.onions.dojang.ui.Screen
 import com.too.onions.dojang.viewmodel.MainViewModel
-import androidx.compose.ui.focus.FocusManager as FocusManager1
 
 @Composable
-fun AddTitleView(
-    emoji: MutableState<EmojiViewItem>,
-    title: MutableState<String>,
-    addTitleMode: MutableState<AddTitleMode>,
+fun AddPageView(
+    addPageMode: MutableState<AddPageMode>,
     viewModel: MainViewModel,
     navController: NavHostController
 ) {
+
+    val emoji = remember { mutableStateOf(EmojiViewItem("", emptyList())) }
+    val title = remember { mutableStateOf("") }
+
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -71,16 +76,29 @@ fun AddTitleView(
             modifier = Modifier.fillMaxSize()
         )
 
-        TitleBar(emoji, title)
+        AddPageTitleBar(emoji, title)
 
-        when (addTitleMode.value) {
-            AddTitleMode.INPUT_EMOJI -> {
-                AddEmoji(emoji, addTitleMode, navController)
+        when (addPageMode.value) {
+            AddPageMode.INPUT_EMOJI -> {
+                AddEmoji(emoji, addPageMode, navController)
             }
-            AddTitleMode.INPUT_TITLE -> {
-                AddPageTitle(title, addTitleMode, navController)
+            AddPageMode.INPUT_TITLE -> {
+                AddPageTitle(title, addPageMode, navController) {
+                    addPageMode.value = AddPageMode.INPUT_DONE
+
+                    val page = Page(
+                        emoji = emoji.value.emoji,
+                        title = title.value
+                    )
+                    viewModel.insertPage(page)
+
+                    navController.navigate(Screen.Main.route) {
+                        popUpTo(Screen.Main.route)
+                        launchSingleTop = true
+                    }
+                }
             }
-            AddTitleMode.INPUT_DONE -> {
+            AddPageMode.INPUT_DONE -> {
                 // 키보드 내린후 화면전환을 위해 만든 화면
                 InputDone(title)
             }
@@ -88,9 +106,112 @@ fun AddTitleView(
     }
 }
 @Composable
+fun AddPageTitleBar(
+    emoji: MutableState<EmojiViewItem>,
+    title: MutableState<String>
+) {
+
+    Surface(
+        color = Color(0xfff2f1f3),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(100.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth().height(40.dp)
+                .padding(start = 24.dp, top = 60.dp, end = 24.dp, bottom = 10.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .width(254.dp)
+                    .fillMaxHeight()
+                    .background(color = Color.Black),
+                verticalAlignment = Alignment.CenterVertically
+
+            ) {
+                Spacer(modifier = Modifier.size(width = 10.dp, height = 40.dp))
+
+                if (emoji.value.emoji == "") {
+                    Image(
+                        painterResource(id = R.drawable.ic_default_emoticon),
+                        contentDescription = null,
+                        modifier = Modifier.size(22.dp)
+                    )
+                } else {
+                    Text(
+                        modifier = Modifier
+                            .size(22.dp, 27.dp)
+                            .padding(top = 5.dp),
+                        text = emoji.value.emoji,
+                        textAlign = TextAlign.Center,
+                        fontSize = 18.sp
+                    )
+                }
+
+                Spacer(modifier = Modifier.size(width = 10.dp, height = 40.dp))
+
+                val text: String
+
+                if (title.value == "") {
+                    text = "페이지명이 없어요."
+                } else {
+                    text = title.value
+                }
+
+                Text (
+                    text = text,
+                    modifier = Modifier
+                        .width(192.dp)
+                        .align(Alignment.CenterVertically),
+                    color = Color(0xffa3a3a3),
+                    fontSize = 13.sp,
+                    maxLines = 2,
+                    textAlign = TextAlign.Left,
+                    lineHeight = 12.sp
+                )
+                Image(
+                    painterResource(id = R.drawable.ic_btn_side_menu),
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp, 24.dp),
+                    alignment = Alignment.CenterEnd
+                )
+            }
+            Spacer(modifier = Modifier.size(width = 4.dp, height = 40.dp))
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(color = Color(0xffdddddd))
+            ) {
+                Image(
+                    painterResource(id = R.drawable.ic_emoticon_2),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(24.dp, 24.dp)
+                        .align(Alignment.Center)
+                )
+            }
+            Spacer(modifier = Modifier.size(width = 4.dp, height = 40.dp))
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(color = Color(0xffdddddd))
+            ) {
+                Image(
+                    painterResource(id = R.drawable.ic_add),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(24.dp, 24.dp)
+                        .align(Alignment.Center)
+                )
+            }
+        }
+    }
+}
+@Composable
 fun AddEmoji(
     emoji: MutableState<EmojiViewItem>,
-    addTitleMode: MutableState<AddTitleMode>,
+    addPageMode: MutableState<AddPageMode>,
     navController: NavHostController
 ) {
 
@@ -159,7 +280,7 @@ fun AddEmoji(
 
             Button(
                 onClick = {
-                    addTitleMode.value = AddTitleMode.INPUT_TITLE
+                    addPageMode.value = AddPageMode.INPUT_TITLE
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Transparent
@@ -199,8 +320,9 @@ fun AddEmoji(
 @Composable
 fun AddPageTitle(
     title: MutableState<String>,
-    addTitleMode: MutableState<AddTitleMode>,
-    navController: NavHostController
+    addPageMode: MutableState<AddPageMode>,
+    navController: NavHostController,
+    onInputDone: () -> Unit
 ) {
     val focusRequester = FocusRequester()
 
@@ -251,7 +373,7 @@ fun AddPageTitle(
         Row {
             Button(
                 onClick = {
-                    addTitleMode.value = AddTitleMode.INPUT_EMOJI
+                    addPageMode.value = AddPageMode.INPUT_EMOJI
                     title.value = ""
                 },
                 colors = ButtonDefaults.buttonColors(
@@ -272,14 +394,7 @@ fun AddPageTitle(
             Spacer(modifier = Modifier.size(10.dp))
 
             Button(
-                onClick = {
-                    addTitleMode.value = AddTitleMode.INPUT_DONE
-
-                    navController.navigate(Screen.Main.route) {
-                        popUpTo(Screen.Main.route)
-                        launchSingleTop = true
-                    }
-                },
+                onClick = onInputDone,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Transparent
                 ),

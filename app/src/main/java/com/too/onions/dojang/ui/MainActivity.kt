@@ -9,7 +9,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -30,7 +29,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.too.onions.dojang.service.MainService
 import com.too.onions.dojang.ui.main.AddContentView
-import com.too.onions.dojang.ui.main.AddTitleView
+import com.too.onions.dojang.ui.main.AddPageView
 import com.too.onions.dojang.ui.main.SingleView
 import com.too.onions.dojang.ui.theme.DojangTheme
 import com.too.onions.dojang.viewmodel.MainViewModel
@@ -38,11 +37,9 @@ import com.too.onions.dojang.viewmodel.MainViewModel
 
 sealed class Screen(val route: String) {
     object Main : Screen("main")
-    object AddTitle : Screen("add_title")
+    object AddPage : Screen("add_page")
     object AddContent : Screen("add_content")
     object AddFriend : Screen("add_friend")
-    object AddPage : Screen("add_page")
-    object ContentDetail : Screen("content_detail")
 
 }
 
@@ -51,7 +48,7 @@ data class ItemData (
     var description: String
 )
 
-enum class AddTitleMode {
+enum class AddPageMode {
     INPUT_EMOJI,
     INPUT_TITLE,
     INPUT_DONE
@@ -165,27 +162,19 @@ fun MainNavHost(
     viewModel: MainViewModel = provideMainViewModel(LocalContext.current)
 ) {
     val viewModel = remember { mutableStateOf(viewModel) }
-
-    val addTitleMode = remember { mutableStateOf(AddTitleMode.INPUT_EMOJI) }
-
-    val emoji = remember { mutableStateOf(EmojiViewItem("", emptyList())) }
-    val title = remember { mutableStateOf("") }
+    val addPageMode = remember { mutableStateOf(AddPageMode.INPUT_EMOJI) }
 
     NavHost(navController = navController, startDestination = Screen.Main.route, modifier = modifier) {
         composable(Screen.Main.route) {
             SingleView(
-                emoji = emoji,
-                title = title,
-                addTitleMode = addTitleMode,
+                addPageMode = addPageMode,
                 viewModel = viewModel.value,
                 navController = navController
             )
         }
-        composable(Screen.AddTitle.route) {
-            AddTitleView(
-                emoji = emoji,
-                title = title,
-                addTitleMode = addTitleMode,
+        composable(Screen.AddPage.route) {
+            AddPageView(
+                addPageMode = addPageMode,
                 viewModel.value,
                 navController
             )

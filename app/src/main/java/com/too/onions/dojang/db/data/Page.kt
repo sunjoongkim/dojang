@@ -3,13 +3,11 @@ package com.too.onions.dojang.db.data
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "contents")
-data class Content (
+@Entity(tableName = "pages")
+data class Page (
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-    val color: Int = 0,
-    val imageUri: String?,
+    val emoji: String = "",
     val title: String = "",
-    val description: String = "",
-    val address: String = ""
+    val friends: String = ""
 )

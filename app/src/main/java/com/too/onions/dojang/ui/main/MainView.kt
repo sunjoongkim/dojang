@@ -1,6 +1,5 @@
 package com.too.onions.dojang.ui.main
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -43,12 +42,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -61,21 +59,24 @@ import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import com.too.onions.dojang.R
 import com.too.onions.dojang.db.data.Content
-import com.too.onions.dojang.ui.AddTitleMode
+import com.too.onions.dojang.db.data.Page
+import com.too.onions.dojang.ui.AddPageMode
 import com.too.onions.dojang.ui.Screen
 import com.too.onions.dojang.viewmodel.MainViewModel
 
 @Composable
 fun SingleView(
-    emoji: MutableState<EmojiViewItem>,
-    title: MutableState<String>,
-    addTitleMode: MutableState<AddTitleMode>,
+    addPageMode: MutableState<AddPageMode>,
     viewModel: MainViewModel,
     navController: NavHostController
 ) {
-    var isNeedInit = remember { mutableStateOf(false) }
+    val isNeedInit = remember { mutableStateOf(false) }
     val isShowContentDetail = remember { mutableStateOf(false) }
     val pagerIndex = remember { mutableStateOf(0) }
+
+    LaunchedEffect(viewModel) {
+        viewModel.refreshPageList()
+    }
 
     Image(
         painterResource(id = R.drawable.bg_single),
@@ -84,7 +85,7 @@ fun SingleView(
         modifier = Modifier.fillMaxSize()
     )
 
-    TitleBar(emoji, title)
+    TitleBar(viewModel)
 
     AddFriendButton(isNeedInit)
     listItem(viewModel, navController,isShowContentDetail, pagerIndex)
@@ -92,7 +93,7 @@ fun SingleView(
     StampButton()
 
     if (isNeedInit.value) {
-        InitTitleDialog(isNeedInit, emoji, title, addTitleMode, navController)
+        InitTitleDialog(isNeedInit, addPageMode, navController)
     }
     if (isShowContentDetail.value) {
         ContentDetailView(
@@ -104,21 +105,22 @@ fun SingleView(
 }
 
 @Composable
-fun TitleBar(
-    emoji: MutableState<EmojiViewItem>,
-    title: MutableState<String>
-) {
+fun TitleBar(viewModel: MainViewModel) {
+
+    val pages: List<Page> by viewModel.pageList.observeAsState(emptyList())
+    val page = if (pages.isEmpty()) null else pages[viewModel.currentPage.value]
+
     Surface(
-        tonalElevation = 15.dp,
         color = Color(0xfff2f1f3),
         modifier = Modifier
             .fillMaxWidth()
-            .height(110.dp)
+            .height(100.dp)
     ) {
         Row(
             modifier = Modifier
-                .size(342.dp, 40.dp)
-                .padding(start = 24.dp, top = 60.dp, end = 24.dp, bottom = 10.dp)
+                .fillMaxWidth().height(40.dp)
+                .offset(y = 50.dp)
+                .padding(start = 24.dp, end = 24.dp)
         ) {
             Row(
                 modifier = Modifier
@@ -130,18 +132,23 @@ fun TitleBar(
             ) {
                 Spacer(modifier = Modifier.size(width = 10.dp, height = 40.dp))
 
-                if (emoji.value.emoji == "") {
+                val title: String
+
+                if (page == null) {
+                    title = "페이지명이 없어요."
+
                     Image(
                         painterResource(id = R.drawable.ic_default_emoticon),
                         contentDescription = null,
                         modifier = Modifier.size(22.dp)
                     )
                 } else {
+                    title = page.title
+
                     Text(
                         modifier = Modifier
-                            .size(22.dp, 27.dp)
-                            .padding(top = 5.dp),
-                        text = emoji.value.emoji,
+                            .size(22.dp, 27.dp),
+                        text = page.emoji,
                         textAlign = TextAlign.Center,
                         fontSize = 18.sp
                     )
@@ -149,16 +156,8 @@ fun TitleBar(
 
                 Spacer(modifier = Modifier.size(width = 10.dp, height = 40.dp))
 
-                var text = ""
-
-                if (title.value == "") {
-                    text = "페이지명이 없어요."
-                } else {
-                    text = title.value
-                }
-
                 Text (
-                    text = text,
+                    text = title,
                     modifier = Modifier
                         .width(192.dp)
                         .align(Alignment.CenterVertically),
@@ -218,7 +217,7 @@ fun AddFriendButton(isNeedInit: MutableState<Boolean>) {
         elevation = ButtonDefaults.buttonElevation(20.dp, 15.dp, 0.dp, 15.dp, 10.dp),
         modifier = Modifier
             .size(65.dp, 170.dp)
-            .padding(start = 25.dp, top = 130.dp)
+            .padding(start = 25.dp, top = 120.dp)
 
     ) {
         Icon(
@@ -244,7 +243,7 @@ fun listItem(
         columns = GridCells.Fixed(2),
         modifier = Modifier
             .fillMaxSize()
-            .padding(start = 24.dp, top = 200.dp, end = 24.dp, bottom = 86.dp),
+            .padding(start = 24.dp, top = 190.dp, end = 24.dp, bottom = 86.dp),
         verticalArrangement = Arrangement.spacedBy(25.dp)
     ) {
         items(contentList.size + 1) {index ->
@@ -402,9 +401,7 @@ fun StampButton() {
 @Composable
 fun InitTitleDialog(
     isNeedInit: MutableState<Boolean>,
-    emoji: MutableState<EmojiViewItem>,
-    title: MutableState<String>,
-    addTitleMode: MutableState<AddTitleMode>,
+    addPageMode: MutableState<AddPageMode>,
     navController: NavHostController
 ) {
     Dialog(
@@ -457,11 +454,8 @@ fun InitTitleDialog(
                     onClick = {
                         isNeedInit.value = false
 
-                        addTitleMode.value = AddTitleMode.INPUT_EMOJI
-                        emoji.value = EmojiViewItem("", emptyList())
-                        title.value = ""
-
-                        navController.navigate(Screen.AddTitle.route)
+                        addPageMode.value = AddPageMode.INPUT_EMOJI
+                        navController.navigate(Screen.AddPage.route)
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Transparent
