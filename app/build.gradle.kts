@@ -76,6 +76,9 @@ dependencies {
 
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1")
 
+    implementation("com.google.accompanist:accompanist-pager:0.17.0")
+    implementation("com.google.accompanist:accompanist-insets:0.30.1")
+    implementation("com.google.accompanist:accompanist-insets-ui:0.30.1")
     implementation("io.coil-kt:coil-compose:2.4.0")
     implementation("androidx.navigation:navigation-compose:2.6.0")
 

@@ -20,6 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
+import androidx.emoji2.emojipicker.EmojiViewItem
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -30,7 +31,6 @@ import androidx.navigation.compose.rememberNavController
 import com.too.onions.dojang.service.MainService
 import com.too.onions.dojang.ui.main.AddContentView
 import com.too.onions.dojang.ui.main.AddTitleView
-import com.too.onions.dojang.ui.main.ContentDetailView
 import com.too.onions.dojang.ui.main.SingleView
 import com.too.onions.dojang.ui.theme.DojangTheme
 import com.too.onions.dojang.viewmodel.MainViewModel
@@ -164,20 +164,34 @@ fun MainNavHost(
     navController: NavHostController = rememberNavController(),
     viewModel: MainViewModel = provideMainViewModel(LocalContext.current)
 ) {
-    val viewModel = remember { mutableStateOf(viewModel)}
+    val viewModel = remember { mutableStateOf(viewModel) }
+
+    val addTitleMode = remember { mutableStateOf(AddTitleMode.INPUT_EMOJI) }
+
+    val emoji = remember { mutableStateOf(EmojiViewItem("", emptyList())) }
+    val title = remember { mutableStateOf("") }
 
     NavHost(navController = navController, startDestination = Screen.Main.route, modifier = modifier) {
         composable(Screen.Main.route) {
-            SingleView(viewModel.value, navController)
+            SingleView(
+                emoji = emoji,
+                title = title,
+                addTitleMode = addTitleMode,
+                viewModel = viewModel.value,
+                navController = navController
+            )
         }
         composable(Screen.AddTitle.route) {
-            AddTitleView(viewModel.value, navController)
+            AddTitleView(
+                emoji = emoji,
+                title = title,
+                addTitleMode = addTitleMode,
+                viewModel.value,
+                navController
+            )
         }
         composable(Screen.AddContent.route) {
             AddContentView(viewModel.value, navController)
-        }
-        composable(Screen.ContentDetail.route) {
-            ContentDetailView(viewModel.value, navController)
         }
     }
 }

@@ -22,10 +22,12 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
@@ -53,6 +55,9 @@ import androidx.compose.ui.focus.FocusManager as FocusManager1
 
 @Composable
 fun AddTitleView(
+    emoji: MutableState<EmojiViewItem>,
+    title: MutableState<String>,
+    addTitleMode: MutableState<AddTitleMode>,
     viewModel: MainViewModel,
     navController: NavHostController
 ) {
@@ -66,25 +71,26 @@ fun AddTitleView(
             modifier = Modifier.fillMaxSize()
         )
 
-        TitleBar(viewModel)
+        TitleBar(emoji, title)
 
-        when (viewModel.addTitleMode.value) {
+        when (addTitleMode.value) {
             AddTitleMode.INPUT_EMOJI -> {
-                AddEmoji(viewModel, navController)
+                AddEmoji(emoji, addTitleMode, navController)
             }
             AddTitleMode.INPUT_TITLE -> {
-                AddPageTitle(viewModel, navController)
+                AddPageTitle(title, addTitleMode, navController)
             }
             AddTitleMode.INPUT_DONE -> {
                 // 키보드 내린후 화면전환을 위해 만든 화면
-                InputDone(viewModel)
+                InputDone(title)
             }
         }
     }
 }
 @Composable
 fun AddEmoji(
-    viewModel: MainViewModel,
+    emoji: MutableState<EmojiViewItem>,
+    addTitleMode: MutableState<AddTitleMode>,
     navController: NavHostController
 ) {
 
@@ -100,7 +106,7 @@ fun AddEmoji(
             modifier = Modifier.size(87.dp, 87.dp)
         ) {
 
-            if (viewModel.emoji.value.emoji == "") {
+            if (emoji.value.emoji == "") {
                 Image(
                     painterResource(id = R.drawable.ic_default_emoticon),
                     contentDescription = null
@@ -108,7 +114,7 @@ fun AddEmoji(
             } else {
                 Text(
                     modifier = Modifier.fillMaxSize(),
-                    text = viewModel.emoji.value.emoji,
+                    text = emoji.value.emoji,
                     textAlign = TextAlign.Center,
                     fontSize = 70.sp
                 )
@@ -128,7 +134,7 @@ fun AddEmoji(
         Row {
             Button(
                 onClick = {
-                    viewModel.emoji.value = EmojiViewItem("", emptyList())
+                    emoji.value = EmojiViewItem("", emptyList())
                     navController.navigate(Screen.Main.route) {
                         popUpTo(Screen.Main.route)
                         launchSingleTop = true
@@ -153,7 +159,7 @@ fun AddEmoji(
 
             Button(
                 onClick = {
-                    viewModel.addTitleMode.value = AddTitleMode.INPUT_TITLE
+                    addTitleMode.value = AddTitleMode.INPUT_TITLE
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Transparent
@@ -162,7 +168,7 @@ fun AddEmoji(
                     .size(120.dp, 46.dp)
                     .background(color = Color(0xff123485), shape = RectangleShape)
                     .border(2.dp, color = Color(0xff17274e)),
-                enabled = !(viewModel.emoji.value.emoji == "")
+                enabled = !(emoji.value.emoji == "")
             ) {
                 Text(
                     text = "다음",
@@ -178,7 +184,7 @@ fun AddEmoji(
             factory = { context ->
                 EmojiPickerView(context).apply {
                     setOnEmojiPickedListener {
-                        viewModel.emoji.value = it
+                        emoji.value = it
                     }
                 }
             },
@@ -189,12 +195,15 @@ fun AddEmoji(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddPageTitle(
-    viewModel: MainViewModel,
+    title: MutableState<String>,
+    addTitleMode: MutableState<AddTitleMode>,
     navController: NavHostController
 ) {
+    val focusRequester = FocusRequester()
+
     Column (
         modifier = Modifier
             .fillMaxSize()
@@ -204,9 +213,9 @@ fun AddPageTitle(
         Spacer(modifier = Modifier.size(49.dp))
 
         TextField(
-            value = viewModel.title.value,
+            value = title.value,
             onValueChange = {
-                viewModel.title.value = it
+                title.value = it
             },
             textStyle = TextStyle(
                 fontSize = 24.sp,
@@ -221,7 +230,7 @@ fun AddPageTitle(
                 )
             },
             modifier = Modifier
-                .focusRequester(viewModel.focusRequester)
+                .focusRequester(focusRequester)
                 .size(330.dp, 164.dp)
                 .wrapContentHeight()
                 .background(color = Color.Transparent),
@@ -242,8 +251,8 @@ fun AddPageTitle(
         Row {
             Button(
                 onClick = {
-                    viewModel.addTitleMode.value = AddTitleMode.INPUT_EMOJI
-                    viewModel.title.value = ""
+                    addTitleMode.value = AddTitleMode.INPUT_EMOJI
+                    title.value = ""
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Transparent
@@ -264,7 +273,7 @@ fun AddPageTitle(
 
             Button(
                 onClick = {
-                    viewModel.addTitleMode.value = AddTitleMode.INPUT_DONE
+                    addTitleMode.value = AddTitleMode.INPUT_DONE
 
                     navController.navigate(Screen.Main.route) {
                         popUpTo(Screen.Main.route)
@@ -278,7 +287,7 @@ fun AddPageTitle(
                     .size(120.dp, 46.dp)
                     .background(color = Color(0xff123485), shape = RectangleShape)
                     .border(2.dp, color = Color(0xff17274e)),
-                enabled = !(viewModel.title.value == "")
+                enabled = !(title.value == "")
             ) {
                 Text(
                     text = "입력 완료",
@@ -292,12 +301,12 @@ fun AddPageTitle(
     }
 
     LaunchedEffect(Unit) {
-        viewModel.focusRequester.requestFocus()
+        focusRequester.requestFocus()
     }
 }
 
 @Composable
-fun InputDone(viewModel: MainViewModel) {
+fun InputDone(title: MutableState<String>) {
     Column (
         modifier = Modifier
             .fillMaxSize()
@@ -308,7 +317,7 @@ fun InputDone(viewModel: MainViewModel) {
 
         Text(
             modifier = Modifier.size(330.dp, 164.dp).wrapContentHeight(),
-            text = viewModel.title.value,
+            text = title.value,
             fontSize = 24.sp,
             color = Color(0xff000000),
             textAlign = TextAlign.Center
@@ -344,7 +353,7 @@ fun InputDone(viewModel: MainViewModel) {
                     .size(120.dp, 46.dp)
                     .background(color = Color(0xff123485), shape = RectangleShape)
                     .border(2.dp, color = Color(0xff17274e)),
-                enabled = !(viewModel.title.value == "")
+                enabled = !(title.value == "")
             ) {
                 Text(
                     text = "입력 완료",

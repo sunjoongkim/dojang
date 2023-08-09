@@ -1,11 +1,11 @@
 package com.too.onions.dojang.ui.main
 
-import android.os.Bundle
-import android.util.Log
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,9 +16,11 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
@@ -30,14 +32,19 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -45,9 +52,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.emoji2.emojipicker.EmojiViewItem
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.pager.HorizontalPager
+import com.google.accompanist.pager.rememberPagerState
 import com.too.onions.dojang.R
 import com.too.onions.dojang.db.data.Content
 import com.too.onions.dojang.ui.AddTitleMode
@@ -56,9 +67,16 @@ import com.too.onions.dojang.viewmodel.MainViewModel
 
 @Composable
 fun SingleView(
+    emoji: MutableState<EmojiViewItem>,
+    title: MutableState<String>,
+    addTitleMode: MutableState<AddTitleMode>,
     viewModel: MainViewModel,
     navController: NavHostController
 ) {
+    var isNeedInit = remember { mutableStateOf(false) }
+    val isShowContentDetail = remember { mutableStateOf(false) }
+    val pagerIndex = remember { mutableStateOf(0) }
+
     Image(
         painterResource(id = R.drawable.bg_single),
         contentDescription = null,
@@ -66,21 +84,30 @@ fun SingleView(
         modifier = Modifier.fillMaxSize()
     )
 
-    TitleBar(viewModel)
+    TitleBar(emoji, title)
 
-    AddFriendButton(viewModel, navController)
-    listItem(viewModel, navController)
+    AddFriendButton(isNeedInit)
+    listItem(viewModel, navController,isShowContentDetail, pagerIndex)
     BottomBar(viewModel)
     StampButton()
 
-    // 초기 세팅이 필요한 경우 다이얼로그 발생
-    if (viewModel.isNeedInit.value) {
-        InitTitleDialog(viewModel, navController)
+    if (isNeedInit.value) {
+        InitTitleDialog(isNeedInit, emoji, title, addTitleMode, navController)
+    }
+    if (isShowContentDetail.value) {
+        ContentDetailView(
+            isShowContentDetail = isShowContentDetail,
+            index = pagerIndex.value,
+            viewModel = viewModel
+        )
     }
 }
 
 @Composable
-fun TitleBar(viewModel: MainViewModel) {
+fun TitleBar(
+    emoji: MutableState<EmojiViewItem>,
+    title: MutableState<String>
+) {
     Surface(
         tonalElevation = 15.dp,
         color = Color(0xfff2f1f3),
@@ -103,7 +130,7 @@ fun TitleBar(viewModel: MainViewModel) {
             ) {
                 Spacer(modifier = Modifier.size(width = 10.dp, height = 40.dp))
 
-                if (viewModel.emoji.value.emoji == "") {
+                if (emoji.value.emoji == "") {
                     Image(
                         painterResource(id = R.drawable.ic_default_emoticon),
                         contentDescription = null,
@@ -114,7 +141,7 @@ fun TitleBar(viewModel: MainViewModel) {
                         modifier = Modifier
                             .size(22.dp, 27.dp)
                             .padding(top = 5.dp),
-                        text = viewModel.emoji.value.emoji,
+                        text = emoji.value.emoji,
                         textAlign = TextAlign.Center,
                         fontSize = 18.sp
                     )
@@ -122,16 +149,16 @@ fun TitleBar(viewModel: MainViewModel) {
 
                 Spacer(modifier = Modifier.size(width = 10.dp, height = 40.dp))
 
-                var title = ""
+                var text = ""
 
-                if (viewModel.title.value == "") {
-                    title = "페이지명이 없어요."
+                if (title.value == "") {
+                    text = "페이지명이 없어요."
                 } else {
-                    title = viewModel.title.value
+                    text = title.value
                 }
 
                 Text (
-                    text = title,
+                    text = text,
                     modifier = Modifier
                         .width(192.dp)
                         .align(Alignment.CenterVertically),
@@ -180,14 +207,11 @@ fun TitleBar(viewModel: MainViewModel) {
     }
 }
 @Composable
-fun AddFriendButton(
-    viewModel: MainViewModel,
-    navController: NavHostController
-) {
+fun AddFriendButton(isNeedInit: MutableState<Boolean>) {
     ElevatedButton(
         onClick = {
             // 초기 설정 필요한지 체크 함수 필요
-            viewModel.isNeedInit.value = true
+            isNeedInit.value = true
         },
         shape = CircleShape,
         contentPadding = PaddingValues(0.dp),
@@ -206,7 +230,9 @@ fun AddFriendButton(
 @Composable
 fun listItem(
     viewModel: MainViewModel,
-    navController: NavHostController
+    navController: NavHostController,
+    isShowContentDetail: MutableState<Boolean>,
+    pagerIndex: MutableState<Int>
 ) {
     val contentList by viewModel.contentList.observeAsState(emptyList())
 
@@ -224,8 +250,12 @@ fun listItem(
         items(contentList.size + 1) {index ->
 
             if (index < contentList.size) {
-                Log.e("@@@@@", "contents[${index}] uri : ${contentList[index].imageUri}")
-                ContentListItem(contentList[index], index, viewModel, navController)
+
+                ContentListItem(
+                    isShowContentDetail = isShowContentDetail,
+                    pagerIndex = pagerIndex,
+                    content = contentList[index],
+                    index = index)
             } else {
                 AddContentButton(viewModel, navController)
             }
@@ -269,17 +299,18 @@ fun AddContentButton(
 }
 @Composable
 fun ContentListItem(
+    isShowContentDetail: MutableState<Boolean>,
+    pagerIndex: MutableState<Int>,
     content: Content,
     index: Int,
-    viewModel: MainViewModel,
-    navController: NavHostController
 ) {
 
     Box(
-        modifier = Modifier.size(150.dp, 165.dp)
+        modifier = Modifier
+            .size(150.dp, 165.dp)
             .clickable(onClick = {
-                viewModel.contentPage.value = index
-                navController.navigate(Screen.ContentDetail.route)
+                pagerIndex.value = index
+                isShowContentDetail.value = true
             })
     ) {
         AsyncImage(
@@ -304,9 +335,10 @@ fun ContentListItem(
                     .align(Alignment.Center)
                     .padding(start = 5.dp),
                 textAlign = TextAlign.Start,
-                text = content.description,
+                text = content.title,
                 fontSize = 10.sp,
-                color = Color(0xff123485)
+                color = Color(0xff123485),
+                lineHeight = 12.sp
             )
         }
     }
@@ -366,13 +398,17 @@ fun StampButton() {
         )
     }
 }
+
 @Composable
 fun InitTitleDialog(
-    viewModel: MainViewModel,
+    isNeedInit: MutableState<Boolean>,
+    emoji: MutableState<EmojiViewItem>,
+    title: MutableState<String>,
+    addTitleMode: MutableState<AddTitleMode>,
     navController: NavHostController
 ) {
     Dialog(
-        onDismissRequest = { viewModel.isNeedInit.value = false }
+        onDismissRequest = { isNeedInit.value = false }
     ) {
         Column(
             modifier = Modifier
@@ -399,7 +435,7 @@ fun InitTitleDialog(
 
             Row {
                 Button(
-                    onClick = { viewModel.isNeedInit.value = false },
+                    onClick = { isNeedInit.value = false },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Transparent
                     ),
@@ -419,11 +455,11 @@ fun InitTitleDialog(
 
                 Button(
                     onClick = {
-                        viewModel.isNeedInit.value = false
+                        isNeedInit.value = false
 
-                        viewModel.addTitleMode.value = AddTitleMode.INPUT_EMOJI
-                        viewModel.emoji.value = EmojiViewItem("", emptyList())
-                        viewModel.title.value = ""
+                        addTitleMode.value = AddTitleMode.INPUT_EMOJI
+                        emoji.value = EmojiViewItem("", emptyList())
+                        title.value = ""
 
                         navController.navigate(Screen.AddTitle.route)
                     },
@@ -442,6 +478,174 @@ fun InitTitleDialog(
                     )
                 }
             }
+        }
+    }
+}
+
+@OptIn(ExperimentalPagerApi::class)
+@Composable
+fun ContentDetailView(
+    isShowContentDetail: MutableState<Boolean>,
+    index: Int,
+    viewModel: MainViewModel
+) {
+    val contentList by viewModel.contentList.observeAsState(emptyList())
+    val pagerState = rememberPagerState(
+        initialPage = index,
+        initialOffscreenLimit = 3,
+        pageCount = contentList.size,
+    )
+
+    Dialog(
+        onDismissRequest = { isShowContentDetail.value = false },
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+        )
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(2f)
+                    .clickable(
+                        interactionSource = MutableInteractionSource(),
+                        indication = null
+                    ) {
+                        isShowContentDetail.value = false
+                    }
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(8f)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = 40.dp)
+                        .background(color = Color(0xff5dcc83), shape = RectangleShape),
+                    contentAlignment = Alignment.BottomCenter
+                ) {
+
+                    Row(
+                        modifier = Modifier
+                            .wrapContentWidth()
+                            .padding(bottom = 35.dp)
+                            .align(Alignment.BottomCenter)
+                    ) {
+                        Button(
+                            onClick = { isShowContentDetail.value = false },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Transparent
+                            ),
+                            modifier = Modifier
+                                .size(120.dp, 46.dp)
+                                .background(color = Color(0xff000000), shape = RectangleShape)
+                                .border(2.dp, color = Color(0xff000000))
+                        ) {
+                            Text(
+                                text = "도장 취소",
+                                fontSize = 14.sp,
+                                fontFamily = FontFamily(Font(R.font.neo_dunggeunmo_pro))
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.size(10.dp))
+
+                        Button(
+                            onClick = { },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Transparent
+                            ),
+                            modifier = Modifier
+                                .size(220.dp, 46.dp)
+                                .background(color = Color(0xff123485), shape = RectangleShape)
+                                .border(2.dp, color = Color(0xff17274e))
+                        ) {
+                            Text(
+                                text = "수정 및 삭제하기",
+                                fontSize = 14.sp,
+                                fontFamily = FontFamily(Font(R.font.neo_dunggeunmo_pro))
+                            )
+                        }
+                    }
+                }
+
+                HorizontalPager(
+                    state = pagerState,
+                    itemSpacing = 20.dp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(500.dp)
+                ) { page ->
+                    ContentPagerItem(contentList[page])
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ContentPagerItem(content: Content) {
+    Box(
+        modifier = Modifier
+            .size(300.dp, 500.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 6.dp, start = 6.dp)
+                .background(Color.Black)
+        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = 6.dp, end = 6.dp)
+                .background(Color.White)
+                .border(width = 3.dp, color = Color.Black),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.size(10.dp))
+            AsyncImage(
+                model = content.imageUri,
+                contentDescription = null,
+                modifier = Modifier
+                    .size(274.dp, 274.dp)
+                    .background(Color(content.color))
+            )
+
+            Spacer(modifier = Modifier.size(15.dp))
+            Text(
+                text = content.title,
+                fontSize = 14.sp,
+                color = Color.Black,
+                textAlign = TextAlign.Left,
+                modifier = Modifier.width(265.dp),
+                lineHeight = 15.sp
+            )
+
+            Spacer(modifier = Modifier.size(15.dp))
+            Text(
+                text = content.description,
+                fontSize = 14.sp,
+                color = Color.Black,
+                textAlign = TextAlign.Left,
+                modifier = Modifier.width(265.dp),
+                lineHeight = 15.sp
+            )
+
+            Spacer(modifier = Modifier.size(15.dp))
+            Text(
+                text = if (!content.address.isEmpty()) "주소\n${content.address}" else "",
+                fontSize = 14.sp,
+                color = Color(0xffa8a8a8),
+                textAlign = TextAlign.Left,
+                modifier = Modifier.width(265.dp),
+                lineHeight = 15.sp
+            )
         }
     }
 }

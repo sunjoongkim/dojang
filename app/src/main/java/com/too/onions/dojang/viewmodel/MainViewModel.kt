@@ -23,12 +23,12 @@ class MainViewModel(context: Context): ViewModel() {
     val contentList: LiveData<List<Content>> get() = _contentList
 
     fun insertContent(content: Content) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             ContentDB.getDatabase(context).contentDao().insert(content)
         }
     }
     fun deleteAllContent() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             ContentDB.getDatabase(context).contentDao().deleteAll()
         }
     }
@@ -40,11 +40,6 @@ class MainViewModel(context: Context): ViewModel() {
     // =================
     val contentPage = mutableStateOf(0)
 
-    val addTitleMode = mutableStateOf(AddTitleMode.INPUT_EMOJI)
-    val isNeedInit = mutableStateOf(false)
 
-    val emoji = mutableStateOf(EmojiViewItem("", emptyList()))
-    val title = mutableStateOf("")
 
-    val focusRequester = FocusRequester()
 }
