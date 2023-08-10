@@ -142,7 +142,8 @@ fun SingleView(
     if (isShowContentDetail.value) {
         ContentDetailView(
             isShowContentDetail = isShowContentDetail,
-            index = contentPageIndex.value,
+            contentList = pages[pagerState.currentPage].contents,
+            contentPageIndex = contentPageIndex.value,
             viewModel = viewModel
         )
     }
@@ -211,9 +212,9 @@ fun TitleBar(
                                 modifier = Modifier
                                     .wrapContentHeight()
                                     .width(22.dp)
-                                    .align(Alignment.Center),
+                                    .align(Alignment.CenterStart)
+                                    .padding(start = 9.dp),
                                 text = page.page.emoji,
-                                textAlign = TextAlign.Center,
                                 fontSize = 18.sp
                             )
                         }
@@ -376,7 +377,7 @@ fun SelectedTab(
         verticalAlignment = Alignment.CenterVertically
 
     ) {
-        Spacer(modifier = Modifier.size(width = 10.dp, height = 40.dp))
+        Spacer(modifier = Modifier.size(width = 9.dp, height = 40.dp))
 
         Text(
             modifier = Modifier
@@ -387,7 +388,7 @@ fun SelectedTab(
             fontSize = 18.sp
         )
 
-        Spacer(modifier = Modifier.size(width = 10.dp, height = 40.dp))
+        Spacer(modifier = Modifier.size(width = 9.dp, height = 40.dp))
         Text (
             text = page.title,
             modifier = Modifier
@@ -718,12 +719,13 @@ fun InitTitleDialog(
 @Composable
 fun ContentDetailView(
     isShowContentDetail: MutableState<Boolean>,
-    index: Int,
+    contentList: List<Content>,
+    contentPageIndex: Int,
     viewModel: MainViewModel
 ) {
-    val contentList by viewModel.contentList.observeAsState(emptyList())
+
     val pagerState = rememberPagerState(
-        initialPage = index,
+        initialPage = contentPageIndex,
         initialOffscreenLimit = 3,
         pageCount = contentList.size,
     )

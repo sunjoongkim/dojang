@@ -134,7 +134,7 @@ fun AddPageTitleBar(
                 verticalAlignment = Alignment.CenterVertically
 
             ) {
-                Spacer(modifier = Modifier.size(width = 10.dp, height = 40.dp))
+                Spacer(modifier = Modifier.size(width = 9.dp, height = 40.dp))
 
                 if (emoji.value.emoji == "") {
                     Image(
@@ -153,7 +153,7 @@ fun AddPageTitleBar(
                     )
                 }
 
-                Spacer(modifier = Modifier.size(width = 10.dp, height = 40.dp))
+                Spacer(modifier = Modifier.size(width = 9.dp, height = 40.dp))
 
                 val text: String
 
