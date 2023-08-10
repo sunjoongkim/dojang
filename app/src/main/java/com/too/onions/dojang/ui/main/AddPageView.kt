@@ -51,12 +51,15 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.emoji2.emojipicker.EmojiPickerView
 import androidx.emoji2.emojipicker.EmojiViewItem
 import androidx.navigation.NavHostController
+import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.pager.PagerState
 import com.too.onions.dojang.R
 import com.too.onions.dojang.db.data.Page
 import com.too.onions.dojang.ui.AddPageMode
 import com.too.onions.dojang.ui.Screen
 import com.too.onions.dojang.viewmodel.MainViewModel
 
+@OptIn(ExperimentalPagerApi::class)
 @Composable
 fun AddPageView(
     addPageMode: MutableState<AddPageMode>,
@@ -93,7 +96,7 @@ fun AddPageView(
                     )
                     viewModel.insertPage(page)
 
-                    navController.navigate(Screen.Main.route) {
+                    navController.navigate(Screen.Main.route + "/true") {
                         popUpTo(Screen.Main.route)
                         launchSingleTop = true
                     }

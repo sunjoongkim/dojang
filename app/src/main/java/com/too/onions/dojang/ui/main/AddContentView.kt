@@ -106,7 +106,7 @@ fun AddContentView(
 
         viewModel.insertContent(content)
 
-        navController.navigate(Screen.Main.route) {
+        navController.navigate(Screen.Main.route + "/false") {
             popUpTo(Screen.Main.route)
             launchSingleTop = true
         }
@@ -151,7 +151,7 @@ fun ContentTitleBar(navController: NavHostController) {
                     interactionSource = MutableInteractionSource(),
                     indication = null,
                     onClick = {
-                        navController.navigate(Screen.Main.route)
+                        navController.navigate(Screen.Main.route + "/false")
                     }
                 )
         ) {

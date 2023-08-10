@@ -68,6 +68,7 @@ import com.too.onions.dojang.ui.Screen
 import com.too.onions.dojang.viewmodel.MainViewModel
 import com.too.onions.dojang.viewmodel.PageWithContents
 import kotlinx.coroutines.launch
+import java.lang.IllegalArgumentException
 import java.lang.Math.abs
 
 @OptIn(ExperimentalPagerApi::class)
@@ -75,7 +76,8 @@ import java.lang.Math.abs
 fun SingleView(
     addPageMode: MutableState<AddPageMode>,
     viewModel: MainViewModel,
-    navController: NavHostController
+    navController: NavHostController,
+    isAddedPage: Boolean?
 ) {
     val isNeedInit = remember { mutableStateOf(false) }
     val isShowContentDetail = remember { mutableStateOf(false) }
@@ -99,6 +101,12 @@ fun SingleView(
         pageCount = if (pages.isEmpty()) 1 else pages.size,
         initialPage = viewModel.currentPage.value.index
     )
+
+    if (isAddedPage != null && isAddedPage) {
+        LaunchedEffect(pagerState) {
+            pagerState.scrollToPage(pagerState.currentPage)
+        }
+    }
 
     Image(
         painterResource(id = R.drawable.bg_single),
@@ -183,13 +191,15 @@ fun TitleBar(
                         SelectedTab(
                             pages[index].page,
                             Modifier
-                                .weight(1f).height(40.dp)
+                                .weight(1f)
+                                .height(40.dp)
                                 .background(color = currentColor)
                         )
                     } else {
                         Box(
                             modifier = Modifier
-                                .width(currentWidth).height(40.dp)
+                                .width(currentWidth)
+                                .height(40.dp)
                                 .background(color = currentColor)
                                 .clickable(onClick = {
                                     scope.launch {
@@ -282,13 +292,19 @@ fun getColor(
     offset: Float
 ) : Color {
     val color = startColor.red * (1 - offset) + endColor.red * offset
+    var result: Color
 
-    return Color(
-        red = color,
-        green = color,
-        blue = color,
-        alpha = 1f
-    )
+    try {
+        result = Color(
+            red = color,
+            green = color,
+            blue = color,
+            alpha = 1f
+        )
+    } catch (e: IllegalArgumentException) {
+        result = Color.Black
+    }
+    return result
 }
 
 @Composable
@@ -299,7 +315,8 @@ fun DefaultTitleBar(onMoveAddPage: () -> Unit) {
     ) {
         Row(
             modifier = Modifier
-                .weight(1f).height(40.dp)
+                .weight(1f)
+                .height(40.dp)
                 .background(color = Color.Black),
             verticalAlignment = Alignment.CenterVertically
 

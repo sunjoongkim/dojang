@@ -24,9 +24,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.pager.PagerState
+import com.google.accompanist.pager.rememberPagerState
 import com.too.onions.dojang.service.MainService
 import com.too.onions.dojang.ui.main.AddContentView
 import com.too.onions.dojang.ui.main.AddPageView
@@ -155,6 +160,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalPagerApi::class)
 @Composable
 fun MainNavHost(
     modifier: Modifier = Modifier,
@@ -164,12 +170,18 @@ fun MainNavHost(
     val viewModel = remember { mutableStateOf(viewModel) }
     val addPageMode = remember { mutableStateOf(AddPageMode.INPUT_EMOJI) }
 
-    NavHost(navController = navController, startDestination = Screen.Main.route, modifier = modifier) {
-        composable(Screen.Main.route) {
+    NavHost(navController = navController, startDestination = Screen.Main.route + "/false", modifier = modifier) {
+        composable(Screen.Main.route + "/{isAddedPage}",
+            arguments = listOf(navArgument("isAddedPage") {
+                type = NavType.BoolType
+            })) {
+            val isAddedPage = it.arguments?.getBoolean("isAddedPage")
+
             SingleView(
                 addPageMode = addPageMode,
                 viewModel = viewModel.value,
-                navController = navController
+                navController = navController,
+                isAddedPage = isAddedPage
             )
         }
         composable(Screen.AddPage.route) {
