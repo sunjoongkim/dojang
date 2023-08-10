@@ -11,8 +11,8 @@ import com.too.onions.dojang.db.data.Content
 @Dao
 interface ContentDao {
 
-    @Query("SELECT * from contents")
-    suspend fun getAll() : List<Content>
+    @Query("SELECT * from contents where pageId = :pageId")
+    suspend fun getAll(pageId: Long) : List<Content>
 
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
@@ -24,6 +24,6 @@ interface ContentDao {
     @Delete
     suspend fun delete(content: Content)
 
-    @Query("DELETE from contents")
-    suspend fun deleteAll()
+    @Query("DELETE from contents where pageId = :pageId")
+    suspend fun deleteAll(pageId: Long)
 }

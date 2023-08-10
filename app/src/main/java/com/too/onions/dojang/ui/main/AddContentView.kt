@@ -49,6 +49,7 @@ import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.too.onions.dojang.R
 import com.too.onions.dojang.db.data.Content
+import com.too.onions.dojang.db.data.Page
 import com.too.onions.dojang.ui.Screen
 import com.too.onions.dojang.viewmodel.MainViewModel
 
@@ -95,6 +96,7 @@ fun AddContentView(
 
     RegistButton(contentName, contentDescription) {
         val content = Content(
+            pageId = viewModel.currentPage.value.id,
             color = selectedColor.value.toArgb(),
             imageUri = checkAndReplaceUri(selectedImageUri.value).toString(),
             title = contentName.value,

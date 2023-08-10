@@ -1,8 +1,10 @@
 package com.too.onions.dojang.viewmodel
 
 import android.content.Context
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -11,12 +13,16 @@ import com.too.onions.dojang.db.data.Page
 import com.too.onions.dojang.db.DojangDB
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+data class PageWithContents (
+    val page: Page,
+    val contents: List<Content>
+)
 
 class MainViewModel(context: Context): ViewModel() {
 
     private val context = context
 
-    var currentPage = mutableStateOf(0)
+    var currentPage: MutableState<Page> = mutableStateOf(Page())
 
     // ===== Page ======
     private val _pageList = MutableLiveData<List<Page>>()
@@ -25,6 +31,7 @@ class MainViewModel(context: Context): ViewModel() {
     fun insertPage(page: Page) {
         viewModelScope.launch(Dispatchers.IO) {
             DojangDB.getDatabase(context).pageDao().insert(page)
+            fetchAllPagesWithContents()
         }
     }
     fun deletePage(page: Page) {
@@ -47,6 +54,7 @@ class MainViewModel(context: Context): ViewModel() {
     fun insertContent(content: Content) {
         viewModelScope.launch(Dispatchers.IO) {
             DojangDB.getDatabase(context).contentDao().insert(content)
+            fetchAllPagesWithContents()
         }
     }
     fun deleteContent(content: Content) {
@@ -54,16 +62,31 @@ class MainViewModel(context: Context): ViewModel() {
             DojangDB.getDatabase(context).contentDao().delete(content)
         }
     }
-    fun deleteAllContent() {
+    fun deleteAllContent(pageId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            DojangDB.getDatabase(context).contentDao().deleteAll()
+            DojangDB.getDatabase(context).contentDao().deleteAll(pageId)
         }
     }
-    fun refreshContentList() {
+    fun refreshContentList(pageId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            _contentList.postValue(DojangDB.getDatabase(context).contentDao().getAll())
+            _contentList.postValue(DojangDB.getDatabase(context).contentDao().getAll(pageId))
         }
     }
     // =================
 
+    private val _pagesWithContents = MutableLiveData<List<PageWithContents>>()
+    val pagesWithContents: LiveData<List<PageWithContents>> get() = _pagesWithContents
+
+    fun fetchAllPagesWithContents() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val allPages = DojangDB.getDatabase(context).pageDao().getAll()
+
+            val result = allPages.map { page ->
+                val contentsForPage = DojangDB.getDatabase(context).contentDao().getAll(page.id)
+                PageWithContents(page, contentsForPage)
+            }
+
+            _pagesWithContents.postValue(result)
+        }
+    }
 }

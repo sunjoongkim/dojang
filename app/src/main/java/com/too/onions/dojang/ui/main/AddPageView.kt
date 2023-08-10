@@ -126,7 +126,7 @@ fun AddPageTitleBar(
         ) {
             Row(
                 modifier = Modifier
-                    .size(254.dp, 40.dp)
+                    .weight(1f).height(40.dp)
                     .background(color = Color.Black),
                 verticalAlignment = Alignment.CenterVertically
 
@@ -163,7 +163,7 @@ fun AddPageTitleBar(
                 Text (
                     text = text,
                     modifier = Modifier
-                        .width(192.dp)
+                        .weight(1f)
                         .align(Alignment.CenterVertically),
                     color = Color(0xffa3a3a3),
                     fontSize = 13.sp,
@@ -171,25 +171,13 @@ fun AddPageTitleBar(
                     textAlign = TextAlign.Left,
                     lineHeight = 12.sp
                 )
+
+                Spacer(modifier = Modifier.size(width = 44.dp, height = 40.dp))
                 Image(
                     painterResource(id = R.drawable.ic_btn_side_menu),
                     contentDescription = null,
                     modifier = Modifier.size(24.dp, 24.dp),
                     alignment = Alignment.CenterEnd
-                )
-            }
-            Spacer(modifier = Modifier.size(width = 4.dp, height = 40.dp))
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(color = Color(0xffdddddd))
-            ) {
-                Image(
-                    painterResource(id = R.drawable.ic_emoticon_2),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(24.dp, 24.dp)
-                        .align(Alignment.Center)
                 )
             }
             Spacer(modifier = Modifier.size(width = 4.dp, height = 40.dp))

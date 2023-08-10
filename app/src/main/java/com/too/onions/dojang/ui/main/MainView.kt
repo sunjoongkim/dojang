@@ -1,5 +1,6 @@
 package com.too.onions.dojang.ui.main
 
+import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -27,8 +29,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -44,10 +44,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -64,7 +66,9 @@ import com.too.onions.dojang.db.data.Page
 import com.too.onions.dojang.ui.AddPageMode
 import com.too.onions.dojang.ui.Screen
 import com.too.onions.dojang.viewmodel.MainViewModel
+import com.too.onions.dojang.viewmodel.PageWithContents
 import kotlinx.coroutines.launch
+import java.lang.Math.abs
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
@@ -78,17 +82,23 @@ fun SingleView(
     val contentPageIndex = remember { mutableStateOf(0) }
 
     LaunchedEffect(viewModel) {
-        viewModel.refreshPageList()
+        viewModel.fetchAllPagesWithContents()
     }
 
-    val pages: List<Page> by viewModel.pageList.observeAsState(emptyList())
-    val page = if (pages.isEmpty()) null else pages[viewModel.currentPage.value]
+    val pages: List<PageWithContents> by viewModel.pagesWithContents.observeAsState(emptyList())
+
+
+    val onMoveAddPage = {
+        isNeedInit.value = false
+
+        addPageMode.value = AddPageMode.INPUT_EMOJI
+        navController.navigate(Screen.AddPage.route)
+    }
 
     val pagerState = rememberPagerState(
         pageCount = if (pages.isEmpty()) 1 else pages.size,
-        initialPage = viewModel.currentPage.value
+        initialPage = viewModel.currentPage.value.index
     )
-
 
     Image(
         painterResource(id = R.drawable.bg_single),
@@ -97,7 +107,12 @@ fun SingleView(
         modifier = Modifier.fillMaxSize()
     )
 
-    TitleBar(pages, pagerState)
+    TitleBar(
+        viewModel,
+        pages,
+        pagerState,
+        onMoveAddPage
+    )
 
     AddFriendButton(isNeedInit)
 
@@ -114,11 +129,7 @@ fun SingleView(
     StampButton()
 
     if (isNeedInit.value) {
-        InitTitleDialog(
-            isNeedInit,
-            addPageMode,
-            navController
-        )
+        InitTitleDialog(isNeedInit, onMoveAddPage)
     }
     if (isShowContentDetail.value) {
         ContentDetailView(
@@ -132,8 +143,10 @@ fun SingleView(
 @OptIn(ExperimentalPagerApi::class)
 @Composable
 fun TitleBar(
-    pages: List<Page>,
-    pagerState: PagerState
+    viewModel: MainViewModel,
+    pages: List<PageWithContents>,
+    pagerState: PagerState,
+    onMoveAddPage: () -> Unit
 ) {
 
     val scope = rememberCoroutineScope()
@@ -153,52 +166,51 @@ fun TitleBar(
         ) {
 
             if (pages.isEmpty()) {
-                DefaultTitleBar()
+                DefaultTitleBar(onMoveAddPage)
             } else {
-                TabRow(
-                    selectedTabIndex = pagerState.currentPage,
-                    contentColor = Color.Black,
-                    modifier = Modifier.height(40.dp)
-                ) {
-                    pages.forEachIndexed { index, page ->
-                        Tab(
-                            selected = pagerState.currentPage == index,
-                            onClick = {
-                                scope.launch {
-                                    pagerState.animateScrollToPage(index)
-                                }
-                            },
-                            modifier = if (pagerState.currentPage == index) {
-                                Modifier
-                                    .weight(5f).height(40.dp)
-                                    .background(Color(0xffdddddd))
-                            } else {
-                                Modifier
-                                    .weight(1f).height(40.dp)
-                                    .background(Color(0xffdddddd))
-                            },
+                pages.forEachIndexed { index, page ->
 
-                            ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Start
-                            ) {
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Text(text = page.emoji)
+                    val offset = getOffSet(pagerState, index)
+                    val maxWidth = getTabMaxWidth(LocalConfiguration.current, pages.size)
+                    val currentWidth = lerp(40f, maxWidth, offset)
 
-                                if (pagerState.currentPage == index) {
-                                    Spacer(modifier = Modifier.width(10.dp))
-                                    Text(text = page.title)
+                    val currentColor = getColor(Color(0xffdddddd), Color(0xff000000), offset)
 
-                                    Image(
-                                        painterResource(id = R.drawable.ic_btn_side_menu),
-                                        contentDescription = null,
-                                        modifier = Modifier.size(24.dp, 24.dp),
-                                        alignment = Alignment.CenterEnd
-                                    )
-                                }
-                            }
+                    if (pagerState.currentPage == index) {
+                        // page 선택될때 currentPage 변경
+                        viewModel.currentPage.value = page.page
+
+                        SelectedTab(
+                            pages[index].page,
+                            Modifier
+                                .weight(1f).height(40.dp)
+                                .background(color = currentColor)
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .width(currentWidth).height(40.dp)
+                                .background(color = currentColor)
+                                .clickable(onClick = {
+                                    scope.launch {
+                                        pagerState.scrollToPage(page = index)
+                                    }
+                                })
+                        ) {
+                            Text(
+                                modifier = Modifier
+                                    .wrapContentHeight()
+                                    .width(22.dp)
+                                    .align(Alignment.Center),
+                                text = page.page.emoji,
+                                textAlign = TextAlign.Center,
+                                fontSize = 18.sp
+                            )
                         }
+                    }
+
+                    if (index < pages.size - 1) {
+                        Spacer(modifier = Modifier.size(4.dp))
                     }
                 }
                 if (pages.size < 3) {
@@ -207,6 +219,7 @@ fun TitleBar(
                         modifier = Modifier
                             .size(40.dp)
                             .background(color = Color(0xffdddddd))
+                            .clickable(onClick = onMoveAddPage)
                     ) {
                         Image(
                             painterResource(id = R.drawable.ic_add),
@@ -221,29 +234,147 @@ fun TitleBar(
         }
     }
 }
+fun getTabMaxWidth(
+    configuration: Configuration,
+    tabSize: Int
+) : Float {
+    val screenWidth = configuration.screenWidthDp
+    var resultWidth: Int
+
+    if (tabSize < 3) {
+        resultWidth = screenWidth - 48 - (tabSize * 44)
+    } else {
+        resultWidth = screenWidth - 48 - ((tabSize - 1) * 44)
+    }
+    return resultWidth.toFloat()
+}
+@OptIn(ExperimentalPagerApi::class)
+fun getOffSet(
+    pagerState: PagerState,
+    index: Int
+) : Float {
+    val isRight = pagerState.currentPageOffset > 0
+
+    if (isRight) {
+        if (index == pagerState.currentPage) {
+            return 1 - pagerState.currentPageOffset
+        } else if (index == pagerState.currentPage + 1) {
+            return pagerState.currentPageOffset
+        } else {
+            return 0f
+        }
+    } else {
+        if (index == pagerState.currentPage) {
+            return 1 + pagerState.currentPageOffset
+        } else if (index == pagerState.currentPage - 1) {
+            return abs(pagerState.currentPageOffset)
+        } else {
+            return 0f
+        }
+    }
+}
+fun lerp(start: Float, stop: Float, fraction: Float): Dp {
+    return ((1 - fraction) * start + fraction * stop).dp
+}
+fun getColor(
+    startColor: Color,
+    endColor: Color,
+    offset: Float
+) : Color {
+    val color = startColor.red * (1 - offset) + endColor.red * offset
+
+    return Color(
+        red = color,
+        green = color,
+        blue = color,
+        alpha = 1f
+    )
+}
+
 @Composable
-fun DefaultTitleBar() {
+fun DefaultTitleBar(onMoveAddPage: () -> Unit) {
     Row(
         modifier = Modifier
-            .size(298.dp, 40.dp)
-            .background(color = Color.Black),
+            .fillMaxSize()
+    ) {
+        Row(
+            modifier = Modifier
+                .weight(1f).height(40.dp)
+                .background(color = Color.Black),
+            verticalAlignment = Alignment.CenterVertically
+
+        ) {
+            Spacer(modifier = Modifier.size(width = 10.dp, height = 40.dp))
+
+            Image(
+                painterResource(id = R.drawable.ic_default_emoticon),
+                contentDescription = null,
+                modifier = Modifier.size(22.dp)
+            )
+
+            Spacer(modifier = Modifier.size(width = 10.dp, height = 40.dp))
+            Text (
+                text = "페이지명이 없어요.",
+                modifier = Modifier
+                    .weight(1f)
+                    .align(Alignment.CenterVertically),
+                color = Color(0xffa3a3a3),
+                fontSize = 13.sp,
+                maxLines = 2,
+                textAlign = TextAlign.Left,
+                lineHeight = 12.sp
+            )
+
+            Image(
+                painterResource(id = R.drawable.ic_btn_side_menu),
+                contentDescription = null,
+                modifier = Modifier.size(24.dp, 24.dp),
+                alignment = Alignment.CenterEnd
+            )
+        }
+        Spacer(modifier = Modifier.size(width = 4.dp, height = 40.dp))
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .background(color = Color(0xffdddddd))
+                .clickable(onClick = onMoveAddPage)
+        ) {
+            Image(
+                painterResource(id = R.drawable.ic_add),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(24.dp, 24.dp)
+                    .align(Alignment.Center)
+            )
+        }
+    }
+}
+@Composable
+fun SelectedTab(
+    page: Page,
+    modifier: Modifier
+) {
+    Row(
+        modifier = modifier,
         verticalAlignment = Alignment.CenterVertically
 
     ) {
         Spacer(modifier = Modifier.size(width = 10.dp, height = 40.dp))
 
-        Image(
-            painterResource(id = R.drawable.ic_default_emoticon),
-            contentDescription = null,
-            modifier = Modifier.size(22.dp)
+        Text(
+            modifier = Modifier
+                .wrapContentHeight()
+                .size(22.dp),
+            text = page.emoji,
+            textAlign = TextAlign.Center,
+            fontSize = 18.sp
         )
 
         Spacer(modifier = Modifier.size(width = 10.dp, height = 40.dp))
-
         Text (
-            text = "페이지명이 없어요.",
+            text = page.title,
             modifier = Modifier
-                .width(192.dp)
+                .weight(1f)
                 .align(Alignment.CenterVertically),
             color = Color(0xffa3a3a3),
             fontSize = 13.sp,
@@ -251,25 +382,12 @@ fun DefaultTitleBar() {
             textAlign = TextAlign.Left,
             lineHeight = 12.sp
         )
+
         Image(
             painterResource(id = R.drawable.ic_btn_side_menu),
             contentDescription = null,
             modifier = Modifier.size(24.dp, 24.dp),
             alignment = Alignment.CenterEnd
-        )
-    }
-    Spacer(modifier = Modifier.size(width = 4.dp, height = 40.dp))
-    Box(
-        modifier = Modifier
-            .size(40.dp)
-            .background(color = Color(0xffdddddd))
-    ) {
-        Image(
-            painterResource(id = R.drawable.ic_add),
-            contentDescription = null,
-            modifier = Modifier
-                .size(24.dp, 24.dp)
-                .align(Alignment.Center)
         )
     }
 }
@@ -298,7 +416,7 @@ fun AddFriendButton(isNeedInit: MutableState<Boolean>) {
 @Composable
 fun ListItemPager(
     pagerState: PagerState,
-    pages: List<Page>,
+    pages: List<PageWithContents>,
     isNeedInit: MutableState<Boolean>,
     viewModel: MainViewModel,
     navController: NavHostController,
@@ -311,12 +429,13 @@ fun ListItemPager(
             .fillMaxSize()
             .padding(start = 24.dp, top = 200.dp, end = 24.dp, bottom = 86.dp),
 
-    ) { page ->
+    ) { index ->
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
             ListItem(
+                index,
                 pages,
                 isNeedInit,
                 viewModel,
@@ -330,18 +449,14 @@ fun ListItemPager(
 }
 @Composable
 fun ListItem(
-    pages: List<Page>,
+    pageIndex: Int,
+    pages: List<PageWithContents>,
     isNeedInit: MutableState<Boolean>,
     viewModel: MainViewModel,
     navController: NavHostController,
     isShowContentDetail: MutableState<Boolean>,
     contentPageIndex: MutableState<Int>
 ) {
-    val contentList by viewModel.contentList.observeAsState(emptyList())
-
-    LaunchedEffect(viewModel) {
-        viewModel.refreshContentList()
-    }
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
@@ -349,13 +464,16 @@ fun ListItem(
             .fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(25.dp)
     ) {
-        items(contentList.size + 1) {index ->
+        val count = if (pages.isEmpty()) 1 else pages[pageIndex].contents.size + 1
 
-            if (index < contentList.size) {
+        items(count) {index ->
+            val size = if (pages.isEmpty()) 0 else pages[pageIndex].contents.size
+
+            if (index < size) {
                 ContentListItem(
                     isShowContentDetail = isShowContentDetail,
-                    pagerIndex = contentPageIndex,
-                    content = contentList[index],
+                    contentPagerIndex = contentPageIndex,
+                    content = pages[pageIndex].contents[index],
                     index = index)
             } else {
                 AddContentButton(
@@ -370,7 +488,7 @@ fun ListItem(
 }
 @Composable
 fun AddContentButton(
-    pages: List<Page>,
+    pages: List<PageWithContents>,
     isNeedInit: MutableState<Boolean>,
     viewModel: MainViewModel,
     navController: NavHostController
@@ -408,7 +526,7 @@ fun AddContentButton(
 @Composable
 fun ContentListItem(
     isShowContentDetail: MutableState<Boolean>,
-    pagerIndex: MutableState<Int>,
+    contentPagerIndex: MutableState<Int>,
     content: Content,
     index: Int,
 ) {
@@ -417,7 +535,7 @@ fun ContentListItem(
         modifier = Modifier
             .size(150.dp, 165.dp)
             .clickable(onClick = {
-                pagerIndex.value = index
+                contentPagerIndex.value = index
                 isShowContentDetail.value = true
             })
     ) {
@@ -482,8 +600,8 @@ fun BottomBar(viewModel: MainViewModel) {
                 painterResource(id = R.drawable.ic_setting),
                 contentDescription = null,
                 modifier = Modifier.clickable {
-                    viewModel.deleteAllContent()
-                    viewModel.refreshContentList()
+                    viewModel.deleteAllContent(viewModel.currentPage.value.id)
+                    viewModel.fetchAllPagesWithContents()
                 }
             )
         }
@@ -510,8 +628,7 @@ fun StampButton() {
 @Composable
 fun InitTitleDialog(
     isNeedInit: MutableState<Boolean>,
-    addPageMode: MutableState<AddPageMode>,
-    navController: NavHostController
+    onMoveAddPage: () -> Unit
 ) {
     Dialog(
         onDismissRequest = { isNeedInit.value = false }
@@ -560,12 +677,7 @@ fun InitTitleDialog(
                 Spacer(modifier = Modifier.size(10.dp))
 
                 Button(
-                    onClick = {
-                        isNeedInit.value = false
-
-                        addPageMode.value = AddPageMode.INPUT_EMOJI
-                        navController.navigate(Screen.AddPage.route)
-                    },
+                    onClick = onMoveAddPage,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Transparent
                     ),

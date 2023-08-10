@@ -7,6 +7,7 @@ import androidx.room.PrimaryKey
 data class Content (
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
+    val pageId: Long = 0L,
     val color: Int = 0,
     val imageUri: String?,
     val title: String = "",
