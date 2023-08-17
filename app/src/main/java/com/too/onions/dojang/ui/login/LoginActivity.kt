@@ -39,6 +39,7 @@ import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
 import com.google.firebase.auth.FirebaseAuth
 import com.too.onions.dojang.R
+import com.too.onions.dojang.ui.MainActivity
 import com.too.onions.dojang.ui.theme.DojangTheme
 import kotlinx.coroutines.delay
 
@@ -72,7 +73,10 @@ class LoginActivity : ComponentActivity() {
             // Successfully signed in
             val user = FirebaseAuth.getInstance().currentUser
             Log.e("@@@@@", "Name : ${user?.displayName}, UUID : ${user?.uid}, Email : ${user?.email}")
-            // ...
+
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
+
         } else {
             Log.e("@@@@@", "Login Fail1!!!!")
             // Sign in failed. If response is null the user canceled the

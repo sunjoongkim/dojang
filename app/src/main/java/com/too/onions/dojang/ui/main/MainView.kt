@@ -1,6 +1,7 @@
 package com.too.onions.dojang.ui.main
 
 import android.content.res.Configuration
+import android.util.Size
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -46,6 +47,7 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
@@ -65,6 +67,7 @@ import com.too.onions.dojang.db.data.Content
 import com.too.onions.dojang.db.data.Page
 import com.too.onions.dojang.ui.AddPageMode
 import com.too.onions.dojang.ui.Screen
+import com.too.onions.dojang.ui.common.CommonDialog
 import com.too.onions.dojang.viewmodel.MainViewModel
 import com.too.onions.dojang.viewmodel.PageWithContents
 import kotlinx.coroutines.launch
@@ -91,10 +94,7 @@ fun SingleView(
 
 
     val onMoveAddPage = {
-        isNeedInit.value = false
 
-        addPageMode.value = AddPageMode.INPUT_EMOJI
-        navController.navigate(Screen.AddPage.route)
     }
 
     val pagerState = rememberPagerState(
@@ -137,7 +137,13 @@ fun SingleView(
     StampButton()
 
     if (isNeedInit.value) {
-        InitTitleDialog(isNeedInit, onMoveAddPage)
+        CommonDialog(
+            showDialog = isNeedInit,
+            title = stringResource(id = R.string.popup_content_regist_page_title),
+            cancelText = stringResource(id = R.string.popup_content_regist_page_cancel),
+            confirmText = stringResource(id = R.string.popup_content_regist_page_confirm),
+            onConfirm = onMoveAddPage
+        )
     }
     if (isShowContentDetail.value) {
         ContentDetailView(

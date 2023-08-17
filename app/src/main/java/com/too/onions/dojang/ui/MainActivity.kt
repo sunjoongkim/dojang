@@ -154,8 +154,6 @@ class MainActivity : ComponentActivity() {
                 MSG_CHECK_START_SERVICE -> checkServiceStarted()
 
                 MSG_SHOW_MAIN_VIEW -> {
-                    val intent = Intent(this@MainActivity, LoginActivity::class.java)
-                    startActivity(intent)
                 }
             }
         }
