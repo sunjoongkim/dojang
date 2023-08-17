@@ -33,6 +33,7 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.PagerState
 import com.google.accompanist.pager.rememberPagerState
 import com.too.onions.dojang.service.MainService
+import com.too.onions.dojang.ui.login.LoginActivity
 import com.too.onions.dojang.ui.main.AddContentView
 import com.too.onions.dojang.ui.main.AddPageView
 import com.too.onions.dojang.ui.main.SingleView
@@ -153,7 +154,8 @@ class MainActivity : ComponentActivity() {
                 MSG_CHECK_START_SERVICE -> checkServiceStarted()
 
                 MSG_SHOW_MAIN_VIEW -> {
-
+                    val intent = Intent(this@MainActivity, LoginActivity::class.java)
+                    startActivity(intent)
                 }
             }
         }

@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "156449335349",
+    "project_id": "dojang-b778b",
+    "storage_bucket": "dojang-b778b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:156449335349:android:27578a7b32e474528de97c",
+        "android_client_info": {
+          "package_name": "com.too.onions.dojang"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "156449335349-7eq7aernh5vilfrddskfu999j9fcop2b.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.too.onions.dojang",
+            "certificate_hash": "d5a7d02abde16d3cb6988a7ee341eef5ee81717d"
+          }
+        },
+        {
+          "client_id": "156449335349-d4b52c3l2i0q2ifs1tjrqe8rrjluo7ld.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCXyNliIPrc3AC24zyjGBzqqxdAUYI6-K4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "156449335349-d4b52c3l2i0q2ifs1tjrqe8rrjluo7ld.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

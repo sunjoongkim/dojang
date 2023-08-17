@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">Dojang</string>
     <string name="title_activity_add_content_view">AddContentView</string>
+
+    <string name="login_google">구글로 로그인하기</string>
+    <string name="login_apple">애플로 로그인하기</string>
+    <string name="login_single">가입없이 혼자 하기</string>
 </resources>
