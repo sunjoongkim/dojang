@@ -38,6 +38,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -64,6 +65,8 @@ import com.google.accompanist.pager.rememberPagerState
 import com.too.onions.dojang.R
 import com.too.onions.dojang.db.data.Content
 import com.too.onions.dojang.db.data.Page
+import com.too.onions.dojang.ui.AddPageMode
+import com.too.onions.dojang.ui.PlayMode
 import com.too.onions.dojang.ui.Screen
 import com.too.onions.dojang.ui.common.CommonDialog
 import com.too.onions.dojang.viewmodel.MainViewModel
@@ -77,21 +80,28 @@ import java.lang.Math.abs
 fun MainView(
     viewModel: MainViewModel,
     navController: NavHostController,
+    addPageMode: MutableState<AddPageMode>,
     isAddedPage: Boolean?
 ) {
     val isNeedInit = remember { mutableStateOf(false) }
     val isShowContentDetail = remember { mutableStateOf(false) }
     val contentPageIndex = remember { mutableStateOf(0) }
 
+    var currentPlayMode by remember { mutableStateOf(PlayMode.SINGLE)}
+
     LaunchedEffect(viewModel) {
         viewModel.fetchAllPagesWithContents()
+        currentPlayMode = if (viewModel.currentPage.value.friends.isEmpty()) PlayMode.SINGLE else PlayMode.MULTI
     }
 
     val pages: List<PageWithContents> by viewModel.pagesWithContents.observeAsState(emptyList())
 
 
     val onMoveAddPage = {
+        isNeedInit.value = false
 
+        addPageMode.value = AddPageMode.INPUT_EMOJI
+        navController.navigate(Screen.AddPage.route)
     }
 
     val pagerState = rememberPagerState(
@@ -119,9 +129,8 @@ fun MainView(
         onMoveAddPage
     )
 
-    AddFriendButton(isNeedInit)
 
-    ListItemPager(
+    PageItemPager(
         pagerState,
         pages,
         isNeedInit,
@@ -413,18 +422,29 @@ fun SelectedTab(
     }
 }
 @Composable
-fun AddFriendButton(isNeedInit: MutableState<Boolean>) {
+fun FriendsBar(
+    pages: List<PageWithContents>,
+    viewModel: MainViewModel,
+    isNeedInit: MutableState<Boolean>
+) {
+    Row(
+
+    ) {
+
+    }
     ElevatedButton(
         onClick = {
-            // 초기 설정 필요한지 체크 함수 필요
-            isNeedInit.value = true
+            if (pages.isEmpty() || viewModel.currentPage.value.title.isEmpty()) {
+                isNeedInit.value = true
+            } else {
+                // 친구 추천 화면
+            }
         },
         shape = CircleShape,
         contentPadding = PaddingValues(0.dp),
         elevation = ButtonDefaults.buttonElevation(20.dp, 15.dp, 0.dp, 15.dp, 10.dp),
         modifier = Modifier
             .size(65.dp, 170.dp)
-            .padding(start = 25.dp, top = 130.dp)
 
     ) {
         Icon(
@@ -433,9 +453,10 @@ fun AddFriendButton(isNeedInit: MutableState<Boolean>) {
         )
     }
 }
+
 @OptIn(ExperimentalPagerApi::class)
 @Composable
-fun ListItemPager(
+fun PageItemPager(
     pagerState: PagerState,
     pages: List<PageWithContents>,
     isNeedInit: MutableState<Boolean>,
@@ -448,23 +469,28 @@ fun ListItemPager(
         state = pagerState,
         modifier = Modifier
             .fillMaxSize()
-            .padding(start = 24.dp, top = 200.dp, end = 24.dp, bottom = 86.dp),
+            .padding(start = 24.dp, top = 130.dp, end = 24.dp, bottom = 86.dp),
 
     ) { index ->
-        Box(
+        Column(
             modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            ListItem(
-                index,
-                pages,
-                isNeedInit,
-                viewModel,
-                navController,
-                isShowContentDetail,
-                contentPageIndex
+            FriendsBar(
+                pages = pages,
+                viewModel = viewModel,
+                isNeedInit = isNeedInit
             )
 
+            ListItem(
+                pageIndex = index,
+                pages = pages,
+                isNeedInit = isNeedInit,
+                viewModel = viewModel,
+                navController = navController,
+                isShowContentDetail = isShowContentDetail,
+                contentPageIndex = contentPageIndex
+            )
         }
     }
 }
@@ -521,9 +547,7 @@ fun AddContentButton(
     ) {
         Button(
             onClick = {
-                // 버튼을 클릭했을 때 수행할 동작 작성
-
-                if (pages.isEmpty()) {
+                if (pages.isEmpty() || viewModel.currentPage.value.title.isEmpty()) {
                     isNeedInit.value = true
                 } else {
                     navController.navigate(Screen.AddContent.route)

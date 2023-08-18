@@ -156,6 +156,7 @@ fun MainNavHost(
             MainView(
                 viewModel = viewModel.value,
                 navController = navController,
+                addPageMode = addPageMode,
                 isAddedPage = isAddedPage
             )
         }
