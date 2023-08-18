@@ -4,12 +4,14 @@ import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 import android.util.Log
+import com.google.firebase.auth.FirebaseUser
 
 class MainService : Service() {
 
+    private var currentUser: FirebaseUser? = null
 
     companion object {
-        var mService : MainService? = null
+        var service : MainService? = null
     }
 
     override fun onBind(intent: Intent): IBinder {
@@ -19,10 +21,18 @@ class MainService : Service() {
     override fun onCreate() {
         super.onCreate()
         Log.e("MainService", "onCreate")
-        mService = this
+        service = this
     }
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         return super.onStartCommand(intent, flags, startId)
         Log.e("MainService", "onStartCommand")
     }
+
+    fun setUser(user: FirebaseUser?) {
+        currentUser = user
+    }
+    fun getUser() : FirebaseUser? {
+        return currentUser
+    }
+
 }

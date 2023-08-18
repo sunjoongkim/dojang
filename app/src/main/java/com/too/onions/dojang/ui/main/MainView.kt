@@ -1,7 +1,6 @@
 package com.too.onions.dojang.ui.main
 
 import android.content.res.Configuration
-import android.util.Size
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -65,7 +64,6 @@ import com.google.accompanist.pager.rememberPagerState
 import com.too.onions.dojang.R
 import com.too.onions.dojang.db.data.Content
 import com.too.onions.dojang.db.data.Page
-import com.too.onions.dojang.ui.AddPageMode
 import com.too.onions.dojang.ui.Screen
 import com.too.onions.dojang.ui.common.CommonDialog
 import com.too.onions.dojang.viewmodel.MainViewModel
@@ -76,8 +74,7 @@ import java.lang.Math.abs
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
-fun SingleView(
-    addPageMode: MutableState<AddPageMode>,
+fun MainView(
     viewModel: MainViewModel,
     navController: NavHostController,
     isAddedPage: Boolean?

@@ -2,6 +2,9 @@ package com.too.onions.dojang.ui.login
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.Message
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -39,6 +42,7 @@ import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
 import com.google.firebase.auth.FirebaseAuth
 import com.too.onions.dojang.R
+import com.too.onions.dojang.service.MainService
 import com.too.onions.dojang.ui.MainActivity
 import com.too.onions.dojang.ui.theme.DojangTheme
 import kotlinx.coroutines.delay
@@ -49,6 +53,7 @@ enum class LoginMode {
 }
 class LoginActivity : ComponentActivity() {
 
+    private var service: MainService? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,8 +62,6 @@ class LoginActivity : ComponentActivity() {
                 LoginView(signInLauncher)
             }
         }
-
-
     }
 
     private val signInLauncher = registerForActivityResult(
@@ -74,15 +77,36 @@ class LoginActivity : ComponentActivity() {
             val user = FirebaseAuth.getInstance().currentUser
             Log.e("@@@@@", "Name : ${user?.displayName}, UUID : ${user?.uid}, Email : ${user?.email}")
 
+            if (MainService.service != null) {
+                MainService.service!!.setUser(user)
+            }
+
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
+            finish()
 
         } else {
-            Log.e("@@@@@", "Login Fail1!!!!")
+            Log.e("@@@@@", "Login Fail!!!!")
             // Sign in failed. If response is null the user canceled the
             // sign-in flow using the back button. Otherwise check
             // response.getError().getErrorCode() and handle the error.
             // ...
+        }
+    }
+
+
+
+    val loginHandler: LoginHandler = LoginHandler()
+
+    companion object {
+        const val MSG_NONE: Int = -1
+    }
+
+    inner class LoginHandler : Handler(Looper.getMainLooper()) {
+        override fun handleMessage(msg: Message) {
+            when (msg.what) {
+
+            }
         }
     }
 }
@@ -92,13 +116,13 @@ fun startLoginProcess(
     loginMode: LoginMode
 ) {
 
-    val idpConfig = when (loginMode) {
+    val loginBuilder = when (loginMode) {
         LoginMode.GOOGLE -> AuthUI.IdpConfig.GoogleBuilder().build()
         LoginMode.APPLE -> AuthUI.IdpConfig.AppleBuilder().build()
     }
 
     val providers = arrayListOf(
-        idpConfig
+        loginBuilder
     )
 
     val signInIntent = AuthUI.getInstance()
@@ -108,6 +132,7 @@ fun startLoginProcess(
 
     signInLauncher.launch(signInIntent)
 }
+
 
 @Composable
 fun LoginView(

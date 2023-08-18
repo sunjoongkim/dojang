@@ -19,7 +19,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
-import androidx.emoji2.emojipicker.EmojiViewItem
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -29,14 +28,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.google.accompanist.pager.ExperimentalPagerApi
-import com.google.accompanist.pager.PagerState
-import com.google.accompanist.pager.rememberPagerState
 import com.too.onions.dojang.service.MainService
-import com.too.onions.dojang.ui.login.LoginActivity
 import com.too.onions.dojang.ui.main.AddContentView
 import com.too.onions.dojang.ui.main.AddPageView
-import com.too.onions.dojang.ui.main.SingleView
+import com.too.onions.dojang.ui.main.MainView
 import com.too.onions.dojang.ui.theme.DojangTheme
 import com.too.onions.dojang.viewmodel.MainViewModel
 
@@ -54,6 +49,11 @@ data class ItemData (
     var description: String
 )
 
+enum class PlayMode {
+    SINGLE,
+    MULTI
+}
+
 enum class AddPageMode {
     INPUT_EMOJI,
     INPUT_TITLE,
@@ -65,7 +65,6 @@ class MainActivity : ComponentActivity() {
     // 갤러리 접근 권한 요청에 사용되는 request key
     private val READ_EXTERNAL_STORAGE_REQUEST_KEY = 101
 
-    private var service: MainService? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,22 +74,9 @@ class MainActivity : ComponentActivity() {
             }
         }
         checkGalleryPermission(this) {}
-        checkServiceStarted()
     }
 
-    fun checkServiceStarted() {
-        service = MainService.mService
 
-        if (service == null) {
-            var intent = Intent(this, MainService::class.java)
-            startService(intent)
-
-            mainHandler.sendEmptyMessageDelayed(MSG_CHECK_START_SERVICE, DELAY_CHECK_START_SERVICE)
-        }
-        else
-            mainHandler.sendEmptyMessageDelayed(MSG_SHOW_MAIN_VIEW, DELAY_SHOW_MAIN_VIEW)
-
-    }
 
 
     // 갤러리 접근 권한 체크 및 요청 함수
@@ -141,26 +127,16 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         const val MSG_NONE: Int = -1
-        const val MSG_CHECK_START_SERVICE: Int = MSG_NONE + 1
-        const val MSG_SHOW_MAIN_VIEW: Int = MSG_CHECK_START_SERVICE + 1
 
-        const val DELAY_CHECK_START_SERVICE: Long = 300
-        const val DELAY_SHOW_MAIN_VIEW: Long = 700
     }
 
     inner class MainHandler : Handler(Looper.getMainLooper()) {
         override fun handleMessage(msg: Message) {
-            when (msg.what) {
-                MSG_CHECK_START_SERVICE -> checkServiceStarted()
 
-                MSG_SHOW_MAIN_VIEW -> {
-                }
-            }
         }
     }
 }
 
-@OptIn(ExperimentalPagerApi::class)
 @Composable
 fun MainNavHost(
     modifier: Modifier = Modifier,
@@ -177,8 +153,7 @@ fun MainNavHost(
             })) {
             val isAddedPage = it.arguments?.getBoolean("isAddedPage")
 
-            SingleView(
-                addPageMode = addPageMode,
+            MainView(
                 viewModel = viewModel.value,
                 navController = navController,
                 isAddedPage = isAddedPage
