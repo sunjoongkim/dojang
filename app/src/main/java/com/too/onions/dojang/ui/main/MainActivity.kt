@@ -1,8 +1,6 @@
-package com.too.onions.dojang.ui
+package com.too.onions.dojang.ui.main
 
 import android.Manifest
-import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
@@ -17,30 +15,27 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.too.onions.dojang.service.MainService
-import com.too.onions.dojang.ui.main.AddContentView
-import com.too.onions.dojang.ui.main.AddPageView
-import com.too.onions.dojang.ui.main.MainView
+import com.too.onions.dojang.ui.main.view.AddContentView
+import com.too.onions.dojang.ui.main.view.AddPageView
+import com.too.onions.dojang.ui.main.view.MainView
 import com.too.onions.dojang.ui.theme.DojangTheme
 import com.too.onions.dojang.viewmodel.MainViewModel
+import dagger.hilt.android.AndroidEntryPoint
 
 
-sealed class Screen(val route: String) {
-    object Main : Screen("main")
-    object AddPage : Screen("add_page")
-    object AddContent : Screen("add_content")
-    object AddFriend : Screen("add_friend")
+sealed class MainScreen(val route: String) {
+    object Main : MainScreen("main")
+    object AddPage : MainScreen("add_page")
+    object AddContent : MainScreen("add_content")
+    object AddFriend : MainScreen("add_friend")
 
 }
 
@@ -60,6 +55,7 @@ enum class AddPageMode {
     INPUT_DONE
 }
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     // 갤러리 접근 권한 요청에 사용되는 request key
@@ -141,13 +137,14 @@ class MainActivity : ComponentActivity() {
 fun MainNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
-    viewModel: MainViewModel = provideMainViewModel(LocalContext.current)
+    viewModel: MainViewModel = hiltViewModel()
 ) {
     val viewModel = remember { mutableStateOf(viewModel) }
     val addPageMode = remember { mutableStateOf(AddPageMode.INPUT_EMOJI) }
 
-    NavHost(navController = navController, startDestination = Screen.Main.route + "/false", modifier = modifier) {
-        composable(Screen.Main.route + "/{isAddedPage}",
+    NavHost(navController = navController, startDestination = MainScreen.Main.route + "/false", modifier = modifier) {
+        composable(
+            MainScreen.Main.route + "/{isAddedPage}",
             arguments = listOf(navArgument("isAddedPage") {
                 type = NavType.BoolType
             })) {
@@ -160,28 +157,16 @@ fun MainNavHost(
                 isAddedPage = isAddedPage
             )
         }
-        composable(Screen.AddPage.route) {
+        composable(MainScreen.AddPage.route) {
             AddPageView(
                 addPageMode = addPageMode,
                 viewModel.value,
                 navController
             )
         }
-        composable(Screen.AddContent.route) {
+        composable(MainScreen.AddContent.route) {
             AddContentView(viewModel.value, navController)
         }
     }
 }
-@Composable
-fun provideMainViewModel(context: Context): MainViewModel {
-    return viewModel(factory = MainViewModelFactory(context))
-}
-class MainViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return MainViewModel(context) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
-}
+

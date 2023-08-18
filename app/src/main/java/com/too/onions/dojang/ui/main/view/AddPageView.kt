@@ -1,4 +1,4 @@
-package com.too.onions.dojang.ui.main
+package com.too.onions.dojang.ui.main.view
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -7,14 +7,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
@@ -27,8 +25,6 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -52,11 +48,10 @@ import androidx.emoji2.emojipicker.EmojiPickerView
 import androidx.emoji2.emojipicker.EmojiViewItem
 import androidx.navigation.NavHostController
 import com.google.accompanist.pager.ExperimentalPagerApi
-import com.google.accompanist.pager.PagerState
 import com.too.onions.dojang.R
 import com.too.onions.dojang.db.data.Page
-import com.too.onions.dojang.ui.AddPageMode
-import com.too.onions.dojang.ui.Screen
+import com.too.onions.dojang.ui.main.AddPageMode
+import com.too.onions.dojang.ui.main.MainScreen
 import com.too.onions.dojang.viewmodel.MainViewModel
 
 @OptIn(ExperimentalPagerApi::class)
@@ -96,8 +91,8 @@ fun AddPageView(
                     )
                     viewModel.insertPage(page)
 
-                    navController.navigate(Screen.Main.route + "/true") {
-                        popUpTo(Screen.Main.route)
+                    navController.navigate(MainScreen.Main.route + "/true") {
+                        popUpTo(MainScreen.Main.route)
                         launchSingleTop = true
                     }
                 }
@@ -248,8 +243,8 @@ fun AddEmoji(
             Button(
                 onClick = {
                     emoji.value = EmojiViewItem("", emptyList())
-                    navController.navigate(Screen.Main.route) {
-                        popUpTo(Screen.Main.route)
+                    navController.navigate(MainScreen.Main.route) {
+                        popUpTo(MainScreen.Main.route)
                         launchSingleTop = true
                     }
                 },

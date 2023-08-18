@@ -1,4 +1,4 @@
-package com.too.onions.dojang.ui.main
+package com.too.onions.dojang.ui.main.view
 
 import android.net.Uri
 import android.provider.DocumentsContract
@@ -35,7 +35,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
@@ -49,8 +48,7 @@ import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.too.onions.dojang.R
 import com.too.onions.dojang.db.data.Content
-import com.too.onions.dojang.db.data.Page
-import com.too.onions.dojang.ui.Screen
+import com.too.onions.dojang.ui.main.MainScreen
 import com.too.onions.dojang.viewmodel.MainViewModel
 
 @Composable
@@ -106,8 +104,8 @@ fun AddContentView(
 
         viewModel.insertContent(content)
 
-        navController.navigate(Screen.Main.route + "/false") {
-            popUpTo(Screen.Main.route)
+        navController.navigate(MainScreen.Main.route + "/false") {
+            popUpTo(MainScreen.Main.route)
             launchSingleTop = true
         }
     }
@@ -151,7 +149,7 @@ fun ContentTitleBar(navController: NavHostController) {
                     interactionSource = MutableInteractionSource(),
                     indication = null,
                     onClick = {
-                        navController.navigate(Screen.Main.route + "/false")
+                        navController.navigate(MainScreen.Main.route + "/false")
                     }
                 )
         ) {

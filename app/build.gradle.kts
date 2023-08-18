@@ -3,6 +3,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("kotlin-kapt")
     id("com.google.gms.google-services")
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -80,6 +81,10 @@ dependencies {
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.firebaseui:firebase-ui-auth:7.2.0")
 
+    implementation("com.google.dagger:hilt-android:2.44")
+    kapt("com.google.dagger:hilt-android-compiler:2.44")
+    implementation("androidx.hilt:hilt-navigation-fragment:1.0.0")
+    implementation("androidx.hilt:hilt-navigation-compose:1.0.0")
 
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1")
 
@@ -99,4 +104,8 @@ dependencies {
     implementation("androidx.emoji2:emoji2:1.3.0")
     implementation("androidx.emoji2:emoji2-views:1.3.0")
     implementation("androidx.emoji2:emoji2-views-helper:1.3.0")
+}
+
+kapt {
+    correctErrorTypes = true
 }

@@ -7,6 +7,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.too.onions.dojang.db.dao.ContentDao
 import com.too.onions.dojang.db.dao.PageDao
+import com.too.onions.dojang.db.dao.UserDao
 import com.too.onions.dojang.db.data.Content
 import com.too.onions.dojang.db.data.Converters
 import com.too.onions.dojang.db.data.Page
@@ -18,6 +19,7 @@ abstract class DojangDB : RoomDatabase() {
 
     abstract fun contentDao(): ContentDao
     abstract fun pageDao(): PageDao
+    abstract fun userDao(): UserDao
 
     companion object {
         @Volatile

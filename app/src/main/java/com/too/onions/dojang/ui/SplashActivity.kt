@@ -15,6 +15,7 @@ import androidx.compose.ui.res.painterResource
 import com.too.onions.dojang.R
 import com.too.onions.dojang.service.MainService
 import com.too.onions.dojang.ui.login.LoginActivity
+import com.too.onions.dojang.ui.main.MainActivity
 import com.too.onions.dojang.ui.theme.DojangTheme
 
 

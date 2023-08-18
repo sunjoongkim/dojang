@@ -1,4 +1,4 @@
-package com.too.onions.dojang.ui.main
+package com.too.onions.dojang.ui.main.view
 
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
@@ -65,10 +65,10 @@ import com.google.accompanist.pager.rememberPagerState
 import com.too.onions.dojang.R
 import com.too.onions.dojang.db.data.Content
 import com.too.onions.dojang.db.data.Page
-import com.too.onions.dojang.ui.AddPageMode
-import com.too.onions.dojang.ui.PlayMode
-import com.too.onions.dojang.ui.Screen
 import com.too.onions.dojang.ui.common.CommonDialog
+import com.too.onions.dojang.ui.main.AddPageMode
+import com.too.onions.dojang.ui.main.MainScreen
+import com.too.onions.dojang.ui.main.PlayMode
 import com.too.onions.dojang.viewmodel.MainViewModel
 import com.too.onions.dojang.viewmodel.PageWithContents
 import kotlinx.coroutines.launch
@@ -101,7 +101,7 @@ fun MainView(
         isNeedInit.value = false
 
         addPageMode.value = AddPageMode.INPUT_EMOJI
-        navController.navigate(Screen.AddPage.route)
+        navController.navigate(MainScreen.AddPage.route)
     }
 
     val pagerState = rememberPagerState(
@@ -176,13 +176,13 @@ fun TitleBar(
         color = Color(0xfff2f1f3),
         modifier = Modifier
             .fillMaxWidth()
-            .height(110.dp)
+            .height(70.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(40.dp)
-                .offset(y = 60.dp)
+                .offset(y = 20.dp)
                 .padding(start = 24.dp, end = 24.dp)
         ) {
 
@@ -428,30 +428,44 @@ fun FriendsBar(
     isNeedInit: MutableState<Boolean>
 ) {
     Row(
-
-    ) {
-
-    }
-    ElevatedButton(
-        onClick = {
-            if (pages.isEmpty() || viewModel.currentPage.value.title.isEmpty()) {
-                isNeedInit.value = true
-            } else {
-                // 친구 추천 화면
-            }
-        },
-        shape = CircleShape,
-        contentPadding = PaddingValues(0.dp),
-        elevation = ButtonDefaults.buttonElevation(20.dp, 15.dp, 0.dp, 15.dp, 10.dp),
         modifier = Modifier
-            .size(65.dp, 170.dp)
-
+            .fillMaxWidth()
+            .height(60.dp)
     ) {
-        Icon(
-            painterResource(id = R.drawable.ic_btn_add_friend),
-            contentDescription = null,
+        Text(
+            text = "선",
+            modifier = Modifier
+                .background(color = Color.White, shape = CircleShape)
+                .size(40.dp)
         )
+        Spacer(modifier = Modifier.size(10.dp))
+        Box(
+            modifier = Modifier.fillMaxSize()
+        ) {
+
+        }
+        Spacer(modifier = Modifier.size(10.dp))
+        ElevatedButton(
+            onClick = {
+                if (pages.isEmpty() || viewModel.currentPage.value.title.isEmpty()) {
+                    isNeedInit.value = true
+                } else {
+                    // 친구 추천 화면
+                }
+            },
+            shape = CircleShape,
+            contentPadding = PaddingValues(0.dp),
+            elevation = ButtonDefaults.buttonElevation(20.dp, 15.dp, 0.dp, 15.dp, 10.dp),
+            modifier = Modifier.size(40.dp)
+
+        ) {
+            Icon(
+                painterResource(id = R.drawable.ic_btn_add_friend),
+                contentDescription = null,
+            )
+        }
     }
+
 }
 
 @OptIn(ExperimentalPagerApi::class)
@@ -469,7 +483,7 @@ fun PageItemPager(
         state = pagerState,
         modifier = Modifier
             .fillMaxSize()
-            .padding(start = 24.dp, top = 130.dp, end = 24.dp, bottom = 86.dp),
+            .padding(start = 24.dp, top = 90.dp, end = 24.dp, bottom = 86.dp),
 
     ) { index ->
         Column(
@@ -550,7 +564,7 @@ fun AddContentButton(
                 if (pages.isEmpty() || viewModel.currentPage.value.title.isEmpty()) {
                     isNeedInit.value = true
                 } else {
-                    navController.navigate(Screen.AddContent.route)
+                    navController.navigate(MainScreen.AddContent.route)
                 }
             },
             modifier = Modifier
@@ -667,78 +681,6 @@ fun StampButton() {
                 .size(72.dp, 72.dp)
                 .align(Alignment.BottomStart)
         )
-    }
-}
-
-@Composable
-fun InitTitleDialog(
-    isNeedInit: MutableState<Boolean>,
-    onMoveAddPage: () -> Unit
-) {
-    Dialog(
-        onDismissRequest = { isNeedInit.value = false }
-    ) {
-        Column(
-            modifier = Modifier
-                .size(320.dp, 220.dp)
-                .background(color = Color(0xfff3f2f4), shape = RectangleShape)
-                .border(2.dp, color = Color(0xff242424)),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Image(
-                painterResource(id = R.drawable.bg_pattern_dialog_png),
-                contentDescription = null,
-                modifier = Modifier.size(312.dp, 20.dp)
-            )
-
-            Spacer(modifier = Modifier.size(47.dp))
-
-            Text(
-                text = "도장깨기 페이지명을\n먼저 등록해 주세요",
-                fontSize = 18.sp,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.size(47.dp))
-
-            Row {
-                Button(
-                    onClick = { isNeedInit.value = false },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent
-                    ),
-                    modifier = Modifier
-                        .size(120.dp, 46.dp)
-                        .background(color = Color(0xff61b476), shape = RectangleShape)
-                        .border(2.dp, color = Color(0xff17274e))
-                ) {
-                    Text(
-                        text = "닫기",
-                        fontSize = 14.sp,
-                        fontFamily = FontFamily(Font(R.font.neo_dunggeunmo_pro))
-                    )
-                }
-
-                Spacer(modifier = Modifier.size(10.dp))
-
-                Button(
-                    onClick = onMoveAddPage,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent
-                    ),
-                    modifier = Modifier
-                        .size(120.dp, 46.dp)
-                        .background(color = Color(0xff123485), shape = RectangleShape)
-                        .border(2.dp, color = Color(0xff17274e))
-                ) {
-                    Text(
-                        text = "등록하기",
-                        fontSize = 14.sp,
-                        fontFamily = FontFamily(Font(R.font.neo_dunggeunmo_pro))
-                    )
-                }
-            }
-        }
     }
 }
 

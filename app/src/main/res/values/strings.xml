@@ -6,6 +6,9 @@
     <string name="login_apple">애플로 로그인하기</string>
     <string name="login_single">가입없이 혼자 하기</string>
 
+    <string name="join_title"><![CDATA[<]]> 회원가입</string>
+
+
     <string name="popup_login_single_title">가입없이 진행하면\n등록했던 자료가 유실되거나,\n친구초대가 안돼요.\n그래도 괜찮으신가요?</string>
     <string name="popup_login_single_cancel">취소</string>
     <string name="popup_login_single_confirm">괜찮아요.</string>

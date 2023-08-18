@@ -5,10 +5,11 @@ import android.content.Intent
 import android.os.IBinder
 import android.util.Log
 import com.google.firebase.auth.FirebaseUser
+import com.too.onions.dojang.db.data.User
 
 class MainService : Service() {
 
-    private var currentUser: FirebaseUser? = null
+    private var currentUser: User? = null
 
     companion object {
         var service : MainService? = null
@@ -28,10 +29,10 @@ class MainService : Service() {
         Log.e("MainService", "onStartCommand")
     }
 
-    fun setUser(user: FirebaseUser?) {
+    fun setUser(user: User?) {
         currentUser = user
     }
-    fun getUser() : FirebaseUser? {
+    fun getUser() : User? {
         return currentUser
     }
 
