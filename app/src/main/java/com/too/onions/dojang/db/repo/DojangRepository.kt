@@ -4,6 +4,7 @@ import com.too.onions.dojang.db.DojangDB
 import com.too.onions.dojang.db.data.Content
 import com.too.onions.dojang.db.data.Page
 import com.too.onions.dojang.db.data.User
+import com.too.onions.dojang.service.MainService
 import javax.inject.Inject
 
 class DojangRepository @Inject constructor(private val db: DojangDB) {
@@ -36,10 +37,11 @@ class DojangRepository @Inject constructor(private val db: DojangDB) {
 
     // ==== User ====
 
-    suspend fun getUser(email: String) : User {
+    suspend fun getUser(email: String) : User? {
         return db.userDao().get(email)
     }
     suspend fun insertUser(user: User) {
         db.userDao().insert(user)
     }
+
 }

@@ -13,7 +13,7 @@ import com.too.onions.dojang.db.data.User
 interface UserDao {
 
     @Query("SELECT * from users where email = :email")
-    suspend fun get(email: String) : User
+    suspend fun get(email: String) : User?
 
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)

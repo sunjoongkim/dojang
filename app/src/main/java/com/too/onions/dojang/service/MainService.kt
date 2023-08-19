@@ -12,7 +12,11 @@ class MainService : Service() {
     private var currentUser: User? = null
 
     companion object {
-        var service : MainService? = null
+        private var instance: MainService? = null
+
+        fun getInstance(): MainService? {
+            return instance
+        }
     }
 
     override fun onBind(intent: Intent): IBinder {
@@ -22,12 +26,13 @@ class MainService : Service() {
     override fun onCreate() {
         super.onCreate()
         Log.e("MainService", "onCreate")
-        service = this
+        instance = this
     }
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         return super.onStartCommand(intent, flags, startId)
         Log.e("MainService", "onStartCommand")
     }
+    fun getInstance() : MainService = this
 
     fun setUser(user: User?) {
         currentUser = user
