@@ -9,11 +9,18 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.viewModels
+import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat.startActivity
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -44,14 +51,26 @@ enum class LoginMode {
 @AndroidEntryPoint
 class LoginActivity : ComponentActivity() {
 
-    private var service: MainService? = null
+    private val viewModel: LoginViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             DojangTheme {
-                LoginNavHost(signInLauncher = signInLauncher)
+
+                LoginNavHost(
+                    signInLauncher = signInLauncher,
+                    viewModel = viewModel
+                )
             }
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+
+        if (MainService.getInstance() != null) {
+            MainService.getInstance()?.setUser(viewModel.user.value)
         }
     }
 
@@ -68,13 +87,9 @@ class LoginActivity : ComponentActivity() {
             val user = FirebaseAuth.getInstance().currentUser
             Log.e("@@@@@", "Name : ${user?.displayName}, UUID : ${user?.uid}, Email : ${user?.email}")
 
-//            if (MainService.service != null) {
-//                MainService.service!!.setUser(user)
-//            }
-
-            val intent = Intent(this, MainActivity::class.java)
-            startActivity(intent)
-            finish()
+            if (user != null) {
+                viewModel.checkUser(user)
+            }
 
         } else {
             Log.e("@@@@@", "Login Fail!!!!")
@@ -128,20 +143,40 @@ fun startLoginProcess(
 fun LoginNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
-    viewModel: LoginViewModel = hiltViewModel(),
+    viewModel: LoginViewModel,
     signInLauncher: ActivityResultLauncher<Intent>
 ) {
-    val viewModel = remember { mutableStateOf(viewModel) }
+
+    val context = LocalContext.current
+    val activity = context as? ComponentActivity
+
+    val isNeedJoin = viewModel.isNeedJoin.observeAsState(initial = null)
+
+    LaunchedEffect(isNeedJoin.value) {
+        if (isNeedJoin.value != null) {
+            if (isNeedJoin.value == true) {
+                navController.navigate(LoginScreen.Join.route)
+            } else {
+                val intent = Intent(context, MainActivity::class.java)
+                context.startActivity(intent)
+                activity?.finish()
+            }
+        }
+    }
 
     NavHost(navController = navController, startDestination = LoginScreen.Login.route, modifier = modifier) {
         composable(LoginScreen.Login.route) {
             LoginView(
                 signInLauncher = signInLauncher,
+                viewModel = viewModel,
                 navController = navController
             )
         }
         composable(LoginScreen.Join.route) {
-            JoinView()
+            JoinView(
+                viewModel = viewModel,
+                navController = navController
+            )
         }
         composable(LoginScreen.Allow.route) {
         }

@@ -34,11 +34,13 @@ import androidx.navigation.NavHostController
 import com.too.onions.dojang.R
 import com.too.onions.dojang.ui.login.LoginMode
 import com.too.onions.dojang.ui.login.startLoginProcess
+import com.too.onions.dojang.viewmodel.LoginViewModel
 import kotlinx.coroutines.delay
 
 @Composable
 fun LoginView(
     signInLauncher: ActivityResultLauncher<Intent>,
+    viewModel : LoginViewModel,
     navController: NavHostController
 ) {
     var colorIndex by remember { mutableStateOf(0) }

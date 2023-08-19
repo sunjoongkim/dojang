@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -40,7 +41,7 @@ class SplashActivity : ComponentActivity() {
     }
 
     fun checkServiceStarted() {
-        service = MainService.service
+        service = MainService.getInstance()
 
         if (service == null) {
             var intent = Intent(this, MainService::class.java)
@@ -53,6 +54,8 @@ class SplashActivity : ComponentActivity() {
         } else {
             val msg = if (service!!.getUser() != null) MSG_START_MAIN_ACTIVITY else MSG_START_LOGIN_ACTIVITY
 
+            Log.e("@@@@@", "========> service!!.getUser() : " + service!!.getUser())
+            Log.e("@@@@@", "========> msg : " + msg)
             splashHandler.sendEmptyMessageDelayed(msg, DELAY_START_ACTIVITY)
         }
     }

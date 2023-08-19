@@ -7,6 +7,11 @@
     <string name="login_single">가입없이 혼자 하기</string>
 
     <string name="join_title"><![CDATA[<]]> 회원가입</string>
+    <string name="join_infomation">자신을 나타내는 별명을 입력해 주세요.\n(별명은 친구 검색에 사용돼요.)</string>
+    <string name="join_hint">별명입력</string>
+    <string name="join_terms_1">이용약관</string>
+    <string name="join_terms_2">에 동의합니다.</string>
+    <string name="join_confirm">완료</string>
 
 
     <string name="popup_login_single_title">가입없이 진행하면\n등록했던 자료가 유실되거나,\n친구초대가 안돼요.\n그래도 괜찮으신가요?</string>
