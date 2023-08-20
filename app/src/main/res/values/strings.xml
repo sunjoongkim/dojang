@@ -13,6 +13,15 @@
     <string name="join_terms_2">에 동의합니다.</string>
     <string name="join_confirm">완료</string>
 
+    <string name="allow_title">알림 허용</string>
+    <string name="allow_infomation">도장깨기를 제대로 즐기려면\n알림을 허용해 주세요.</string>
+    <string name="allow_infomation_sub_1">알림 허용을 왜 해야하나요?</string>
+    <string name="allow_infomation_sub_2">1. 초대장을 받을 수 있어요.</string>
+    <string name="allow_infomation_sub_3">2. 친구 상태를 확인할 수 있어요.</string>
+    <string name="allow_infomation_sub_4">3. 새로운 기능 출시를 알려줘요.</string>
+    <string name="allow_infomation_sub_5">4. 사진을 등록해서 도장을 깰 수 있어요.</string>
+    <string name="allow_confirm">🤙 알림 허용하기</string>
+
 
     <string name="popup_login_single_title">가입없이 진행하면\n등록했던 자료가 유실되거나,\n친구초대가 안돼요.\n그래도 괜찮으신가요?</string>
     <string name="popup_login_single_cancel">취소</string>

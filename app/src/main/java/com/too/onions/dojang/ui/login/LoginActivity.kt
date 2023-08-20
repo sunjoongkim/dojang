@@ -1,6 +1,9 @@
 package com.too.onions.dojang.ui.login
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -9,18 +12,15 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.core.content.ContextCompat.startActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -30,6 +30,7 @@ import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
 import com.google.firebase.auth.FirebaseAuth
 import com.too.onions.dojang.service.MainService
+import com.too.onions.dojang.ui.login.view.AllowView
 import com.too.onions.dojang.ui.login.view.JoinView
 import com.too.onions.dojang.ui.login.view.LoginView
 import com.too.onions.dojang.ui.main.MainActivity
@@ -60,7 +61,8 @@ class LoginActivity : ComponentActivity() {
 
                 LoginNavHost(
                     signInLauncher = signInLauncher,
-                    viewModel = viewModel
+                    viewModel = viewModel,
+                    checkNotiPermission = { checkNotiPermission() }
                 )
             }
         }
@@ -100,18 +102,48 @@ class LoginActivity : ComponentActivity() {
         }
     }
 
+    private fun checkNotiPermission() {
+        if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED){
+            // permission granted
+        } else {
+            if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)){
+                // show rationale and then launch launcher to request permission
+            } else {
+                // first request or forever denied case
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    notiLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                } else {
+                    loginHandler.sendEmptyMessage(MSG_START_MAIN_ACTIVITY)
+                }
+            }
+        }
+    }
 
+    private val notiLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted){
+            loginHandler.sendEmptyMessage(MSG_START_MAIN_ACTIVITY)
+        } else {
+            finish()
+        }
+    }
 
     val loginHandler: LoginHandler = LoginHandler()
 
     companion object {
         const val MSG_NONE: Int = -1
+        const val MSG_START_MAIN_ACTIVITY: Int = MSG_NONE + 1
     }
 
     inner class LoginHandler : Handler(Looper.getMainLooper()) {
         override fun handleMessage(msg: Message) {
             when (msg.what) {
-
+                MSG_START_MAIN_ACTIVITY -> {
+                    val intent = Intent(this@LoginActivity, MainActivity::class.java)
+                    startActivity(intent)
+                    finish()
+                }
             }
         }
     }
@@ -139,12 +171,14 @@ fun startLoginProcess(
     signInLauncher.launch(signInIntent)
 }
 
+
 @Composable
 fun LoginNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
     viewModel: LoginViewModel,
-    signInLauncher: ActivityResultLauncher<Intent>
+    signInLauncher: ActivityResultLauncher<Intent>,
+    checkNotiPermission: () -> Unit
 ) {
 
     val context = LocalContext.current
@@ -179,6 +213,11 @@ fun LoginNavHost(
             )
         }
         composable(LoginScreen.Allow.route) {
+            AllowView(
+                viewModel = viewModel,
+                navController = navController,
+                checkNotiPermission = checkNotiPermission
+            )
         }
     }
 }
