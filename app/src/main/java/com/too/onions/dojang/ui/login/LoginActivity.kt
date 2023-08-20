@@ -68,13 +68,6 @@ class LoginActivity : ComponentActivity() {
         }
     }
 
-    override fun onStop() {
-        super.onStop()
-
-        if (MainService.getInstance() != null) {
-            MainService.getInstance()?.setUser(viewModel.user.value)
-        }
-    }
 
     private val signInLauncher = registerForActivityResult(
         FirebaseAuthUIActivityResultContract()

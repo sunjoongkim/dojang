@@ -3,6 +3,8 @@ package com.too.onions.dojang.ui.main.view
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.ScrollScope
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,7 +16,9 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -114,12 +118,12 @@ fun AddPageTitleBar(
         color = Color(0xfff2f1f3),
         modifier = Modifier
             .fillMaxWidth()
-            .height(116.dp)
+            .height(70.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth().height(40.dp)
-                .offset(y = 60.dp)
+                .offset(y = 20.dp)
                 .padding(start = 24.dp, end = 24.dp)
         ) {
             Row(
@@ -243,10 +247,7 @@ fun AddEmoji(
             Button(
                 onClick = {
                     emoji.value = EmojiViewItem("", emptyList())
-                    navController.navigate(MainScreen.Main.route) {
-                        popUpTo(MainScreen.Main.route)
-                        launchSingleTop = true
-                    }
+                    navController.popBackStack()
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Transparent
@@ -316,7 +317,8 @@ fun AddPageTitle(
     Column (
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = 130.dp),
+            .padding(top = 130.dp)
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.size(49.dp))
@@ -340,9 +342,10 @@ fun AddPageTitle(
             },
             modifier = Modifier
                 .focusRequester(focusRequester)
-                .size(330.dp, 164.dp)
+                .fillMaxWidth()
                 .wrapContentHeight()
-                .background(color = Color.Transparent),
+                .background(color = Color.Transparent)
+                .padding(start = 24.dp, end = 24.dp),
             singleLine = false,
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Text,

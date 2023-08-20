@@ -8,7 +8,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.too.onions.dojang.db.data.Content
 import com.too.onions.dojang.db.data.Page
+import com.too.onions.dojang.db.data.User
 import com.too.onions.dojang.db.repo.DojangRepository
+import com.too.onions.dojang.service.MainService
+import com.too.onions.dojang.ui.main.MainScreen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -72,8 +75,14 @@ class MainViewModel @Inject constructor(private val repository: DojangRepository
         }
     }
 
-    // =======================
+    // ===== User =====
 
+    fun getCurrentUser() : User? {
+        if (MainService.getInstance() != null) {
+            return MainService.getInstance()?.getUser()
+        }
+        return null
+    }
 
     private val _pagesWithContents = MutableLiveData<List<PageWithContents>>()
     val pagesWithContents: LiveData<List<PageWithContents>> get() = _pagesWithContents

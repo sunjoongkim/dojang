@@ -1,6 +1,7 @@
 package com.too.onions.dojang.ui.main.view
 
 import android.content.res.Configuration
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -8,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -20,6 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -65,6 +68,7 @@ import com.google.accompanist.pager.rememberPagerState
 import com.too.onions.dojang.R
 import com.too.onions.dojang.db.data.Content
 import com.too.onions.dojang.db.data.Page
+import com.too.onions.dojang.define.Define.STAMP_DEFAULT
 import com.too.onions.dojang.ui.common.CommonDialog
 import com.too.onions.dojang.ui.main.AddPageMode
 import com.too.onions.dojang.ui.main.MainScreen
@@ -122,23 +126,33 @@ fun MainView(
         modifier = Modifier.fillMaxSize()
     )
 
-    TitleBar(
-        viewModel,
-        pages,
-        pagerState,
-        onMoveAddPage
-    )
+    Column {
+        TitleBar(
+            viewModel,
+            pages,
+            pagerState,
+            onMoveAddPage
+        )
 
+        Spacer(modifier = Modifier.size(15.dp))
+        FriendsBar(
+            pages = pages,
+            viewModel = viewModel,
+            isNeedInit = isNeedInit
+        )
 
-    PageItemPager(
-        pagerState,
-        pages,
-        isNeedInit,
-        viewModel,
-        navController,
-        isShowContentDetail,
-        contentPageIndex
-    )
+        Spacer(modifier = Modifier.size(15.dp))
+        PageItemPager(
+            pagerState,
+            pages,
+            isNeedInit,
+            viewModel,
+            navController,
+            isShowContentDetail,
+            contentPageIndex
+        )
+    }
+
     BottomBar(viewModel)
     StampButton()
 
@@ -427,20 +441,59 @@ fun FriendsBar(
     viewModel: MainViewModel,
     isNeedInit: MutableState<Boolean>
 ) {
+    val user = viewModel.getCurrentUser()
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(60.dp)
+            .padding(start = 24.dp, end = 24.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = "선",
+        Box(
             modifier = Modifier
-                .background(color = Color.White, shape = CircleShape)
-                .size(40.dp)
-        )
+                .background(
+                    color = if (user?.stamp?.isEmpty() == true) Color(0xffe3ea97) else Color.White,
+                    shape = CircleShape
+                )
+                .border(width = 2.dp, color = Color(0x20000000), shape = CircleShape)
+                .size(40.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            if (user?.stamp?.isEmpty() == true) {
+                Text(
+                    text = if (user?.nickname == "") "" else user?.nickname?.first().toString(),
+                    modifier = Modifier
+                        .wrapContentSize(),
+                    textAlign = TextAlign.Center,
+                    color = Color(0xffa2a958)
+                )
+            } else {
+
+                if (user?.stamp?.equals(STAMP_DEFAULT) == true) {
+                    Image(
+                        painterResource(id = R.drawable.ic_logo),
+                        contentDescription = null,
+
+                    )
+                } else {
+                    Text(
+                        text = user?.stamp ?: "",
+                        modifier = Modifier
+                            .wrapContentSize(),
+                        textAlign = TextAlign.Center,
+                        color = Color(0xffa2a958)
+                    )
+                }
+            }
+
+        }
+
         Spacer(modifier = Modifier.size(10.dp))
         Box(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .weight(1f)
+                .background(Color.Red)
         ) {
 
         }
@@ -483,18 +536,13 @@ fun PageItemPager(
         state = pagerState,
         modifier = Modifier
             .fillMaxSize()
-            .padding(start = 24.dp, top = 90.dp, end = 24.dp, bottom = 86.dp),
+            .padding(start = 24.dp, bottom = 86.dp),
 
     ) { index ->
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            FriendsBar(
-                pages = pages,
-                viewModel = viewModel,
-                isNeedInit = isNeedInit
-            )
 
             ListItem(
                 pageIndex = index,
@@ -518,31 +566,37 @@ fun ListItem(
     isShowContentDetail: MutableState<Boolean>,
     contentPageIndex: MutableState<Int>
 ) {
+    BoxWithConstraints {
+        val itemSize = (maxWidth - 48.dp) / 2
 
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
-        modifier = Modifier
-            .fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(25.dp)
-    ) {
-        val count = if (pages.isEmpty()) 1 else pages[pageIndex].contents.size + 1
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            modifier = Modifier
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(25.dp)
+        ) {
+            val count = if (pages.isEmpty()) 1 else pages[pageIndex].contents.size + 1
 
-        items(count) {index ->
-            val size = if (pages.isEmpty()) 0 else pages[pageIndex].contents.size
+            items(count) {index ->
+                val size = if (pages.isEmpty()) 0 else pages[pageIndex].contents.size
 
-            if (index < size) {
-                ContentListItem(
-                    isShowContentDetail = isShowContentDetail,
-                    contentPagerIndex = contentPageIndex,
-                    content = pages[pageIndex].contents[index],
-                    index = index)
-            } else {
-                AddContentButton(
-                    pages,
-                    isNeedInit,
-                    viewModel,
-                    navController
-                )
+                if (index < size) {
+                    ContentListItem(
+                        isShowContentDetail = isShowContentDetail,
+                        contentPagerIndex = contentPageIndex,
+                        content = pages[pageIndex].contents[index],
+                        index = index,
+                        itemSize = itemSize
+                    )
+                } else {
+                    AddContentButton(
+                        pages,
+                        isNeedInit,
+                        viewModel,
+                        navController,
+                        itemSize
+                    )
+                }
             }
         }
     }
@@ -552,11 +606,12 @@ fun AddContentButton(
     pages: List<PageWithContents>,
     isNeedInit: MutableState<Boolean>,
     viewModel: MainViewModel,
-    navController: NavHostController
+    navController: NavHostController,
+    itemSize: Dp
 ) {
     Box(
         modifier = Modifier
-            .size(150.dp, 150.dp)
+            .size(itemSize)
             .padding(end = 24.dp)
     ) {
         Button(
@@ -588,35 +643,38 @@ fun ContentListItem(
     contentPagerIndex: MutableState<Int>,
     content: Content,
     index: Int,
+    itemSize : Dp
 ) {
 
     Box(
         modifier = Modifier
-            .size(150.dp, 165.dp)
+            .size(itemSize, (itemSize + 15.dp))
             .clickable(onClick = {
                 contentPagerIndex.value = index
                 isShowContentDetail.value = true
             })
     ) {
+
         AsyncImage(
             model = content.imageUri,
             contentDescription = null,
             modifier = Modifier
-                .size(150.dp, 150.dp)
+                .size(itemSize)
                 .border(1.dp, Color(0xff123485), RectangleShape)
-                .background(color = Color(content.color))
+                .background(color = Color(content.color)),
+            contentScale = ContentScale.Crop
         )
 
         Box(
             modifier = Modifier
-                .size(120.dp, 40.dp)
+                .size(itemSize - 30.dp, 40.dp)
                 .align(Alignment.BottomStart)
                 .border(1.dp, Color(0xff123485), RectangleShape)
                 .background(color = Color(0xff5dcc83)),
         ) {
             Text(
                 modifier = Modifier
-                    .width(120.dp)
+                    .width(itemSize - 30.dp)
                     .align(Alignment.Center)
                     .padding(start = 5.dp),
                 textAlign = TextAlign.Start,

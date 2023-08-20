@@ -39,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
@@ -103,11 +104,7 @@ fun AddContentView(
         )
 
         viewModel.insertContent(content)
-
-        navController.navigate(MainScreen.Main.route + "/false") {
-            popUpTo(MainScreen.Main.route)
-            launchSingleTop = true
-        }
+        navController.popBackStack()
     }
 }
 fun checkAndReplaceUri(uri: Uri?) : String? {
@@ -149,7 +146,7 @@ fun ContentTitleBar(navController: NavHostController) {
                     interactionSource = MutableInteractionSource(),
                     indication = null,
                     onClick = {
-                        navController.navigate(MainScreen.Main.route + "/false")
+                        navController.popBackStack()
                     }
                 )
         ) {
@@ -189,7 +186,8 @@ fun DisplayContent(
                 contentDescription = null,
                 modifier = Modifier
                     .size(150.dp, 150.dp)
-                    .border(1.dp, Color(0xff123485), RectangleShape)
+                    .border(1.dp, Color(0xff123485), RectangleShape),
+                contentScale = ContentScale.Crop
             )
         }
 
