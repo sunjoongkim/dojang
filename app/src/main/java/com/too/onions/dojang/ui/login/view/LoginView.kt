@@ -76,7 +76,7 @@ fun LoginView(
         ) {
             Spacer(modifier = Modifier.weight(0.2f))
             Image(
-                painterResource(id = R.drawable.ic_logo),
+                painterResource(id = R.drawable.ic_btn_stamp),
                 contentDescription = null,
                 modifier = Modifier
                     .size(162.dp)

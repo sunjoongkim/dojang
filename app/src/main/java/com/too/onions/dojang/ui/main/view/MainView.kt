@@ -5,6 +5,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,7 +26,15 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.BottomDrawer
+import androidx.compose.material.BottomDrawerState
+import androidx.compose.material.BottomDrawerValue
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.rememberBottomDrawerState
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
@@ -75,10 +84,9 @@ import com.too.onions.dojang.ui.main.PlayMode
 import com.too.onions.dojang.viewmodel.MainViewModel
 import com.too.onions.dojang.viewmodel.PageWithContents
 import kotlinx.coroutines.launch
-import java.lang.IllegalArgumentException
 import java.lang.Math.abs
 
-@OptIn(ExperimentalPagerApi::class)
+@OptIn(ExperimentalPagerApi::class, ExperimentalMaterialApi::class)
 @Composable
 fun MainView(
     viewModel: MainViewModel,
@@ -88,8 +96,10 @@ fun MainView(
 ) {
     val isNeedInit = remember { mutableStateOf(false) }
     val isShowContentDetail = remember { mutableStateOf(false) }
-    val contentPageIndex = remember { mutableStateOf(0) }
 
+    val drawerState = rememberBottomDrawerState(BottomDrawerValue.Closed)
+
+    val contentPageIndex = remember { mutableStateOf(0) }
     var currentPlayMode by remember { mutableStateOf(PlayMode.SINGLE)}
 
     LaunchedEffect(viewModel) {
@@ -118,60 +128,79 @@ fun MainView(
         }
     }
 
-    Image(
-        painterResource(id = R.drawable.bg_single),
-        contentDescription = null,
-        contentScale = ContentScale.FillBounds,
-        modifier = Modifier.fillMaxSize()
+    BottomDrawer(
+        drawerState = drawerState,
+        gesturesEnabled = true,
+        drawerContent = {
+            // DrawerView
+            SelectStampView(
+                navController = navController,
+                drawerState = drawerState
+            )
+        },
+        content = {
+            // Main 화면
+            Image(
+                painterResource(id = R.drawable.bg_single),
+                contentDescription = null,
+                contentScale = ContentScale.FillBounds,
+                modifier = Modifier.fillMaxSize()
+            )
+
+            Column {
+                TitleBar(
+                    viewModel,
+                    pages,
+                    pagerState,
+                    onMoveAddPage
+                )
+
+                Spacer(modifier = Modifier.size(15.dp))
+                FriendsBar(
+                    pages = pages,
+                    viewModel = viewModel,
+                    isNeedInit = isNeedInit
+                )
+
+                Spacer(modifier = Modifier.size(15.dp))
+                PageItemPager(
+                    pagerState,
+                    pages,
+                    isNeedInit,
+                    viewModel,
+                    navController,
+                    isShowContentDetail,
+                    contentPageIndex
+                )
+            }
+
+            BottomBar(viewModel)
+            StampButton(
+                viewModel,
+                drawerState
+            )
+
+            if (isNeedInit.value) {
+                CommonDialog(
+                    showDialog = isNeedInit,
+                    title = stringResource(id = R.string.popup_content_regist_page_title),
+                    cancelText = stringResource(id = R.string.popup_content_regist_page_cancel),
+                    confirmText = stringResource(id = R.string.popup_content_regist_page_confirm),
+                    onConfirm = onMoveAddPage
+                )
+            }
+            if (isShowContentDetail.value) {
+                ContentDetailView(
+                    isShowContentDetail = isShowContentDetail,
+                    contentList = pages[pagerState.currentPage].contents,
+                    contentPageIndex = contentPageIndex.value,
+                    viewModel = viewModel
+                )
+            }
+        }
     )
 
-    Column {
-        TitleBar(
-            viewModel,
-            pages,
-            pagerState,
-            onMoveAddPage
-        )
 
-        Spacer(modifier = Modifier.size(15.dp))
-        FriendsBar(
-            pages = pages,
-            viewModel = viewModel,
-            isNeedInit = isNeedInit
-        )
-
-        Spacer(modifier = Modifier.size(15.dp))
-        PageItemPager(
-            pagerState,
-            pages,
-            isNeedInit,
-            viewModel,
-            navController,
-            isShowContentDetail,
-            contentPageIndex
-        )
-    }
-
-    BottomBar(viewModel)
-    StampButton(viewModel)
-
-    if (isNeedInit.value) {
-        CommonDialog(
-            showDialog = isNeedInit,
-            title = stringResource(id = R.string.popup_content_regist_page_title),
-            cancelText = stringResource(id = R.string.popup_content_regist_page_cancel),
-            confirmText = stringResource(id = R.string.popup_content_regist_page_confirm),
-            onConfirm = onMoveAddPage
-        )
-    }
-    if (isShowContentDetail.value) {
-        ContentDetailView(
-            isShowContentDetail = isShowContentDetail,
-            contentList = pages[pagerState.currentPage].contents,
-            contentPageIndex = contentPageIndex.value,
-            viewModel = viewModel
-        )
-    }
 }
 
 @OptIn(ExperimentalPagerApi::class)
@@ -471,7 +500,7 @@ fun FriendsBar(
 
                 if (user?.stamp?.equals(STAMP_DEFAULT) == true) {
                     Image(
-                        painterResource(id = R.drawable.ic_logo),
+                        painterResource(id = R.drawable.ic_btn_stamp),
                         contentDescription = null,
 
                     )
@@ -613,7 +642,10 @@ fun AddContentButton(
     Box(
         modifier = Modifier
             .size(itemSize, itemSize - 36.dp)
-            .padding(start = if (count % 2 == 0) 24.dp else 12.dp, end = if (count % 2 == 0) 12.dp else 24.dp)
+            .padding(
+                start = if (count % 2 == 0) 24.dp else 12.dp,
+                end = if (count % 2 == 0) 12.dp else 24.dp
+            )
     ) {
         Button(
             onClick = {
@@ -654,7 +686,10 @@ fun ContentListItem(
                 contentPagerIndex.value = index
                 isShowContentDetail.value = true
             })
-            .padding(start = if (index % 2 == 1) 12.dp else 24.dp, end = if (index % 2 == 0) 12.dp else 24.dp)
+            .padding(
+                start = if (index % 2 == 1) 12.dp else 24.dp,
+                end = if (index % 2 == 0) 12.dp else 24.dp
+            )
     ) {
 
         AsyncImage(
@@ -706,30 +741,35 @@ fun BottomBar(viewModel: MainViewModel) {
                         endY = 500f
                     )
                 )
-                .padding(start = 270.dp, top = 15.dp)
+                .padding(start = 280.dp, top = 15.dp)
         ) {
             Image(
-                painterResource(id = R.drawable.ic_noti),
-                contentDescription = null
+                painterResource(id = R.drawable.ic_btn_noti),
+                contentDescription = null,
             )
 
             Spacer(modifier = Modifier.size(25.dp))
 
             Image(
-                painterResource(id = R.drawable.ic_setting),
+                painterResource(id = R.drawable.ic_btn_setting),
                 contentDescription = null,
                 modifier = Modifier.clickable {
                     viewModel.deleteAllContent(viewModel.currentPage.value.id)
                     viewModel.fetchAllPagesWithContents()
                 }
+
             )
         }
     }
 }
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun StampButton(
-    viewModel: MainViewModel
+    viewModel: MainViewModel,
+    drawerState: BottomDrawerState
 ) {
+    val scope = rememberCoroutineScope()
+    val interactionSource = remember { MutableInteractionSource() }
 
     Box(
         modifier = Modifier
@@ -738,199 +778,43 @@ fun StampButton(
     ) {
         val user = viewModel.getCurrentUser()
 
-        if (user?.stamp?.isEmpty() == true) {
-            Image(
-                painterResource(id = R.drawable.bg_btn_stamp_default),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(72.dp, 72.dp)
-                    .align(Alignment.BottomStart)
-            )
-        } else {
-            Image(
-                painterResource(id = R.drawable.bg_btn_stamp_1),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(72.dp, 72.dp)
-                    .align(Alignment.BottomStart)
-            )
-            Image(
-                painterResource(id = R.drawable.bg_btn_stamp_2),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(72.dp, 72.dp)
-                    .align(Alignment.BottomStart)
-            )
-        }
-
-    }
-}
-
-@OptIn(ExperimentalPagerApi::class)
-@Composable
-fun ContentDetailView(
-    isShowContentDetail: MutableState<Boolean>,
-    contentList: List<Content>,
-    contentPageIndex: Int,
-    viewModel: MainViewModel
-) {
-
-    val pagerState = rememberPagerState(
-        initialPage = contentPageIndex,
-        initialOffscreenLimit = 3,
-        pageCount = contentList.size,
-    )
-
-    Dialog(
-        onDismissRequest = { isShowContentDetail.value = false },
-        properties = DialogProperties(
-            usePlatformDefaultWidth = false,
-        )
-    ) {
-        Column(
-            modifier = Modifier.fillMaxSize()
+        Box(
+            modifier = Modifier
+                .size(72.dp)
+                .align(Alignment.BottomStart)
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    onClick = {
+                        scope.launch {
+                            drawerState.open()
+                        }
+                    }
+                )
         ) {
-            Box(
+            Image(
+                painterResource(id = R.drawable.bg_btn_stamp),
+                contentDescription = null,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(2f)
-                    .clickable(
-                        interactionSource = MutableInteractionSource(),
-                        indication = null
-                    ) {
-                        isShowContentDetail.value = false
-                    }
             )
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(8f)
-            ) {
-                Box(
+            if (user?.stamp?.isEmpty() == true || user?.stamp?.equals(STAMP_DEFAULT) == true) {
+
+                Image(
+                    painterResource(id = R.drawable.ic_btn_stamp),
+                    contentDescription = null,
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(top = 40.dp)
-                        .background(color = Color(0xff5dcc83), shape = RectangleShape),
-                    contentAlignment = Alignment.BottomCenter
-                ) {
+                        .size(52.dp, 52.dp)
+                        .align(Alignment.Center)
+                )
+            } else {
+                Text(
+                    text = user?.stamp ?: ""
+                )
 
-                    Row(
-                        modifier = Modifier
-                            .wrapContentWidth()
-                            .padding(bottom = 35.dp)
-                            .align(Alignment.BottomCenter)
-                    ) {
-                        Button(
-                            onClick = { isShowContentDetail.value = false },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color.Transparent
-                            ),
-                            modifier = Modifier
-                                .size(120.dp, 46.dp)
-                                .background(color = Color(0xff000000), shape = RectangleShape)
-                                .border(2.dp, color = Color(0xff000000))
-                        ) {
-                            Text(
-                                text = "도장 취소",
-                                fontSize = 14.sp,
-                                fontFamily = FontFamily(Font(R.font.neo_dunggeunmo_pro))
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.size(10.dp))
-
-                        Button(
-                            onClick = { },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color.Transparent
-                            ),
-                            modifier = Modifier
-                                .size(220.dp, 46.dp)
-                                .background(color = Color(0xff123485), shape = RectangleShape)
-                                .border(2.dp, color = Color(0xff17274e))
-                        ) {
-                            Text(
-                                text = "수정 및 삭제하기",
-                                fontSize = 14.sp,
-                                fontFamily = FontFamily(Font(R.font.neo_dunggeunmo_pro))
-                            )
-                        }
-                    }
-                }
-
-                HorizontalPager(
-                    state = pagerState,
-                    itemSpacing = 20.dp,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(500.dp)
-                ) { page ->
-                    ContentPagerItem(contentList[page])
-                }
             }
         }
     }
 }
 
-@Composable
-fun ContentPagerItem(content: Content) {
-    Box(
-        modifier = Modifier
-            .size(300.dp, 500.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 6.dp, start = 6.dp)
-                .background(Color.Black)
-        )
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(bottom = 6.dp, end = 6.dp)
-                .background(Color.White)
-                .border(width = 3.dp, color = Color.Black),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(modifier = Modifier.size(10.dp))
-            AsyncImage(
-                model = content.imageUri,
-                contentDescription = null,
-                modifier = Modifier
-                    .size(274.dp, 274.dp)
-                    .background(Color(content.color))
-            )
-
-            Spacer(modifier = Modifier.size(15.dp))
-            Text(
-                text = content.title,
-                fontSize = 14.sp,
-                color = Color.Black,
-                textAlign = TextAlign.Left,
-                modifier = Modifier.width(265.dp),
-                lineHeight = 15.sp
-            )
-
-            Spacer(modifier = Modifier.size(15.dp))
-            Text(
-                text = content.description,
-                fontSize = 14.sp,
-                color = Color.Black,
-                textAlign = TextAlign.Left,
-                modifier = Modifier.width(265.dp),
-                lineHeight = 15.sp
-            )
-
-            Spacer(modifier = Modifier.size(15.dp))
-            Text(
-                text = if (!content.address.isEmpty()) "주소\n${content.address}" else "",
-                fontSize = 14.sp,
-                color = Color(0xffa8a8a8),
-                textAlign = TextAlign.Left,
-                modifier = Modifier.width(265.dp),
-                lineHeight = 15.sp
-            )
-        }
-    }
-}

@@ -25,6 +25,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.too.onions.dojang.ui.main.view.AddContentView
 import com.too.onions.dojang.ui.main.view.AddPageView
+import com.too.onions.dojang.ui.main.view.AddStampEmojiView
 import com.too.onions.dojang.ui.main.view.MainView
 import com.too.onions.dojang.ui.theme.DojangTheme
 import com.too.onions.dojang.viewmodel.MainViewModel
@@ -36,6 +37,7 @@ sealed class MainScreen(val route: String) {
     object AddPage : MainScreen("add_page")
     object AddContent : MainScreen("add_content")
     object AddFriend : MainScreen("add_friend")
+    object AddStampEmoji : MainScreen("add_stamp_emoji")
 
 }
 
@@ -160,12 +162,20 @@ fun MainNavHost(
         composable(MainScreen.AddPage.route) {
             AddPageView(
                 addPageMode = addPageMode,
-                viewModel.value,
-                navController
+                viewModel = viewModel.value,
+                navController = navController
             )
         }
         composable(MainScreen.AddContent.route) {
-            AddContentView(viewModel.value, navController)
+            AddContentView(
+                viewModel = viewModel.value,
+                navController = navController)
+        }
+        composable(MainScreen.AddStampEmoji.route) {
+            AddStampEmojiView(
+                viewModel = viewModel.value,
+                navController = navController
+            )
         }
     }
 }

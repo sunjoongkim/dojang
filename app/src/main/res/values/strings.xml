@@ -22,6 +22,12 @@
     <string name="allow_infomation_sub_5">4. 사진을 등록해서 도장을 깰 수 있어요.</string>
     <string name="allow_confirm">🤙 알림 허용하기</string>
 
+    <string name="select_stamp_info">도장을 찍기 전 어떤 도장으로 할지\n선택해 주세요.</string>
+    <string name="select_stamp_cancel">취소</string>
+    <string name="select_stamp_confirm">선택 완료</string>
+    <string name="add_stamp_info">사용할 이모티콘을 선택하세요.</string>
+    <string name="add_stamp_confirm">선택 완료</string>
+
 
     <string name="popup_login_single_title">가입없이 진행하면\n등록했던 자료가 유실되거나,\n친구초대가 안돼요.\n그래도 괜찮으신가요?</string>
     <string name="popup_login_single_cancel">취소</string>
