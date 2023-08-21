@@ -1,7 +1,6 @@
 package com.too.onions.dojang.ui.main.view
 
 import android.content.res.Configuration
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -154,7 +153,7 @@ fun MainView(
     }
 
     BottomBar(viewModel)
-    StampButton()
+    StampButton(viewModel)
 
     if (isNeedInit.value) {
         CommonDialog(
@@ -536,7 +535,7 @@ fun PageItemPager(
         state = pagerState,
         modifier = Modifier
             .fillMaxSize()
-            .padding(start = 24.dp, bottom = 86.dp),
+            .padding(bottom = 86.dp),
 
     ) { index ->
         Column(
@@ -567,7 +566,7 @@ fun ListItem(
     contentPageIndex: MutableState<Int>
 ) {
     BoxWithConstraints {
-        val itemSize = (maxWidth - 48.dp) / 2
+        val itemSize = maxWidth / 2
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
@@ -590,11 +589,12 @@ fun ListItem(
                     )
                 } else {
                     AddContentButton(
-                        pages,
-                        isNeedInit,
-                        viewModel,
-                        navController,
-                        itemSize
+                        pages = pages,
+                        isNeedInit = isNeedInit,
+                        viewModel = viewModel,
+                        navController = navController,
+                        count = size,
+                        itemSize = itemSize
                     )
                 }
             }
@@ -607,12 +607,13 @@ fun AddContentButton(
     isNeedInit: MutableState<Boolean>,
     viewModel: MainViewModel,
     navController: NavHostController,
+    count: Int,
     itemSize: Dp
 ) {
     Box(
         modifier = Modifier
-            .size(itemSize)
-            .padding(end = 24.dp)
+            .size(itemSize, itemSize - 36.dp)
+            .padding(start = if (count % 2 == 0) 24.dp else 12.dp, end = if (count % 2 == 0) 12.dp else 24.dp)
     ) {
         Button(
             onClick = {
@@ -648,18 +649,19 @@ fun ContentListItem(
 
     Box(
         modifier = Modifier
-            .size(itemSize, (itemSize + 15.dp))
+            .size(itemSize, (itemSize + 15.dp - 36.dp))
             .clickable(onClick = {
                 contentPagerIndex.value = index
                 isShowContentDetail.value = true
             })
+            .padding(start = if (index % 2 == 1) 12.dp else 24.dp, end = if (index % 2 == 0) 12.dp else 24.dp)
     ) {
 
         AsyncImage(
             model = content.imageUri,
             contentDescription = null,
             modifier = Modifier
-                .size(itemSize)
+                .size(itemSize, itemSize - 36.dp)
                 .border(1.dp, Color(0xff123485), RectangleShape)
                 .background(color = Color(content.color)),
             contentScale = ContentScale.Crop
@@ -667,14 +669,14 @@ fun ContentListItem(
 
         Box(
             modifier = Modifier
-                .size(itemSize - 30.dp, 40.dp)
+                .size(itemSize - 30.dp - 36.dp, 40.dp)
                 .align(Alignment.BottomStart)
                 .border(1.dp, Color(0xff123485), RectangleShape)
                 .background(color = Color(0xff5dcc83)),
         ) {
             Text(
                 modifier = Modifier
-                    .width(itemSize - 30.dp)
+                    .width(itemSize - 30.dp - 36.dp)
                     .align(Alignment.Center)
                     .padding(start = 5.dp),
                 textAlign = TextAlign.Start,
@@ -725,20 +727,42 @@ fun BottomBar(viewModel: MainViewModel) {
     }
 }
 @Composable
-fun StampButton() {
+fun StampButton(
+    viewModel: MainViewModel
+) {
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .padding(start = 20.dp, bottom = 18.dp)
     ) {
-        Image(
-            painterResource(id = R.drawable.ic_btn_stamp),
-            contentDescription = null,
-            modifier = Modifier
-                .size(72.dp, 72.dp)
-                .align(Alignment.BottomStart)
-        )
+        val user = viewModel.getCurrentUser()
+
+        if (user?.stamp?.isEmpty() == true) {
+            Image(
+                painterResource(id = R.drawable.bg_btn_stamp_default),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(72.dp, 72.dp)
+                    .align(Alignment.BottomStart)
+            )
+        } else {
+            Image(
+                painterResource(id = R.drawable.bg_btn_stamp_1),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(72.dp, 72.dp)
+                    .align(Alignment.BottomStart)
+            )
+            Image(
+                painterResource(id = R.drawable.bg_btn_stamp_2),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(72.dp, 72.dp)
+                    .align(Alignment.BottomStart)
+            )
+        }
+
     }
 }
 
