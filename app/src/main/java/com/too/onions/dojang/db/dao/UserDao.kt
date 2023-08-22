@@ -15,6 +15,8 @@ interface UserDao {
     @Query("SELECT * from users where email = :email")
     suspend fun get(email: String) : User?
 
+    @Query("UPDATE users SET stamp = :stamp")
+    suspend fun updateStamp(stamp: String)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(user: User)

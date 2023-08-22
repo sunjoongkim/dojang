@@ -77,6 +77,7 @@ fun AddStampEmojiView(
 
         Button(
             onClick = {
+                viewModel.updateUserStamp(emoji.value.emoji)
                 navController.popBackStack()
             },
             colors = ButtonDefaults.buttonColors(

@@ -37,10 +37,23 @@ class DojangRepository @Inject constructor(private val db: DojangDB) {
 
     // ==== User ====
 
+    private var currentUser: User? = null
+
+    fun getCurrentUser() : User? {
+        return currentUser
+    }
+    suspend fun updateUserStamp(stamp: String) {
+        if (currentUser != null) {
+            currentUser = currentUser?.copy(stamp = stamp)
+            db.userDao().updateStamp(stamp = stamp)
+        }
+    }
     suspend fun getUser(email: String) : User? {
-        return db.userDao().get(email)
+        currentUser = db.userDao().get(email)
+        return currentUser
     }
     suspend fun insertUser(user: User) {
+        currentUser = user
         db.userDao().insert(user)
     }
 

@@ -54,8 +54,6 @@ class SplashActivity : ComponentActivity() {
         } else {
             val msg = if (service!!.getUser() != null) MSG_START_MAIN_ACTIVITY else MSG_START_LOGIN_ACTIVITY
 
-            Log.e("@@@@@", "========> service!!.getUser() : " + service!!.getUser())
-            Log.e("@@@@@", "========> msg : " + msg)
             splashHandler.sendEmptyMessageDelayed(msg, DELAY_START_ACTIVITY)
         }
     }

@@ -1,6 +1,7 @@
 package com.too.onions.dojang.ui.main.view
 
 import android.content.res.Configuration
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -102,8 +103,11 @@ fun MainView(
     val contentPageIndex = remember { mutableStateOf(0) }
     var currentPlayMode by remember { mutableStateOf(PlayMode.SINGLE)}
 
+    val isStampMode by remember { mutableStateOf(viewModel.user.value?.stamp?.isEmpty()) }
+
     LaunchedEffect(viewModel) {
         viewModel.fetchAllPagesWithContents()
+        viewModel.setUser()
         currentPlayMode = if (viewModel.currentPage.value.friends.isEmpty()) PlayMode.SINGLE else PlayMode.MULTI
     }
 
@@ -174,7 +178,11 @@ fun MainView(
                 )
             }
 
-            BottomBar(viewModel)
+            if (isStampMode == false) {
+                BottomBar(viewModel)
+            } else {
+
+            }
             StampButton(
                 viewModel,
                 drawerState
@@ -469,7 +477,7 @@ fun FriendsBar(
     viewModel: MainViewModel,
     isNeedInit: MutableState<Boolean>
 ) {
-    val user = viewModel.getCurrentUser()
+    val user by viewModel.user.observeAsState()
 
     Row(
         modifier = Modifier
@@ -508,7 +516,8 @@ fun FriendsBar(
                     Text(
                         text = user?.stamp ?: "",
                         modifier = Modifier
-                            .wrapContentSize(),
+                            .wrapContentSize()
+                            .padding(top = 2.dp),
                         textAlign = TextAlign.Center,
                         color = Color(0xffa2a958)
                     )
@@ -725,6 +734,47 @@ fun ContentListItem(
 }
 @Composable
 fun BottomBar(viewModel: MainViewModel) {
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .fillMaxWidth()
+                .height(76.dp)
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(Color(0xfff3fff4), Color(0xffc2ffd3)),
+                        startY = 0f,
+                        endY = 500f
+                    )
+                )
+                .padding(start = 280.dp, top = 15.dp)
+        ) {
+            Image(
+                painterResource(id = R.drawable.ic_btn_noti),
+                contentDescription = null,
+            )
+
+            Spacer(modifier = Modifier.size(25.dp))
+
+            Image(
+                painterResource(id = R.drawable.ic_btn_setting),
+                contentDescription = null,
+                modifier = Modifier.clickable {
+                    viewModel.deleteAllContent(viewModel.currentPage.value.id)
+                    viewModel.fetchAllPagesWithContents()
+                }
+
+            )
+        }
+    }
+}
+@Composable
+fun StampBottomBar(viewModel: MainViewModel) {
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -776,7 +826,7 @@ fun StampButton(
             .fillMaxSize()
             .padding(start = 20.dp, bottom = 18.dp)
     ) {
-        val user = viewModel.getCurrentUser()
+        val user by viewModel.user.observeAsState()
 
         Box(
             modifier = Modifier
@@ -790,7 +840,8 @@ fun StampButton(
                             drawerState.open()
                         }
                     }
-                )
+                ),
+            contentAlignment = Alignment.Center
         ) {
             Image(
                 painterResource(id = R.drawable.bg_btn_stamp),
@@ -806,11 +857,16 @@ fun StampButton(
                     contentDescription = null,
                     modifier = Modifier
                         .size(52.dp, 52.dp)
-                        .align(Alignment.Center)
                 )
             } else {
                 Text(
-                    text = user?.stamp ?: ""
+                    text = user?.stamp ?: "",
+                    modifier = Modifier
+                        .wrapContentSize()
+                        .padding(top = 5.dp),
+                    textAlign = TextAlign.Center,
+                    color = Color(0xffa2a958),
+                    fontSize = 30.sp
                 )
 
             }

@@ -37,7 +37,9 @@ class LoginViewModel @Inject constructor(private val repository: DojangRepositor
                 _isNeedJoin.postValue(true)
             } else {
                 _isNeedJoin.postValue(false)
-                MainService.getInstance()?.setUser(retrievedUser)
+                if (MainService.getInstance() != null) {
+                    MainService.getInstance()!!.setUser(retrievedUser)
+                }
             }
 
             setUser(user)

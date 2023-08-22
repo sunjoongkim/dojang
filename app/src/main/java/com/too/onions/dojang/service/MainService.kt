@@ -35,11 +35,9 @@ class MainService : Service() {
     fun getInstance() : MainService = this
 
     fun setUser(user: User?) {
-        Log.e("@@@@@", "=====> setUser : " + user?.nickname)
         currentUser = user
     }
     fun getUser() : User? {
-        Log.e("@@@@@", "=====> getUser : " + currentUser?.nickname)
         return currentUser
     }
 

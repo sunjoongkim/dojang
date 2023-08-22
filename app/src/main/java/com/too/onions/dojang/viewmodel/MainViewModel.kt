@@ -1,5 +1,6 @@
 package com.too.onions.dojang.viewmodel
 
+import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
@@ -77,11 +78,18 @@ class MainViewModel @Inject constructor(private val repository: DojangRepository
 
     // ===== User =====
 
-    fun getCurrentUser() : User? {
-        if (MainService.getInstance() != null) {
-            return MainService.getInstance()?.getUser()
+    private val _user = MutableLiveData<User>()
+    val user: LiveData<User> = _user
+
+    fun setUser() {
+        Log.e("@@@@@", "======> current user  : " + repository.getCurrentUser())
+        _user.postValue(repository.getCurrentUser())
+    }
+
+    fun updateUserStamp(stamp: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.updateUserStamp(stamp)
         }
-        return null
     }
 
     private val _pagesWithContents = MutableLiveData<List<PageWithContents>>()
