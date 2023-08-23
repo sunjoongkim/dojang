@@ -47,11 +47,13 @@ import androidx.navigation.NavHostController
 import com.too.onions.dojang.R
 import com.too.onions.dojang.define.Define
 import com.too.onions.dojang.ui.main.MainScreen
+import com.too.onions.dojang.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun SelectStampView(
+    viewModel: MainViewModel,
     navController: NavHostController,
     drawerState: BottomDrawerState
 ) {
@@ -137,7 +139,10 @@ fun SelectStampView(
                 Text(
                     text = String(Character.toChars(0x1F600)),
                     fontSize = 45.sp,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .wrapContentHeight()
+                        .padding(top = 7.dp)
                 )
             }
 
@@ -175,8 +180,14 @@ fun SelectStampView(
             Button(
                 onClick = {
                     scope.launch {
-                        drawerState.close()
-                        navController.navigate(MainScreen.AddStampEmoji.route)
+
+                        if (seletedStamp.value == Define.SEL_STAMP_DEFAULT) {
+                            viewModel.setStampMode(true)
+                            drawerState.close()
+                        } else {
+                            drawerState.close()
+                            navController.navigate(MainScreen.AddStampEmoji.route)
+                        }
                     }
                 },
                 colors = ButtonDefaults.buttonColors(

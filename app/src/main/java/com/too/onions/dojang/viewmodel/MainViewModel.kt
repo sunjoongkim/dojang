@@ -2,7 +2,9 @@ package com.too.onions.dojang.viewmodel
 
 import android.util.Log
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -25,9 +27,17 @@ data class PageWithContents (
 @HiltViewModel
 class MainViewModel @Inject constructor(private val repository: DojangRepository): ViewModel() {
 
-    var currentPage: MutableState<Page> = mutableStateOf(Page())
+    private val _isStampMode = MutableLiveData(false)
+    val isStampMode: LiveData<Boolean> get() = _isStampMode
+
+    fun setStampMode(isStamp: Boolean) {
+        _isStampMode.postValue(isStamp)
+    }
 
     // ===== Page ======
+
+    var currentPage: MutableState<Page> = mutableStateOf(Page())
+
     private val _pageList = MutableLiveData<List<Page>>()
     val pageList: LiveData<List<Page>> get() = _pageList
 

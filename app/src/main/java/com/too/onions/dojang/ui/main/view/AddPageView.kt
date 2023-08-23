@@ -145,7 +145,8 @@ fun AddPageTitleBar(
                     Text(
                         modifier = Modifier
                             .wrapContentHeight()
-                            .size(22.dp),
+                            .size(22.dp)
+                            .padding(top = 2.dp),
                         text = emoji.value.emoji,
                         textAlign = TextAlign.Center,
                         fontSize = 18.sp

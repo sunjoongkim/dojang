@@ -1,12 +1,10 @@
 package com.too.onions.dojang.ui.main.view
 
 import android.content.res.Configuration
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,18 +22,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.BottomDrawer
 import androidx.compose.material.BottomDrawerState
 import androidx.compose.material.BottomDrawerValue
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.rememberBottomDrawerState
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
@@ -60,14 +54,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.google.accompanist.pager.ExperimentalPagerApi
@@ -77,6 +67,7 @@ import com.google.accompanist.pager.rememberPagerState
 import com.too.onions.dojang.R
 import com.too.onions.dojang.db.data.Content
 import com.too.onions.dojang.db.data.Page
+import com.too.onions.dojang.db.data.User
 import com.too.onions.dojang.define.Define.STAMP_DEFAULT
 import com.too.onions.dojang.ui.common.CommonDialog
 import com.too.onions.dojang.ui.main.AddPageMode
@@ -95,6 +86,8 @@ fun MainView(
     addPageMode: MutableState<AddPageMode>,
     isAddedPage: Boolean?
 ) {
+    val scope = rememberCoroutineScope()
+
     val isNeedInit = remember { mutableStateOf(false) }
     val isShowContentDetail = remember { mutableStateOf(false) }
 
@@ -103,7 +96,8 @@ fun MainView(
     val contentPageIndex = remember { mutableStateOf(0) }
     var currentPlayMode by remember { mutableStateOf(PlayMode.SINGLE)}
 
-    val isStampMode by remember { mutableStateOf(viewModel.user.value?.stamp?.isEmpty()) }
+    val user by viewModel.user.observeAsState()
+    val isStampMode by viewModel.isStampMode.observeAsState(false)
 
     LaunchedEffect(viewModel) {
         viewModel.fetchAllPagesWithContents()
@@ -134,10 +128,11 @@ fun MainView(
 
     BottomDrawer(
         drawerState = drawerState,
-        gesturesEnabled = true,
+        gesturesEnabled = false,
         drawerContent = {
             // DrawerView
             SelectStampView(
+                viewModel = viewModel,
                 navController = navController,
                 drawerState = drawerState
             )
@@ -163,7 +158,8 @@ fun MainView(
                 FriendsBar(
                     pages = pages,
                     viewModel = viewModel,
-                    isNeedInit = isNeedInit
+                    isNeedInit = isNeedInit,
+                    user = user
                 )
 
                 Spacer(modifier = Modifier.size(15.dp))
@@ -178,18 +174,36 @@ fun MainView(
                 )
             }
 
-            if (isStampMode == false) {
+            if (!isStampMode) {
+                // 일반 화면 BottomBar
                 BottomBar(viewModel)
+                StampButton(
+                    viewModel = viewModel,
+                    onClick = {
+                        scope.launch {
+                            if (pages.isEmpty() || viewModel.currentPage.value.title.isEmpty()) {
+                                isNeedInit.value = true
+                            } else if (pages[pagerState.currentPage].contents.isEmpty()) {
+                                navController.navigate(MainScreen.AddContent.route)
+                            } else if (user?.stamp?.isEmpty() == true) {
+                                drawerState.open()
+                            } else {
+                                viewModel.setStampMode(true)
+                            }
+                        }
+                    }
+                )
             } else {
-
+                // 도장찍기 모드 BottomBar
+                BottomBarSel()
+                StampButtonSel {
+                    viewModel.setStampMode(false)
+                }
             }
-            StampButton(
-                viewModel,
-                drawerState
-            )
 
             if (isNeedInit.value) {
                 CommonDialog(
+
                     showDialog = isNeedInit,
                     title = stringResource(id = R.string.popup_content_regist_page_title),
                     cancelText = stringResource(id = R.string.popup_content_regist_page_cancel),
@@ -275,7 +289,7 @@ fun TitleBar(
                                     .wrapContentHeight()
                                     .width(22.dp)
                                     .align(Alignment.CenterStart)
-                                    .padding(start = 9.dp),
+                                    .padding(start = 9.dp, top = 2.dp),
                                 text = page.page.emoji,
                                 fontSize = 18.sp
                             )
@@ -444,7 +458,8 @@ fun SelectedTab(
         Text(
             modifier = Modifier
                 .wrapContentHeight()
-                .size(22.dp),
+                .size(22.dp)
+                .padding(top = 2.dp),
             text = page.emoji,
             textAlign = TextAlign.Center,
             fontSize = 18.sp
@@ -475,10 +490,9 @@ fun SelectedTab(
 fun FriendsBar(
     pages: List<PageWithContents>,
     viewModel: MainViewModel,
-    isNeedInit: MutableState<Boolean>
+    isNeedInit: MutableState<Boolean>,
+    user: User?
 ) {
-    val user by viewModel.user.observeAsState()
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -773,41 +787,24 @@ fun BottomBar(viewModel: MainViewModel) {
     }
 }
 @Composable
-fun StampBottomBar(viewModel: MainViewModel) {
+fun BottomBarSel() {
 
     Box(
         modifier = Modifier
             .fillMaxSize()
     ) {
-        Row(
+        Box(
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .fillMaxWidth()
                 .height(76.dp)
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(Color(0xfff3fff4), Color(0xffc2ffd3)),
-                        startY = 0f,
-                        endY = 500f
-                    )
-                )
-                .padding(start = 280.dp, top = 15.dp)
+                .background(Color.Black)
+                .padding(start = 108.dp, top = 11.dp)
         ) {
-            Image(
-                painterResource(id = R.drawable.ic_btn_noti),
-                contentDescription = null,
-            )
-
-            Spacer(modifier = Modifier.size(25.dp))
-
-            Image(
-                painterResource(id = R.drawable.ic_btn_setting),
-                contentDescription = null,
-                modifier = Modifier.clickable {
-                    viewModel.deleteAllContent(viewModel.currentPage.value.id)
-                    viewModel.fetchAllPagesWithContents()
-                }
-
+            Text(
+                text = stringResource(id = R.string.main_stamp_sel_info),
+                color = Color.White,
+                fontSize = 16.sp
             )
         }
     }
@@ -816,9 +813,8 @@ fun StampBottomBar(viewModel: MainViewModel) {
 @Composable
 fun StampButton(
     viewModel: MainViewModel,
-    drawerState: BottomDrawerState
+    onClick: () -> Unit
 ) {
-    val scope = rememberCoroutineScope()
     val interactionSource = remember { MutableInteractionSource() }
 
     Box(
@@ -835,11 +831,7 @@ fun StampButton(
                 .clickable(
                     interactionSource = interactionSource,
                     indication = null,
-                    onClick = {
-                        scope.launch {
-                            drawerState.open()
-                        }
-                    }
+                    onClick = onClick
                 ),
             contentAlignment = Alignment.Center
         ) {
@@ -874,3 +866,35 @@ fun StampButton(
     }
 }
 
+@Composable
+fun StampButtonSel(
+    onClick: () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(start = 20.dp, bottom = 18.dp)
+    ) {
+
+        Box(
+            modifier = Modifier
+                .size(72.dp)
+                .align(Alignment.BottomStart)
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    onClick = onClick
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painterResource(id = R.drawable.bg_btn_stamp_sel),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth()
+            )
+        }
+    }
+}
