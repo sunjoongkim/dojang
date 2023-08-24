@@ -26,7 +26,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.BottomDrawer
-import androidx.compose.material.BottomDrawerState
 import androidx.compose.material.BottomDrawerValue
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.rememberBottomDrawerState
@@ -163,15 +162,18 @@ fun MainView(
                 )
 
                 Spacer(modifier = Modifier.size(15.dp))
-                PageItemPager(
-                    pagerState,
-                    pages,
-                    isNeedInit,
-                    viewModel,
-                    navController,
-                    isShowContentDetail,
-                    contentPageIndex
-                )
+
+                if (!isStampMode) {
+                    PageItemPager(
+                        pagerState,
+                        pages,
+                        isNeedInit,
+                        viewModel,
+                        navController,
+                        isShowContentDetail,
+                        contentPageIndex
+                    )
+                }
             }
 
             if (!isStampMode) {
@@ -194,11 +196,11 @@ fun MainView(
                     }
                 )
             } else {
-                // 도장찍기 모드 BottomBar
-                BottomBarSel()
-                StampButtonSel {
-                    viewModel.setStampMode(false)
-                }
+                // 도장찍기 모드 화면
+                StampModeView(
+                    viewModel = viewModel,
+                    contents = pages[pagerState.currentPage].contents
+                )
             }
 
             if (isNeedInit.value) {
@@ -595,7 +597,7 @@ fun PageItemPager(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            ListItem(
+            ContentList(
                 pageIndex = index,
                 pages = pages,
                 isNeedInit = isNeedInit,
@@ -608,7 +610,7 @@ fun PageItemPager(
     }
 }
 @Composable
-fun ListItem(
+fun ContentList(
     pageIndex: Int,
     pages: List<PageWithContents>,
     isNeedInit: MutableState<Boolean>,
@@ -701,14 +703,18 @@ fun ContentListItem(
     index: Int,
     itemSize : Dp
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
 
     Box(
         modifier = Modifier
             .size(itemSize, (itemSize + 15.dp - 36.dp))
-            .clickable(onClick = {
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) {
                 contentPagerIndex.value = index
                 isShowContentDetail.value = true
-            })
+            }
             .padding(
                 start = if (index % 2 == 1) 12.dp else 24.dp,
                 end = if (index % 2 == 0) 12.dp else 24.dp
@@ -787,30 +793,6 @@ fun BottomBar(viewModel: MainViewModel) {
     }
 }
 @Composable
-fun BottomBarSel() {
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-    ) {
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .fillMaxWidth()
-                .height(76.dp)
-                .background(Color.Black)
-                .padding(start = 108.dp, top = 11.dp)
-        ) {
-            Text(
-                text = stringResource(id = R.string.main_stamp_sel_info),
-                color = Color.White,
-                fontSize = 16.sp
-            )
-        }
-    }
-}
-@OptIn(ExperimentalMaterialApi::class)
-@Composable
 fun StampButton(
     viewModel: MainViewModel,
     onClick: () -> Unit
@@ -866,35 +848,3 @@ fun StampButton(
     }
 }
 
-@Composable
-fun StampButtonSel(
-    onClick: () -> Unit
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(start = 20.dp, bottom = 18.dp)
-    ) {
-
-        Box(
-            modifier = Modifier
-                .size(72.dp)
-                .align(Alignment.BottomStart)
-                .clickable(
-                    interactionSource = interactionSource,
-                    indication = null,
-                    onClick = onClick
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Image(
-                painterResource(id = R.drawable.bg_btn_stamp_sel),
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxWidth()
-            )
-        }
-    }
-}
