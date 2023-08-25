@@ -1,12 +1,21 @@
 package com.too.onions.dojang.ui.main.view
 
+import android.content.Context
 import android.content.res.Configuration
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
+import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -54,6 +63,7 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -61,6 +71,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.getSystemService
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.google.accompanist.pager.ExperimentalPagerApi
@@ -101,6 +112,15 @@ fun StampModeView(
     val user by viewModel.user.observeAsState()
     val isStampMode by viewModel.isStampMode.observeAsState(false)
 
+    val context = LocalContext.current
+    val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+        vibratorManager.defaultVibrator
+    } else {
+        @Suppress("DEPRECATION")
+        context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+    }
+
     val interactionSource = remember { MutableInteractionSource() }
 
     Box(
@@ -131,12 +151,14 @@ fun StampModeView(
             painterResource(id = R.drawable.img_stamp),
             contentDescription = null,
             modifier = Modifier
-                .offset { IntOffset(offsetX.roundToInt(), offsetY.roundToInt())}
+                .offset { IntOffset(offsetX.roundToInt(), offsetY.roundToInt()) }
                 .pointerInput(Unit) {
                     detectDragGestures { change, dragAmount ->
                         change.consume()
                         offsetX += dragAmount.x
                         offsetY += dragAmount.y
+                        performstatus
+                        Feedback(vibrator, 30)
                     }
                 }
                 .align(Alignment.Center)
@@ -147,17 +169,40 @@ fun StampModeView(
             viewModel.setStampMode(false)
         }
     }
-
+}
+fun performHapticFeedback(vibrator: Vibrator, intensity: Int) {
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+        val effect = VibrationEffect.createOneShot(
+            100,
+            intensity
+        )
+        vibrator.vibrate(effect)
+    } else {
+        // For pre-Oreo devices
+        vibrator.vibrate(100)
+    }
 }
 @Composable
 fun ContentListSel(
     viewModel: MainViewModel,
     contents: List<Content>
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isHovered by interactionSource.collectIsHoveredAsState()
+
+    LaunchedEffect(interactionSource) {
+        Log.e("@@@@@", "======>  isHovered : " + isHovered)
+
+    }
+
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .padding(top = 160.dp, bottom = 86.dp)
+            .hoverable(
+                interactionSource = interactionSource,
+                enabled = true
+            )
     ) {
         val itemSize = maxWidth / 2
 
@@ -186,16 +231,21 @@ fun ContentListItemSel(
     itemSize : Dp
 ) {
     val interactionSource = remember { MutableInteractionSource() }
+    val isHovered by interactionSource.collectIsHoveredAsState()
+    val displaySize = if (isHovered) itemSize * 1.1f else itemSize
+
+    LaunchedEffect(interactionSource) {
+        Log.e("@@@@@", "======> item ${index} isHovered : " + isHovered)
+
+    }
 
     Box(
         modifier = Modifier
-            .size(itemSize, (itemSize + 15.dp - 36.dp))
-            .clickable(
+            .size(displaySize, (displaySize + 15.dp - 36.dp))
+            .hoverable(
                 interactionSource = interactionSource,
-                indication = null
-            ) {
-
-            }
+                enabled = true
+            )
             .padding(
                 start = if (index % 2 == 1) 12.dp else 24.dp,
                 end = if (index % 2 == 0) 12.dp else 24.dp
@@ -206,22 +256,26 @@ fun ContentListItemSel(
             model = content.imageUri,
             contentDescription = null,
             modifier = Modifier
-                .size(itemSize, itemSize - 36.dp)
+                .size(displaySize, displaySize - 36.dp)
                 .border(1.dp, Color(0xff123485), RectangleShape)
-                .background(color = Color(content.color)),
-            contentScale = ContentScale.Crop
+                .background(color = Color(content.color))
+                .hoverable(
+                    interactionSource = interactionSource,
+                    enabled = true
+                )
+            ,contentScale = ContentScale.Crop
         )
 
         Box(
             modifier = Modifier
-                .size(itemSize - 30.dp - 36.dp, 40.dp)
+                .size(displaySize - 30.dp - 36.dp, 40.dp)
                 .align(Alignment.BottomStart)
                 .border(1.dp, Color(0xff123485), RectangleShape)
                 .background(color = Color(0xff5dcc83)),
         ) {
             Text(
                 modifier = Modifier
-                    .width(itemSize - 30.dp - 36.dp)
+                    .width(displaySize - 30.dp - 36.dp)
                     .align(Alignment.Center)
                     .padding(start = 5.dp),
                 textAlign = TextAlign.Start,

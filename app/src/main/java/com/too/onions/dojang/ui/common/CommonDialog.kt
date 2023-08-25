@@ -103,7 +103,8 @@ fun CommonDialog(
                         Text(
                             text = confirmText,
                             fontSize = 14.sp,
-                            fontFamily = FontFamily(Font(R.font.neo_dunggeunmo_pro))
+                            fontFamily = FontFamily(Font(R.font.neo_dunggeunmo_pro)),
+                            lineHeight = 14.sp
                         )
                     }
                 }

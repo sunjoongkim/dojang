@@ -39,5 +39,9 @@
     <string name="popup_content_regist_page_cancel">닫기</string>
     <string name="popup_content_regist_page_confirm">등록하기</string>
 
+    <string name="popup_add_content_title">등록된 콘텐츠가 없어서\n도장을 찍을게 없어요.</string>
+    <string name="popup_add_content_cancel">닫기</string>
+    <string name="popup_add_content_confirm">콘텐츠\n만들기</string>
+
 
 </resources>

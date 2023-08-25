@@ -89,6 +89,7 @@ fun MainView(
 
     val isNeedInit = remember { mutableStateOf(false) }
     val isShowContentDetail = remember { mutableStateOf(false) }
+    val isNeedAddContent = remember { mutableStateOf(false) }
 
     val drawerState = rememberBottomDrawerState(BottomDrawerValue.Closed)
 
@@ -186,7 +187,7 @@ fun MainView(
                             if (pages.isEmpty() || viewModel.currentPage.value.title.isEmpty()) {
                                 isNeedInit.value = true
                             } else if (pages[pagerState.currentPage].contents.isEmpty()) {
-                                navController.navigate(MainScreen.AddContent.route)
+                                isNeedAddContent.value = true
                             } else if (user?.stamp?.isEmpty() == true) {
                                 drawerState.open()
                             } else {
@@ -203,9 +204,9 @@ fun MainView(
                 )
             }
 
+            // 최초 페이지 추가 팝업
             if (isNeedInit.value) {
                 CommonDialog(
-
                     showDialog = isNeedInit,
                     title = stringResource(id = R.string.popup_content_regist_page_title),
                     cancelText = stringResource(id = R.string.popup_content_regist_page_cancel),
@@ -213,6 +214,7 @@ fun MainView(
                     onConfirm = onMoveAddPage
                 )
             }
+            // content 선택시 상세화면
             if (isShowContentDetail.value) {
                 ContentDetailView(
                     isShowContentDetail = isShowContentDetail,
@@ -221,10 +223,21 @@ fun MainView(
                     viewModel = viewModel
                 )
             }
+            // content 없을때 도장 선택시 팝업
+            if (isNeedAddContent.value) {
+                CommonDialog(
+                    showDialog = isNeedAddContent,
+                    title = stringResource(id = R.string.popup_add_content_title),
+                    cancelText = stringResource(id = R.string.popup_add_content_cancel),
+                    confirmText = stringResource(id = R.string.popup_add_content_confirm),
+                    onConfirm = {
+                        isNeedAddContent.value = false
+                        navController.navigate(MainScreen.AddContent.route)
+                    }
+                )
+            }
         }
     )
-
-
 }
 
 @OptIn(ExperimentalPagerApi::class)
