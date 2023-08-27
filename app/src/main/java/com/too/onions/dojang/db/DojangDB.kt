@@ -9,9 +9,9 @@ import com.too.onions.dojang.db.dao.ContentDao
 import com.too.onions.dojang.db.dao.PageDao
 import com.too.onions.dojang.db.dao.UserDao
 import com.too.onions.dojang.db.data.Content
-import com.too.onions.dojang.db.data.Converters
 import com.too.onions.dojang.db.data.Page
 import com.too.onions.dojang.db.data.User
+import com.too.onions.dojang.db.data.converter.Converters
 
 @Database(entities = [Content::class, Page::class, User::class], version = 1, exportSchema = false)
 @TypeConverters(Converters::class)

@@ -6,6 +6,7 @@ import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -115,7 +116,15 @@ fun StampModeView(
             modifier = Modifier
                 .offset { IntOffset(offsetX.roundToInt(), offsetY.roundToInt()) }
                 .pointerInput(Unit) {
-                    detectDragGestures { change, dragAmount ->
+                    detectDragGestures(
+                        onDragEnd = {
+                            // content 안에 도장을 찍을 경우
+                            // 좌표계산 -> 도장찍기 -> getContent -> stamp 추가 -> updateContent
+                            if (overlappedIndex.value != -1) {
+                                contents[overlappedIndex.value]
+                            }
+                        }
+                    ) { change, dragAmount ->
                         change.consume()
                         offsetX += dragAmount.x
                         offsetY += dragAmount.y

@@ -14,10 +14,3 @@ data class Page (
     val friends: List<String> = emptyList()
 )
 
-class Converters {
-    @TypeConverter
-    fun stringToList(value: String): List<String> = value.split((",")).map { it.trim() }
-
-    @TypeConverter
-    fun listToString(list: List<String>): String = list.joinToString {","}
-}

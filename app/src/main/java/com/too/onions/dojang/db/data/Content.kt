@@ -12,5 +12,12 @@ data class Content (
     val imageUri: String?,
     val title: String = "",
     val description: String = "",
-    val address: String = ""
+    val address: String = "",
+    val stampList: List<Stamp> = emptyList()
+)
+
+data class Stamp (
+    val user: String,
+    val x: Int,
+    val y: Int
 )

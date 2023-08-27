@@ -14,6 +14,8 @@ interface ContentDao {
     @Query("SELECT * from contents where pageId = :pageId")
     suspend fun getAll(pageId: Long) : List<Content>
 
+    @Query("SELECT * from contents where id = :contentId")
+    suspend fun get(contentId: Long) : Content
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(content: Content)

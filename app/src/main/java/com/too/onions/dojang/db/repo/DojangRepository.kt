@@ -3,6 +3,7 @@ package com.too.onions.dojang.db.repo
 import com.too.onions.dojang.db.DojangDB
 import com.too.onions.dojang.db.data.Content
 import com.too.onions.dojang.db.data.Page
+import com.too.onions.dojang.db.data.Stamp
 import com.too.onions.dojang.db.data.User
 import com.too.onions.dojang.service.MainService
 import javax.inject.Inject
@@ -23,6 +24,12 @@ class DojangRepository @Inject constructor(private val db: DojangDB) {
 
     suspend fun insertContent(content: Content) {
         db.contentDao().insert(content)
+    }
+    suspend fun getContent(contentId: Long){
+        db.contentDao().get(contentId)
+    }
+    suspend fun updateContent(content: Content) {
+        db.contentDao().update(content)
     }
     suspend fun deleteContent(content: Content) {
         db.contentDao().delete(content)

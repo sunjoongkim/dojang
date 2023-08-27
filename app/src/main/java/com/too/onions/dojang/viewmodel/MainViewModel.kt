@@ -11,6 +11,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.too.onions.dojang.db.data.Content
 import com.too.onions.dojang.db.data.Page
+import com.too.onions.dojang.db.data.Stamp
 import com.too.onions.dojang.db.data.User
 import com.too.onions.dojang.db.repo.DojangRepository
 import com.too.onions.dojang.service.MainService
@@ -70,9 +71,19 @@ class MainViewModel @Inject constructor(private val repository: DojangRepository
             fetchAllPagesWithContents()
         }
     }
+    fun getContent(contentId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.getContent(contentId)
+        }
+    }
     fun deleteContent(content: Content) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.deleteContent(content)
+        }
+    }
+    fun updateContent(content: Content) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.updateContent(content)
         }
     }
     fun deleteAllContent(pageId: Long) {
