@@ -13,6 +13,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -31,6 +33,7 @@ import androidx.emoji2.emojipicker.EmojiPickerView
 import androidx.emoji2.emojipicker.EmojiViewItem
 import androidx.navigation.NavHostController
 import com.too.onions.dojang.R
+import com.too.onions.dojang.define.Define
 import com.too.onions.dojang.viewmodel.MainViewModel
 
 @Composable
@@ -38,6 +41,7 @@ fun AddStampEmojiView(
     viewModel: MainViewModel,
     navController: NavHostController
 ) {
+    val pages by viewModel.pageInfos.observeAsState(emptyList())
     val emoji = remember { mutableStateOf(EmojiViewItem("", emptyList())) }
 
     Column (
@@ -78,7 +82,18 @@ fun AddStampEmojiView(
 
         Button(
             onClick = {
-                viewModel.updateUserStamp(emoji.value.emoji)
+                // 현재 user에 해당하는 pageUser 를 가져와 stamp 변환후 update
+                val updated = page.friends.map { friend ->
+                    if (friend.nickName == viewModel.user.value?.nickname) {
+                        friend.copy(stamp = Define.STAMP_DEFAULT)
+                    } else {
+                        friend
+                    }
+                }
+                val newPage = page.copy(friends = updated)
+                viewModel.updatePage(newPage)
+
+                //viewModel.updateUserStamp(emoji.value.emoji)
                 viewModel.setStampMode(true)
                 navController.popBackStack()
             },

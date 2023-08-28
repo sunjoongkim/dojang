@@ -11,6 +11,10 @@ data class Page (
     val index: Int = 0,
     val emoji: String = "",
     val title: String = "",
-    val friends: List<String> = emptyList()
+    val friends: List<PageUser> = emptyList()
 )
 
+data class PageUser (
+    val nickName: String,
+    val stamp: String = ""
+)

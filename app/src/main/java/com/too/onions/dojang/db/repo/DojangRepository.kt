@@ -12,6 +12,9 @@ class DojangRepository @Inject constructor(private val db: DojangDB) {
     suspend fun insertPage(page: Page) {
         db.pageDao().insert(page)
     }
+    suspend fun updatePage(page: Page) {
+        db.pageDao().update(page)
+    }
     suspend fun deletePage(page: Page) {
         db.pageDao().delete(page)
     }

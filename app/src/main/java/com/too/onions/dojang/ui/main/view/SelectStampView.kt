@@ -45,9 +45,11 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.too.onions.dojang.R
+import com.too.onions.dojang.db.data.Page
 import com.too.onions.dojang.define.Define
 import com.too.onions.dojang.ui.main.MainScreen
 import com.too.onions.dojang.viewmodel.MainViewModel
+import com.too.onions.dojang.viewmodel.PageInfo
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -55,7 +57,8 @@ import kotlinx.coroutines.launch
 fun SelectStampView(
     viewModel: MainViewModel,
     navController: NavHostController,
-    drawerState: BottomDrawerState
+    drawerState: BottomDrawerState,
+    page: Page
 ) {
     val seletedStamp = remember { mutableStateOf(Define.SEL_STAMP_NONE)}
     val interactionSource = remember { MutableInteractionSource() }
@@ -182,6 +185,17 @@ fun SelectStampView(
                     scope.launch {
 
                         if (seletedStamp.value == Define.SEL_STAMP_DEFAULT) {
+                            // 현재 user에 해당하는 pageUser 를 가져와 stamp 변환후 update
+                            val updated = page.friends.map { friend ->
+                                if (friend.nickName == viewModel.user.value?.nickname) {
+                                    friend.copy(stamp = Define.STAMP_DEFAULT)
+                                } else {
+                                    friend
+                                }
+                            }
+                            val newPage = page.copy(friends = updated)
+                            viewModel.updatePage(newPage)
+
                             viewModel.setStampMode(true)
                             drawerState.close()
                         } else {

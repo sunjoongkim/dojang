@@ -54,6 +54,7 @@ import androidx.navigation.NavHostController
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.too.onions.dojang.R
 import com.too.onions.dojang.db.data.Page
+import com.too.onions.dojang.db.data.PageUser
 import com.too.onions.dojang.ui.main.AddPageMode
 import com.too.onions.dojang.ui.main.MainScreen
 import com.too.onions.dojang.viewmodel.MainViewModel
@@ -89,16 +90,19 @@ fun AddPageView(
                 AddPageTitle(title, addPageMode, navController) {
                     addPageMode.value = AddPageMode.INPUT_DONE
 
+                    val firstUser = PageUser(
+                        nickName = viewModel.user.value?.nickname ?: ""
+                    )
+                    val friends = ArrayList<PageUser>()
+                    friends.add(firstUser)
+
                     val page = Page(
                         emoji = emoji.value.emoji,
-                        title = title.value
+                        title = title.value,
+                        friends = friends
                     )
                     viewModel.insertPage(page)
-
-                    navController.navigate(MainScreen.Main.route + "/true") {
-                        popUpTo(MainScreen.Main.route)
-                        launchSingleTop = true
-                    }
+                    navController.popBackStack()
                 }
             }
             AddPageMode.INPUT_DONE -> {

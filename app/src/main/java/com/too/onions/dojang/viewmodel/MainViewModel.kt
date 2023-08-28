@@ -2,28 +2,23 @@ package com.too.onions.dojang.viewmodel
 
 import android.util.Log
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.too.onions.dojang.db.data.Content
 import com.too.onions.dojang.db.data.Page
-import com.too.onions.dojang.db.data.Stamp
 import com.too.onions.dojang.db.data.User
 import com.too.onions.dojang.db.repo.DojangRepository
-import com.too.onions.dojang.service.MainService
-import com.too.onions.dojang.ui.main.MainScreen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-data class PageWithContents (
+data class PageInfo (
     val page: Page,
-    val contents: List<Content>
+    val contents: List<Content>,
 )
 @HiltViewModel
 class MainViewModel @Inject constructor(private val repository: DojangRepository): ViewModel() {
@@ -45,6 +40,12 @@ class MainViewModel @Inject constructor(private val repository: DojangRepository
     fun insertPage(page: Page) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.insertPage(page)
+            fetchAllPagesWithContents()
+        }
+    }
+    fun updatePage(page: Page){
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.updatePage(page)
             fetchAllPagesWithContents()
         }
     }
@@ -113,8 +114,8 @@ class MainViewModel @Inject constructor(private val repository: DojangRepository
         }
     }
 
-    private val _pagesWithContents = MutableLiveData<List<PageWithContents>>()
-    val pagesWithContents: LiveData<List<PageWithContents>> get() = _pagesWithContents
+    private val _pageInfos = MutableLiveData<List<PageInfo>>()
+    val pageInfos: LiveData<List<PageInfo>> get() = _pageInfos
 
     fun fetchAllPagesWithContents() {
         viewModelScope.launch(Dispatchers.IO) {
@@ -122,10 +123,10 @@ class MainViewModel @Inject constructor(private val repository: DojangRepository
 
             val result = allPages.map { page ->
                 val contentsForPage = repository.getAllContent(page.id)
-                PageWithContents(page, contentsForPage)
+                PageInfo(page, contentsForPage)
             }
 
-            _pagesWithContents.postValue(result)
+            _pageInfos.postValue(result)
         }
     }
 }

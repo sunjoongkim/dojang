@@ -73,7 +73,7 @@ import com.too.onions.dojang.ui.main.AddPageMode
 import com.too.onions.dojang.ui.main.MainScreen
 import com.too.onions.dojang.ui.main.PlayMode
 import com.too.onions.dojang.viewmodel.MainViewModel
-import com.too.onions.dojang.viewmodel.PageWithContents
+import com.too.onions.dojang.viewmodel.PageInfo
 import kotlinx.coroutines.launch
 import java.lang.Math.abs
 
@@ -105,7 +105,7 @@ fun MainView(
         currentPlayMode = if (viewModel.currentPage.value.friends.isEmpty()) PlayMode.SINGLE else PlayMode.MULTI
     }
 
-    val pages: List<PageWithContents> by viewModel.pagesWithContents.observeAsState(emptyList())
+    val pages: List<PageInfo> by viewModel.pageInfos.observeAsState(emptyList())
 
 
     val onMoveAddPage = {
@@ -134,7 +134,8 @@ fun MainView(
             SelectStampView(
                 viewModel = viewModel,
                 navController = navController,
-                drawerState = drawerState
+                drawerState = drawerState,
+                page = pages[pagerState.currentPage].page
             )
         },
         content = {
@@ -244,7 +245,7 @@ fun MainView(
 @Composable
 fun TitleBar(
     viewModel: MainViewModel,
-    pages: List<PageWithContents>,
+    pages: List<PageInfo>,
     pagerState: PagerState,
     onMoveAddPage: () -> Unit
 ) {
@@ -503,7 +504,7 @@ fun SelectedTab(
 }
 @Composable
 fun FriendsBar(
-    pages: List<PageWithContents>,
+    pages: List<PageInfo>,
     viewModel: MainViewModel,
     isNeedInit: MutableState<Boolean>,
     user: User?
@@ -591,7 +592,7 @@ fun FriendsBar(
 @Composable
 fun PageItemPager(
     pagerState: PagerState,
-    pages: List<PageWithContents>,
+    pages: List<PageInfo>,
     isNeedInit: MutableState<Boolean>,
     viewModel: MainViewModel,
     navController: NavHostController,
@@ -625,7 +626,7 @@ fun PageItemPager(
 @Composable
 fun ContentList(
     pageIndex: Int,
-    pages: List<PageWithContents>,
+    pages: List<PageInfo>,
     isNeedInit: MutableState<Boolean>,
     viewModel: MainViewModel,
     navController: NavHostController,
@@ -670,7 +671,7 @@ fun ContentList(
 }
 @Composable
 fun AddContentButton(
-    pages: List<PageWithContents>,
+    pages: List<PageInfo>,
     isNeedInit: MutableState<Boolean>,
     viewModel: MainViewModel,
     navController: NavHostController,
