@@ -3,8 +3,6 @@ package com.too.onions.dojang.ui.main.view
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.ScrollScope
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -54,9 +52,8 @@ import androidx.navigation.NavHostController
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.too.onions.dojang.R
 import com.too.onions.dojang.db.data.Page
-import com.too.onions.dojang.db.data.PageUser
+import com.too.onions.dojang.db.data.Friend
 import com.too.onions.dojang.ui.main.AddPageMode
-import com.too.onions.dojang.ui.main.MainScreen
 import com.too.onions.dojang.viewmodel.MainViewModel
 
 @OptIn(ExperimentalPagerApi::class)
@@ -90,10 +87,10 @@ fun AddPageView(
                 AddPageTitle(title, addPageMode, navController) {
                     addPageMode.value = AddPageMode.INPUT_DONE
 
-                    val firstUser = PageUser(
-                        nickName = viewModel.user.value?.nickname ?: ""
+                    val firstUser = Friend(
+                        nickname = viewModel.user.value?.nickname ?: ""
                     )
-                    val friends = ArrayList<PageUser>()
+                    val friends = ArrayList<Friend>()
                     friends.add(firstUser)
 
                     val page = Page(

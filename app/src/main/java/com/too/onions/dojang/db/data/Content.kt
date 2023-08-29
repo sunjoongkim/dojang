@@ -13,11 +13,12 @@ data class Content (
     val title: String = "",
     val description: String = "",
     val address: String = "",
-    val stampList: List<Stamp> = emptyList()
+    val stamps: List<Stamp> = emptyList()
 )
 
 data class Stamp (
     val user: String,
+    val stamp: String,
     val x: Int,
     val y: Int
 )

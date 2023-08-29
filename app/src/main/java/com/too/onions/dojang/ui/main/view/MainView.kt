@@ -1,6 +1,7 @@
 package com.too.onions.dojang.ui.main.view
 
 import android.content.res.Configuration
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -65,8 +66,8 @@ import com.google.accompanist.pager.PagerState
 import com.google.accompanist.pager.rememberPagerState
 import com.too.onions.dojang.R
 import com.too.onions.dojang.db.data.Content
+import com.too.onions.dojang.db.data.Friend
 import com.too.onions.dojang.db.data.Page
-import com.too.onions.dojang.db.data.User
 import com.too.onions.dojang.define.Define.STAMP_DEFAULT
 import com.too.onions.dojang.ui.common.CommonDialog
 import com.too.onions.dojang.ui.main.AddPageMode
@@ -76,6 +77,14 @@ import com.too.onions.dojang.viewmodel.MainViewModel
 import com.too.onions.dojang.viewmodel.PageInfo
 import kotlinx.coroutines.launch
 import java.lang.Math.abs
+
+
+enum class StampStatus {
+    EmptyPage,
+    EmptyContent,
+    EmptyStamp,
+    ReadyDone
+}
 
 @OptIn(ExperimentalPagerApi::class, ExperimentalMaterialApi::class)
 @Composable
@@ -94,19 +103,19 @@ fun MainView(
     val drawerState = rememberBottomDrawerState(BottomDrawerValue.Closed)
 
     val contentPageIndex = remember { mutableStateOf(0) }
-    var currentPlayMode by remember { mutableStateOf(PlayMode.SINGLE)}
 
     val user by viewModel.user.observeAsState()
     val isStampMode by viewModel.isStampMode.observeAsState(false)
 
-    LaunchedEffect(viewModel) {
-        viewModel.fetchAllPagesWithContents()
-        viewModel.setUser()
-        currentPlayMode = if (viewModel.currentPage.value.friends.isEmpty()) PlayMode.SINGLE else PlayMode.MULTI
-    }
-
     val pages: List<PageInfo> by viewModel.pageInfos.observeAsState(emptyList())
 
+    val pagerState = rememberPagerState(
+        pageCount = if (pages.isEmpty()) 1 else pages.size,
+        initialPage = viewModel.currentPage.value.index
+    )
+
+    var currentPlayMode by remember { mutableStateOf(PlayMode.SINGLE)}
+    var currentUser : Friend by remember { mutableStateOf(Friend(""))}
 
     val onMoveAddPage = {
         isNeedInit.value = false
@@ -115,14 +124,34 @@ fun MainView(
         navController.navigate(MainScreen.AddPage.route)
     }
 
-    val pagerState = rememberPagerState(
-        pageCount = if (pages.isEmpty()) 1 else pages.size,
-        initialPage = viewModel.currentPage.value.index
-    )
-
     if (isAddedPage != null && isAddedPage) {
         LaunchedEffect(pagerState) {
             pagerState.scrollToPage(pagerState.currentPage)
+        }
+    }
+
+    LaunchedEffect(viewModel) {
+        viewModel.fetchAllPagesWithContents()
+        viewModel.setUser()
+    }
+
+    LaunchedEffect(user) {
+        if (pages.isEmpty()) {
+            currentPlayMode = PlayMode.SINGLE
+            currentUser = Friend(nickname = viewModel.user.value?.nickname ?: "")
+        }
+    }
+
+    LaunchedEffect(pages) {
+        if (pages.isNotEmpty()) {
+            currentPlayMode =
+                if (pages[pagerState.currentPage].page.friends.size == 1) PlayMode.SINGLE else PlayMode.MULTI
+
+            pages[pagerState.currentPage].page.friends.map { friend ->
+                if (friend.nickname == viewModel.user.value?.nickname) {
+                    currentUser = friend
+                }
+            }
         }
     }
 
@@ -135,7 +164,7 @@ fun MainView(
                 viewModel = viewModel,
                 navController = navController,
                 drawerState = drawerState,
-                page = pages[pagerState.currentPage].page
+                page = if (pages.isNotEmpty()) pages[pagerState.currentPage].page else null
             )
         },
         content = {
@@ -160,7 +189,7 @@ fun MainView(
                     pages = pages,
                     viewModel = viewModel,
                     isNeedInit = isNeedInit,
-                    user = user
+                    currentUser = currentUser
                 )
 
                 Spacer(modifier = Modifier.size(15.dp))
@@ -182,17 +211,18 @@ fun MainView(
                 // 일반 화면 BottomBar
                 BottomBar(viewModel)
                 StampButton(
-                    viewModel = viewModel,
+                    currentUser = currentUser,
                     onClick = {
                         scope.launch {
-                            if (pages.isEmpty() || viewModel.currentPage.value.title.isEmpty()) {
-                                isNeedInit.value = true
-                            } else if (pages[pagerState.currentPage].contents.isEmpty()) {
-                                isNeedAddContent.value = true
-                            } else if (user?.stamp?.isEmpty() == true) {
-                                drawerState.open()
-                            } else {
-                                viewModel.setStampMode(true)
+                            when (checkStampStatus(
+                                pages = pages,
+                                pagerState = pagerState,
+                                viewModel = viewModel
+                            )) {
+                                StampStatus.EmptyPage -> isNeedInit.value = true
+                                StampStatus.EmptyContent -> isNeedAddContent.value = true
+                                StampStatus.EmptyStamp -> drawerState.open()
+                                StampStatus.ReadyDone -> viewModel.setStampMode(true)
                             }
                         }
                     }
@@ -201,7 +231,8 @@ fun MainView(
                 // 도장찍기 모드 화면
                 StampModeView(
                     viewModel = viewModel,
-                    contents = pages[pagerState.currentPage].contents
+                    contents = pages[pagerState.currentPage].contents,
+                    currentUser = currentUser
                 )
             }
 
@@ -239,6 +270,32 @@ fun MainView(
             }
         }
     )
+}
+@OptIn(ExperimentalPagerApi::class)
+fun checkStampStatus(
+    pages: List<PageInfo>,
+    pagerState: PagerState,
+    viewModel: MainViewModel
+) : StampStatus {
+    if (pages.isEmpty() || viewModel.currentPage.value.title.isEmpty()) {
+        return StampStatus.EmptyPage
+    } else if (pages[pagerState.currentPage].contents.isEmpty()) {
+        return StampStatus.EmptyContent
+    } else {
+        var stamp = ""
+
+        pages[pagerState.currentPage].page.friends.map { friend ->
+            if (friend.nickname == viewModel.user.value?.nickname) {
+                stamp = friend.stamp
+            }
+        }
+
+        return if (stamp.isEmpty()) {
+            StampStatus.EmptyStamp
+        } else {
+            StampStatus.ReadyDone
+        }
+    }
 }
 
 @OptIn(ExperimentalPagerApi::class)
@@ -507,7 +564,7 @@ fun FriendsBar(
     pages: List<PageInfo>,
     viewModel: MainViewModel,
     isNeedInit: MutableState<Boolean>,
-    user: User?
+    currentUser: Friend
 ) {
     Row(
         modifier = Modifier
@@ -519,16 +576,16 @@ fun FriendsBar(
         Box(
             modifier = Modifier
                 .background(
-                    color = if (user?.stamp?.isEmpty() == true) Color(0xffe3ea97) else Color.White,
+                    color = if (currentUser.stamp.isNotEmpty()) Color.White else Color(0xffe3ea97),
                     shape = CircleShape
                 )
                 .border(width = 2.dp, color = Color(0x20000000), shape = CircleShape)
                 .size(40.dp),
             contentAlignment = Alignment.Center
         ) {
-            if (user?.stamp?.isEmpty() == true) {
+            if (currentUser.stamp.isEmpty()) {
                 Text(
-                    text = if (user?.nickname == "") "" else user?.nickname?.first().toString(),
+                    text = if (currentUser.nickname == "") "" else currentUser.nickname.first().toString(),
                     modifier = Modifier
                         .wrapContentSize(),
                     textAlign = TextAlign.Center,
@@ -536,7 +593,7 @@ fun FriendsBar(
                 )
             } else {
 
-                if (user?.stamp?.equals(STAMP_DEFAULT) == true) {
+                if (currentUser.stamp == STAMP_DEFAULT) {
                     Image(
                         painterResource(id = R.drawable.ic_btn_stamp),
                         contentDescription = null,
@@ -544,7 +601,7 @@ fun FriendsBar(
                     )
                 } else {
                     Text(
-                        text = user?.stamp ?: "",
+                        text = currentUser.stamp,
                         modifier = Modifier
                             .wrapContentSize()
                             .padding(top = 2.dp),
@@ -808,7 +865,7 @@ fun BottomBar(viewModel: MainViewModel) {
 }
 @Composable
 fun StampButton(
-    viewModel: MainViewModel,
+    currentUser: Friend,
     onClick: () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -818,7 +875,6 @@ fun StampButton(
             .fillMaxSize()
             .padding(start = 20.dp, bottom = 18.dp)
     ) {
-        val user by viewModel.user.observeAsState()
 
         Box(
             modifier = Modifier
@@ -838,8 +894,7 @@ fun StampButton(
                     .fillMaxWidth()
             )
 
-            if (user?.stamp?.isEmpty() == true || user?.stamp?.equals(STAMP_DEFAULT) == true) {
-
+            if (currentUser.stamp == "" || currentUser.stamp == STAMP_DEFAULT) {
                 Image(
                     painterResource(id = R.drawable.ic_btn_stamp),
                     contentDescription = null,
@@ -848,7 +903,7 @@ fun StampButton(
                 )
             } else {
                 Text(
-                    text = user?.stamp ?: "",
+                    text = currentUser.stamp,
                     modifier = Modifier
                         .wrapContentSize()
                         .padding(top = 5.dp),
@@ -856,7 +911,6 @@ fun StampButton(
                     color = Color(0xffa2a958),
                     fontSize = 30.sp
                 )
-
             }
         }
     }

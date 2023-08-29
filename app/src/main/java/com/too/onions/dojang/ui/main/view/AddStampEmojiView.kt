@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -33,7 +32,6 @@ import androidx.emoji2.emojipicker.EmojiPickerView
 import androidx.emoji2.emojipicker.EmojiViewItem
 import androidx.navigation.NavHostController
 import com.too.onions.dojang.R
-import com.too.onions.dojang.define.Define
 import com.too.onions.dojang.viewmodel.MainViewModel
 
 @Composable
@@ -83,14 +81,14 @@ fun AddStampEmojiView(
         Button(
             onClick = {
                 // 현재 user에 해당하는 pageUser 를 가져와 stamp 변환후 update
-                val updated = page.friends.map { friend ->
-                    if (friend.nickName == viewModel.user.value?.nickname) {
-                        friend.copy(stamp = Define.STAMP_DEFAULT)
+                val updated = viewModel.currentPage.value.friends.map { friend ->
+                    if (friend.nickname == viewModel.user.value?.nickname) {
+                        friend.copy(stamp = emoji.value.emoji)
                     } else {
                         friend
                     }
                 }
-                val newPage = page.copy(friends = updated)
+                val newPage = viewModel.currentPage.value.copy(friends = updated)
                 viewModel.updatePage(newPage)
 
                 //viewModel.updateUserStamp(emoji.value.emoji)

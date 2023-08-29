@@ -1,12 +1,10 @@
 package com.too.onions.dojang.ui.main.view
 
-import android.widget.Space
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -26,7 +24,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -42,14 +39,12 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.too.onions.dojang.R
 import com.too.onions.dojang.db.data.Page
 import com.too.onions.dojang.define.Define
 import com.too.onions.dojang.ui.main.MainScreen
 import com.too.onions.dojang.viewmodel.MainViewModel
-import com.too.onions.dojang.viewmodel.PageInfo
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -58,7 +53,7 @@ fun SelectStampView(
     viewModel: MainViewModel,
     navController: NavHostController,
     drawerState: BottomDrawerState,
-    page: Page
+    page: Page?
 ) {
     val seletedStamp = remember { mutableStateOf(Define.SEL_STAMP_NONE)}
     val interactionSource = remember { MutableInteractionSource() }
@@ -186,15 +181,17 @@ fun SelectStampView(
 
                         if (seletedStamp.value == Define.SEL_STAMP_DEFAULT) {
                             // 현재 user에 해당하는 pageUser 를 가져와 stamp 변환후 update
-                            val updated = page.friends.map { friend ->
-                                if (friend.nickName == viewModel.user.value?.nickname) {
+                            val updated = page?.friends?.map { friend ->
+                                if (friend.nickname == viewModel.user.value?.nickname) {
                                     friend.copy(stamp = Define.STAMP_DEFAULT)
                                 } else {
                                     friend
                                 }
                             }
-                            val newPage = page.copy(friends = updated)
-                            viewModel.updatePage(newPage)
+                            val newPage = page?.copy(friends = updated ?: emptyList())
+                            if (newPage != null) {
+                                viewModel.updatePage(newPage)
+                            }
 
                             viewModel.setStampMode(true)
                             drawerState.close()

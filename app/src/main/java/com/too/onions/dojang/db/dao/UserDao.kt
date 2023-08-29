@@ -6,15 +6,11 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
-import com.too.onions.dojang.db.data.Content
-import com.too.onions.dojang.db.data.Page
 import com.too.onions.dojang.db.data.User
 
 @Dao
 interface UserDao {
 
-    @Query("SELECT * from users where pageId = :pageId")
-    suspend fun getAll(pageId: Long) : List<User>
     @Query("SELECT * from users where email = :email")
     suspend fun get(email: String) : User?
 

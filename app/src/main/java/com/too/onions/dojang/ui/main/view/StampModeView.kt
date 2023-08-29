@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material3.Text
@@ -43,6 +44,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -54,13 +56,17 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.too.onions.dojang.R
 import com.too.onions.dojang.db.data.Content
+import com.too.onions.dojang.db.data.Friend
+import com.too.onions.dojang.db.data.Stamp
+import com.too.onions.dojang.define.Define
 import com.too.onions.dojang.viewmodel.MainViewModel
 import kotlin.math.roundToInt
 
 @Composable
 fun StampModeView(
     viewModel: MainViewModel,
-    contents: List<Content>
+    contents: List<Content>,
+    currentUser: Friend
 ) {
 
     val context = LocalContext.current
@@ -81,16 +87,20 @@ fun StampModeView(
     var offsetX by remember { mutableStateOf(0f) }
     var offsetY by remember { mutableStateOf(0f) }
 
+    // content item 내부 x,y offset
+    var innerOffsetX by remember { mutableStateOf(0f) }
+    var innerOffsetY by remember { mutableStateOf(0f) }
 
     val displayMetrics = Resources.getSystem().displayMetrics
     val centerX = displayMetrics.widthPixels / 2
     val centerY = displayMetrics.heightPixels / 2
 
     Box(
-        modifier = Modifier.clickable(
-            interactionSource = interactionSource,
-            indication = null
-        ) {}
+        modifier = Modifier
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) {}
     ) {
         Image(
             painterResource(id = R.drawable.bg_single),
@@ -121,7 +131,21 @@ fun StampModeView(
                             // content 안에 도장을 찍을 경우
                             // 좌표계산 -> 도장찍기 -> getContent -> stamp 추가 -> updateContent
                             if (overlappedIndex.value != -1) {
-                                contents[overlappedIndex.value]
+                                val adjustedX = (offsetX + size.width / 2).roundToInt()
+                                val adjustedY = (offsetY + size.height / 2).roundToInt()
+
+                                Log.e("@@@@@", "====> innerOffsetX : ${innerOffsetX}, innerOffsetY : ${innerOffsetY}")
+                                val stamp = Stamp(
+                                    user = currentUser.nickname,
+                                    stamp = currentUser.stamp,
+                                    x = innerOffsetX.roundToInt(), //(centerX + offsetX),
+                                    y = innerOffsetY.roundToInt() //(centerY + offsetY + size.height / 3)
+                                )
+                                val stamps = contents[overlappedIndex.value].stamps.toMutableList()
+                                stamps.add(stamp)
+
+                                val content = contents[overlappedIndex.value].copy(stamps = stamps)
+                                viewModel.updateContent(content)
                             }
                         }
                     ) { change, dragAmount ->
@@ -132,9 +156,20 @@ fun StampModeView(
 
                         overlappedIndex.value = -1
                         for ((index, coordinates) in coordinateMap) {
-                            if (coordinates.boundsInRoot().contains(Offset(centerX + offsetX, centerY + offsetY + size.height / 3))) {
+                            if (coordinates
+                                    .boundsInRoot()
+                                    .contains(
+                                        Offset(
+                                            centerX + offsetX,
+                                            centerY + offsetY + size.height / 3
+                                        )
+                                    )
+                            ) {
                                 overlappedIndex.value = index
                                 intensity = 30
+
+                                innerOffsetX = (centerX + offsetX) - coordinates.boundsInRoot().topLeft.x
+                                innerOffsetY = (centerY + offsetY + size.height / 3) - coordinates.boundsInRoot().topLeft.y
                             }
                         }
                         performHapticFeedback(vibrator, intensity)
@@ -211,11 +246,11 @@ fun ContentListItemSel(
             .padding(
                 start = if (index % 2 == 1) 12.dp - reduce else 24.dp - reduce,
                 end = if (index % 2 == 0) 12.dp - reduce else 24.dp - reduce,
-                top = if (index == overlappedIndex.value) 0.dp else 10.dp ,
-                bottom = if (index == overlappedIndex.value) 0.dp else 15.dp ,
+                top = if (index == overlappedIndex.value) 0.dp else 10.dp,
+                bottom = if (index == overlappedIndex.value) 0.dp else 15.dp,
             )
     ) {
-
+        // content image
         AsyncImage(
             model = content.imageUri,
             contentDescription = null,
@@ -229,6 +264,49 @@ fun ContentListItemSel(
             contentScale = ContentScale.Crop
         )
 
+        // stamps
+        val parentOffsetX = remember { mutableStateOf(0f) }
+        val parentOffsetY = remember { mutableStateOf(0f) }
+
+        Box(
+            modifier = Modifier
+                .size(itemSize)
+                .onGloballyPositioned { coordinates ->
+                    val pos = coordinates.positionInRoot()
+                    parentOffsetX.value = pos.x
+                    parentOffsetY.value = pos.y
+                }
+        ) {
+            content.stamps.map { stamp ->
+                Log.e("@@@@@", "=======> x : " + stamp.x)
+                Log.e("@@@@@", "=======> y : " + stamp.y)
+
+                if (stamp.stamp == Define.STAMP_DEFAULT) {
+                    Image(
+                        painterResource(id = R.drawable.ic_btn_stamp),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(72.dp)
+                            .offset(
+                                x = (stamp.x / 5).dp,
+                                y = (stamp.y / 5).dp
+                            )
+                    )
+                } else {
+                    Text (
+                        text = stamp.stamp,
+                        fontSize = 40.sp,
+                        modifier = Modifier
+                            .offset(
+                                x = (stamp.x / 5).dp,
+                                y = (stamp.y / 5).dp
+                            )
+                    )
+                }
+            }
+        }
+
+        // content title
         Box(
             modifier = Modifier
                 .size(itemSize - 30.dp - 36.dp, 40.dp)

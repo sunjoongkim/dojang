@@ -85,6 +85,7 @@ class MainViewModel @Inject constructor(private val repository: DojangRepository
     fun updateContent(content: Content) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.updateContent(content)
+            fetchAllPagesWithContents()
         }
     }
     fun deleteAllContent(pageId: Long) {

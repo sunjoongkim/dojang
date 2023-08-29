@@ -2,7 +2,6 @@ package com.too.onions.dojang.db.data
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import androidx.room.TypeConverter
 
 @Entity(tableName = "pages")
 data class Page (
@@ -11,10 +10,10 @@ data class Page (
     val index: Int = 0,
     val emoji: String = "",
     val title: String = "",
-    val friends: List<PageUser> = emptyList()
+    val friends: List<Friend> = emptyList()
 )
 
-data class PageUser (
-    val nickName: String,
+data class Friend (
+    val nickname: String,
     val stamp: String = ""
 )
