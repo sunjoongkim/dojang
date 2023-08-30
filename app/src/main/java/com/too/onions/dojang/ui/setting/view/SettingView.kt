@@ -1,19 +1,14 @@
 package com.too.onions.dojang.ui.setting.view
 
-import android.net.Uri
-import android.provider.DocumentsContract
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,45 +16,28 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import coil.compose.AsyncImage
 import com.too.onions.dojang.R
-import com.too.onions.dojang.db.data.Content
 import com.too.onions.dojang.db.data.User
-import com.too.onions.dojang.define.Define
-import com.too.onions.dojang.ui.main.MainScreen
-import com.too.onions.dojang.viewmodel.MainViewModel
+import com.too.onions.dojang.ui.setting.SettingScreen
 import com.too.onions.dojang.viewmodel.SettingViewModel
 
 @Composable
@@ -68,6 +46,10 @@ fun SettingView(
     navController: NavHostController,
     user: User
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+
+    val isLocked = remember { mutableStateOf(false) }
+    val isUseFaceId = remember { mutableStateOf(false) }
 
     Image(
         painterResource(id = R.drawable.bg_setting),
@@ -132,13 +114,26 @@ fun SettingView(
                 .fillMaxWidth()
                 .weight(0.1f)
                 .border(width = 1.dp, color = Color(0xff565656))
-                .padding(start = 24.dp, end = 24.dp),
+                .padding(start = 24.dp, end = 24.dp)
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null
+                ) {
+                    navController.navigate(SettingScreen.Noti.route)
+                },
             contentAlignment = Alignment.CenterStart
         ) {
             Text(
                 text = stringResource(id = R.string.setting_menu_noti),
                 fontSize = 16.sp,
                 color = Color.Black
+            )
+
+            Text(
+                text = ">",
+                fontSize = 16.sp,
+                color = Color.Black,
+                modifier = Modifier.align(Alignment.CenterEnd)
             )
         }
 
@@ -160,19 +155,62 @@ fun SettingView(
         }
         Spacer(modifier = Modifier.size(10.dp))
 
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(0.1f)
+                .weight(if (isLocked.value) 0.2f else 0.1f)
                 .border(width = 1.dp, color = Color(0xff565656))
                 .padding(start = 24.dp, end = 24.dp),
-            contentAlignment = Alignment.CenterStart
+            verticalArrangement = Arrangement.Center
+
         ) {
-            Text(
-                text = stringResource(id = R.string.setting_menu_pw),
-                fontSize = 16.sp,
-                color = Color.Black
-            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Text(
+                    text = stringResource(id = R.string.setting_menu_pw),
+                    fontSize = 16.sp,
+                    color = Color.Black
+                )
+
+                Image(
+                    painterResource(id = if (isLocked.value) R.drawable.ic_btn_toggle_on else R.drawable.ic_btn_toggle_off),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .clickable {
+                            isLocked.value = !isLocked.value
+                        }
+                )
+            }
+
+            if (isLocked.value) {
+                Spacer(modifier = Modifier.size(25.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.setting_menu_faceid),
+                        fontSize = 16.sp,
+                        color = Color.Black
+                    )
+
+                    Image(
+                        painterResource(id = if (isUseFaceId.value) R.drawable.ic_btn_toggle_on else R.drawable.ic_btn_toggle_off),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .clickable {
+                                isUseFaceId.value = !isUseFaceId.value
+                            }
+                    )
+                }
+            }
+
         }
         Spacer(modifier = Modifier.size(10.dp))
 
@@ -187,7 +225,7 @@ fun SettingView(
             Text(
                 text = stringResource(id = R.string.setting_menu_font),
                 fontSize = 16.sp,
-                color = Color.Black
+                color = Color(0xffd0d0d0)
             )
         }
         Spacer(modifier = Modifier.size(10.dp))
@@ -221,6 +259,9 @@ fun SettingView(
                 fontSize = 16.sp,
                 color = Color.Black
             )
+        }
+        if (!isLocked.value) {
+            Spacer(modifier = Modifier.weight(0.1f))
         }
         Spacer(modifier = Modifier.size(25.dp))
     }

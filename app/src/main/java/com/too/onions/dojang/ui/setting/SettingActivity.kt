@@ -21,6 +21,7 @@ import com.too.onions.dojang.db.data.User
 import com.too.onions.dojang.ui.login.view.AllowView
 import com.too.onions.dojang.ui.login.view.JoinView
 import com.too.onions.dojang.ui.login.view.LoginView
+import com.too.onions.dojang.ui.setting.view.NotiSettingView
 import com.too.onions.dojang.ui.setting.view.SettingView
 import com.too.onions.dojang.ui.theme.DojangTheme
 import com.too.onions.dojang.viewmodel.LoginViewModel
@@ -101,7 +102,10 @@ fun SettingNavHost(
             )
         }
         composable(SettingScreen.Noti.route) {
-
+            NotiSettingView(
+                viewModel = viewModel,
+                navController = navController
+            )
         }
         composable(SettingScreen.Password.route) {
 
