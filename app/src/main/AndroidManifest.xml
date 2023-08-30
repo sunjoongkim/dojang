@@ -39,6 +39,8 @@
             android:windowSoftInputMode="adjustResize"/>
         <activity android:name="com.too.onions.dojang.ui.login.LoginActivity"
             android:windowSoftInputMode="adjustResize"/>
+        <activity android:name="com.too.onions.dojang.ui.setting.SettingActivity"
+            android:windowSoftInputMode="adjustResize"/>
     </application>
 
 </manifest>

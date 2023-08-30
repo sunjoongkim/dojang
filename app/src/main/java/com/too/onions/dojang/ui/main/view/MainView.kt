@@ -1,7 +1,7 @@
 package com.too.onions.dojang.ui.main.view
 
+import android.content.Intent
 import android.content.res.Configuration
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -52,6 +52,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -73,6 +74,7 @@ import com.too.onions.dojang.ui.common.CommonDialog
 import com.too.onions.dojang.ui.main.AddPageMode
 import com.too.onions.dojang.ui.main.MainScreen
 import com.too.onions.dojang.ui.main.PlayMode
+import com.too.onions.dojang.ui.setting.SettingActivity
 import com.too.onions.dojang.viewmodel.MainViewModel
 import com.too.onions.dojang.viewmodel.PageInfo
 import kotlinx.coroutines.launch
@@ -80,10 +82,10 @@ import java.lang.Math.abs
 
 
 enum class StampStatus {
-    EmptyPage,
-    EmptyContent,
-    EmptyStamp,
-    ReadyDone
+    EMPTY_PAGE,
+    EMPTY_CONTENT,
+    EMPTY_STAMP,
+    READY_DONE
 }
 
 @OptIn(ExperimentalPagerApi::class, ExperimentalMaterialApi::class)
@@ -219,10 +221,10 @@ fun MainView(
                                 pagerState = pagerState,
                                 viewModel = viewModel
                             )) {
-                                StampStatus.EmptyPage -> isNeedInit.value = true
-                                StampStatus.EmptyContent -> isNeedAddContent.value = true
-                                StampStatus.EmptyStamp -> drawerState.open()
-                                StampStatus.ReadyDone -> viewModel.setStampMode(true)
+                                StampStatus.EMPTY_PAGE -> isNeedInit.value = true
+                                StampStatus.EMPTY_CONTENT -> isNeedAddContent.value = true
+                                StampStatus.EMPTY_STAMP -> drawerState.open()
+                                StampStatus.READY_DONE -> viewModel.setStampMode(true)
                             }
                         }
                     }
@@ -278,9 +280,9 @@ fun checkStampStatus(
     viewModel: MainViewModel
 ) : StampStatus {
     if (pages.isEmpty() || viewModel.currentPage.value.title.isEmpty()) {
-        return StampStatus.EmptyPage
+        return StampStatus.EMPTY_PAGE
     } else if (pages[pagerState.currentPage].contents.isEmpty()) {
-        return StampStatus.EmptyContent
+        return StampStatus.EMPTY_CONTENT
     } else {
         var stamp = ""
 
@@ -291,9 +293,9 @@ fun checkStampStatus(
         }
 
         return if (stamp.isEmpty()) {
-            StampStatus.EmptyStamp
+            StampStatus.EMPTY_STAMP
         } else {
-            StampStatus.ReadyDone
+            StampStatus.READY_DONE
         }
     }
 }
@@ -826,6 +828,8 @@ fun ContentListItem(
 @Composable
 fun BottomBar(viewModel: MainViewModel) {
 
+    val context = LocalContext.current
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -855,8 +859,9 @@ fun BottomBar(viewModel: MainViewModel) {
                 painterResource(id = R.drawable.ic_btn_setting),
                 contentDescription = null,
                 modifier = Modifier.clickable {
-                    viewModel.deleteAllContent(viewModel.currentPage.value.id)
-                    viewModel.fetchAllPagesWithContents()
+                    val intent = Intent(context, SettingActivity::class.java)
+                    intent.putExtra("user", viewModel.user.value)
+                    context.startActivity(intent)
                 }
 
             )

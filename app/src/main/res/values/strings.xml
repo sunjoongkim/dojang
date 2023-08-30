@@ -31,6 +31,16 @@
     <string name="main_stamp_sel_info">도장깨기를 한 컨텐츠에\n도장을 드래그해서 놔두세요.</string>
 
 
+    <string name="setting_title"><![CDATA[<]]> 설정</string>
+    <string name="setting_title_noti"><![CDATA[<]]> 알림 설정</string>
+    <string name="setting_menu_noti">알림 설정</string>
+    <string name="setting_menu_invite">친구 초대하기</string>
+    <string name="setting_menu_pw">암호 잠금</string>
+    <string name="setting_menu_font">글꼴 바꾸기 (오픈 예정)</string>
+    <string name="setting_menu_contact">버그<![CDATA[&]]>의견 보내기</string>
+    <string name="setting_menu_evaluate">앱 평가하기</string>
+
+
     <string name="popup_login_single_title">가입없이 진행하면\n등록했던 자료가 유실되거나,\n친구초대가 안돼요.\n그래도 괜찮으신가요?</string>
     <string name="popup_login_single_cancel">취소</string>
     <string name="popup_login_single_confirm">괜찮아요.</string>
