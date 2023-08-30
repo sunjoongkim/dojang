@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Dojang</string>
+    <string name="app_name">꾹꾹이</string>
     <string name="title_activity_add_content_view">AddContentView</string>
 
     <string name="login_google">구글로 로그인하기</string>

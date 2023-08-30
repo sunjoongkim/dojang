@@ -8,11 +8,11 @@ plugins {
 }
 
 android {
-    namespace = "com.too.onions.dojang"
+    namespace = "com.too.onions.gguggugi"
     compileSdk = 33
 
     defaultConfig {
-        applicationId = "com.too.onions.dojang"
+        applicationId = "com.too.onions.gguggugi"
         minSdk = 29
         targetSdk = 33
         versionCode = 1
