@@ -177,7 +177,7 @@ fun MainView(
 
     BottomDrawer(
         drawerState = drawerState,
-        gesturesEnabled = false,
+        gesturesEnabled = true,
         drawerContent = {
             // DrawerView
             // 모드에 따라 drawer 생성

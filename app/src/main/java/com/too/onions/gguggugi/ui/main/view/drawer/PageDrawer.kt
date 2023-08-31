@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.BottomDrawerState
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material3.Text
@@ -57,82 +58,111 @@ fun PageDrawer(
 
 
         Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp)
+                .clickable {
 
+                },
+            contentAlignment = Alignment.Center
         ) {
+            Text(
+                text = stringResource(id = R.string.drawer_page_modify_emoji),
+                fontSize = 16.sp,
+                color = Color(0xff123485),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight()
+                    .padding(start = 24.dp, end = 24.dp)
 
+            )
         }
-        Text(
-            text = stringResource(id = R.string.drawer_page_modify_emoji),
-            fontSize = 16.sp,
-            textAlign = TextAlign.Center,
-            color = Color(0xff123485),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp)
-                .padding(start = 24.dp, end = 24.dp)
-                .clickable {
 
-                }
-        )
 
         Spacer(modifier = Modifier
             .fillMaxWidth()
-            .height(2.dp)
-            .background(Color(0xff123485))
+            .height(1.dp)
+            .padding(start = 24.dp, end = 24.dp)
+            .background(Color(0x20123485))
         )
 
-        Text(
-            text = stringResource(id = R.string.drawer_page_modify_title),
-            fontSize = 16.sp,
-            textAlign = TextAlign.Center,
-            color = Color(0xff123485),
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(60.dp)
-                .padding(start = 24.dp, end = 24.dp)
                 .clickable {
 
-                }
-        )
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = stringResource(id = R.string.drawer_page_modify_title),
+                fontSize = 16.sp,
+                color = Color(0xff123485),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight()
+                    .padding(start = 24.dp, end = 24.dp)
+
+            )
+        }
+
 
         Spacer(modifier = Modifier
             .fillMaxWidth()
-            .height(2.dp)
-            .background(Color(0xff123485))
+            .height(1.dp)
+            .padding(start = 24.dp, end = 24.dp)
+            .background(Color(0x20123485))
         )
 
-        Text(
-            text = stringResource(id = R.string.drawer_page_share),
-            fontSize = 16.sp,
-            textAlign = TextAlign.Center,
-            color = Color(0xff123485),
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(60.dp)
-                .padding(start = 24.dp, end = 24.dp)
                 .clickable {
 
-                }
-        )
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = stringResource(id = R.string.drawer_page_share),
+                fontSize = 16.sp,
+                color = Color(0xff123485),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight()
+                    .padding(start = 24.dp, end = 24.dp)
+
+            )
+        }
+
 
         Spacer(modifier = Modifier
             .fillMaxWidth()
-            .height(2.dp)
-            .background(Color(0xff123485))
+            .height(1.dp)
+            .padding(start = 24.dp, end = 24.dp)
+            .background(Color(0x20123485))
         )
 
-        Text(
-            text = stringResource(id = R.string.drawer_page_delete),
-            fontSize = 16.sp,
-            textAlign = TextAlign.Center,
-            color = Color(0xff123485),
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(60.dp)
-                .padding(start = 24.dp, end = 24.dp)
                 .clickable {
 
-                }
-        )
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = stringResource(id = R.string.drawer_page_delete),
+                fontSize = 16.sp,
+                color = Color(0xffff0000),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight()
+                    .padding(start = 24.dp, end = 24.dp)
+
+            )
+        }
     }
 }
