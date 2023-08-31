@@ -27,7 +27,7 @@ import com.too.onions.gguggugi.ui.main.view.AddContentView
 import com.too.onions.gguggugi.ui.main.view.AddPageView
 import com.too.onions.gguggugi.ui.main.view.AddStampEmojiView
 import com.too.onions.gguggugi.ui.main.view.MainView
-import com.too.onions.gguggugi.ui.theme.DojangTheme
+import com.too.onions.gguggugi.ui.common.theme.DojangTheme
 import com.too.onions.gguggugi.viewmodel.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 

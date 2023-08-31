@@ -71,7 +71,7 @@ fun AddStampEmojiView(
         Spacer(modifier = Modifier.size(50.dp))
 
         Text(
-            text = stringResource(id = R.string.add_stamp_info),
+            text = stringResource(id = R.string.drawer_stamp_add_info),
             fontSize = 14.sp,
             color = Color(0xffa8a8a8)
         )
@@ -105,7 +105,7 @@ fun AddStampEmojiView(
             enabled = !(emoji.value.emoji == "")
         ) {
             Text(
-                text = stringResource(id = R.string.add_stamp_confirm),
+                text = stringResource(id = R.string.drawer_stamp_add_confirm),
                 fontSize = 14.sp,
                 fontFamily = FontFamily(Font(R.font.neo_dunggeunmo_pro))
             )

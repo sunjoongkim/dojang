@@ -17,7 +17,7 @@ import androidx.navigation.compose.rememberNavController
 import com.too.onions.gguggugi.db.data.User
 import com.too.onions.gguggugi.ui.setting.view.NotiSettingView
 import com.too.onions.gguggugi.ui.setting.view.SettingView
-import com.too.onions.gguggugi.ui.theme.DojangTheme
+import com.too.onions.gguggugi.ui.common.theme.DojangTheme
 import com.too.onions.gguggugi.viewmodel.SettingViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -82,9 +82,6 @@ fun SettingNavHost(
     viewModel: SettingViewModel,
     user: User
 ) {
-
-    val context = LocalContext.current
-    val activity = context as? ComponentActivity
 
     NavHost(navController = navController, startDestination = SettingScreen.Menu.route) {
         composable(SettingScreen.Menu.route) {

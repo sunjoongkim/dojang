@@ -1,4 +1,4 @@
-package com.too.onions.gguggugi.ui.theme
+package com.too.onions.gguggugi.ui.common.theme
 
 import androidx.compose.ui.graphics.Color
 

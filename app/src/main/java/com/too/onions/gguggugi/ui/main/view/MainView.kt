@@ -74,6 +74,8 @@ import com.too.onions.gguggugi.ui.common.CommonDialog
 import com.too.onions.gguggugi.ui.main.AddPageMode
 import com.too.onions.gguggugi.ui.main.MainScreen
 import com.too.onions.gguggugi.ui.main.PlayMode
+import com.too.onions.gguggugi.ui.main.view.drawer.PageDrawer
+import com.too.onions.gguggugi.ui.main.view.drawer.StampDrawer
 import com.too.onions.gguggugi.ui.setting.SettingActivity
 import com.too.onions.gguggugi.viewmodel.MainViewModel
 import com.too.onions.gguggugi.viewmodel.PageInfo
@@ -86,6 +88,13 @@ enum class StampStatus {
     EMPTY_CONTENT,
     EMPTY_STAMP,
     READY_DONE
+}
+
+enum class DrawerMode {
+    STAMP,
+    PAGE,
+    FRIEND,
+    CONTENT
 }
 
 @OptIn(ExperimentalPagerApi::class, ExperimentalMaterialApi::class)
@@ -101,6 +110,8 @@ fun MainView(
     val isNeedInit = remember { mutableStateOf(false) }
     val isShowContentDetail = remember { mutableStateOf(false) }
     val isNeedAddContent = remember { mutableStateOf(false) }
+
+    val drawerMode = remember { mutableStateOf(DrawerMode.STAMP) }
 
     val drawerState = rememberBottomDrawerState(BottomDrawerValue.Closed)
 
@@ -124,6 +135,13 @@ fun MainView(
 
         addPageMode.value = AddPageMode.INPUT_EMOJI
         navController.navigate(MainScreen.AddPage.route)
+    }
+
+    val onOpenDrawer :  (DrawerMode) -> Unit = { mode ->
+        drawerMode.value = mode
+        scope.launch {
+            drawerState.open()
+        }
     }
 
     if (isAddedPage != null && isAddedPage) {
@@ -162,12 +180,28 @@ fun MainView(
         gesturesEnabled = false,
         drawerContent = {
             // DrawerView
-            SelectStampView(
-                viewModel = viewModel,
-                navController = navController,
-                drawerState = drawerState,
-                page = if (pages.isNotEmpty()) pages[pagerState.currentPage].page else null
-            )
+            // 모드에 따라 drawer 생성
+            when (drawerMode.value) {
+                DrawerMode.STAMP -> {
+                    StampDrawer(
+                        viewModel = viewModel,
+                        navController = navController,
+                        drawerState = drawerState,
+                        page = if (pages.isNotEmpty()) pages[pagerState.currentPage].page else null
+                    )
+                }
+                DrawerMode.PAGE -> {
+                    PageDrawer(
+                        viewModel = viewModel,
+                        navController = navController,
+                        drawerState = drawerState,
+                        page = if (pages.isNotEmpty()) pages[pagerState.currentPage].page else null
+                    )
+                }
+                DrawerMode.CONTENT -> {}
+                DrawerMode.FRIEND -> {}
+            }
+
         },
         content = {
             // Main 화면
@@ -183,7 +217,8 @@ fun MainView(
                     viewModel,
                     pages,
                     pagerState,
-                    onMoveAddPage
+                    onMoveAddPage,
+                    onOpenDrawer
                 )
 
                 Spacer(modifier = Modifier.size(15.dp))
@@ -204,7 +239,7 @@ fun MainView(
                         viewModel,
                         navController,
                         isShowContentDetail,
-                        contentPageIndex
+                        contentPageIndex,
                     )
                 }
             }
@@ -223,7 +258,7 @@ fun MainView(
                             )) {
                                 StampStatus.EMPTY_PAGE -> isNeedInit.value = true
                                 StampStatus.EMPTY_CONTENT -> isNeedAddContent.value = true
-                                StampStatus.EMPTY_STAMP -> drawerState.open()
+                                StampStatus.EMPTY_STAMP -> onOpenDrawer(DrawerMode.STAMP)
                                 StampStatus.READY_DONE -> viewModel.setStampMode(true)
                             }
                         }
@@ -306,7 +341,8 @@ fun TitleBar(
     viewModel: MainViewModel,
     pages: List<PageInfo>,
     pagerState: PagerState,
-    onMoveAddPage: () -> Unit
+    onMoveAddPage: () -> Unit,
+    onOpenDrawer: (DrawerMode) -> Unit
 ) {
 
     val scope = rememberCoroutineScope()
@@ -345,7 +381,8 @@ fun TitleBar(
                             Modifier
                                 .weight(1f)
                                 .height(40.dp)
-                                .background(color = currentColor)
+                                .background(color = currentColor),
+                            onOpenDrawer
                         )
                     } else {
                         Box(
@@ -521,7 +558,8 @@ fun DefaultTitleBar(onMoveAddPage: () -> Unit) {
 @Composable
 fun SelectedTab(
     page: Page,
-    modifier: Modifier
+    modifier: Modifier,
+    onOpenDrawer: (DrawerMode) -> Unit
 ) {
     Row(
         modifier = modifier,
@@ -556,7 +594,13 @@ fun SelectedTab(
         Image(
             painterResource(id = R.drawable.ic_btn_side_menu),
             contentDescription = null,
-            modifier = Modifier.size(24.dp, 24.dp),
+            modifier = Modifier
+                .size(24.dp, 24.dp)
+                .clickable(
+
+                ) {
+                    onOpenDrawer(DrawerMode.PAGE)
+                } ,
             alignment = Alignment.CenterEnd
         )
     }

@@ -31,7 +31,7 @@ import com.too.onions.gguggugi.ui.login.view.AllowView
 import com.too.onions.gguggugi.ui.login.view.JoinView
 import com.too.onions.gguggugi.ui.login.view.LoginView
 import com.too.onions.gguggugi.ui.main.MainActivity
-import com.too.onions.gguggugi.ui.theme.DojangTheme
+import com.too.onions.gguggugi.ui.common.theme.DojangTheme
 import com.too.onions.gguggugi.viewmodel.LoginViewModel
 import dagger.hilt.android.AndroidEntryPoint
 

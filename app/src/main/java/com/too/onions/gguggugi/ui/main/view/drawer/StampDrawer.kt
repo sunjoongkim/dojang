@@ -1,4 +1,4 @@
-package com.too.onions.gguggugi.ui.main.view
+package com.too.onions.gguggugi.ui.main.view.drawer
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -49,7 +49,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun SelectStampView(
+fun StampDrawer(
     viewModel: MainViewModel,
     navController: NavHostController,
     drawerState: BottomDrawerState,
@@ -81,7 +81,7 @@ fun SelectStampView(
         Spacer(modifier = Modifier.size(30.dp))
 
         Text(
-            text = stringResource(id = R.string.select_stamp_info),
+            text = stringResource(id = R.string.drawer_stamp_info),
             fontSize = 16.sp,
             textAlign = TextAlign.Center,
             color = Color(0xff123485)
@@ -167,7 +167,7 @@ fun SelectStampView(
                     .border(2.dp, color = Color(0xff000000))
             ) {
                 Text(
-                    text = stringResource(id = R.string.select_stamp_cancel),
+                    text = stringResource(id = R.string.drawer_stamp_cancel),
                     fontSize = 14.sp,
                     fontFamily = FontFamily(Font(R.font.neo_dunggeunmo_pro))
                 )
@@ -211,7 +211,7 @@ fun SelectStampView(
                 enabled = seletedStamp.value != Define.SEL_STAMP_NONE
             ) {
                 Text(
-                    text = stringResource(id = R.string.select_stamp_confirm),
+                    text = stringResource(id = R.string.drawer_stamp_confirm),
                     fontSize = 14.sp,
                     fontFamily = FontFamily(Font(R.font.neo_dunggeunmo_pro))
                 )

@@ -16,7 +16,7 @@ import com.too.onions.gguggugi.R
 import com.too.onions.gguggugi.service.MainService
 import com.too.onions.gguggugi.ui.login.LoginActivity
 import com.too.onions.gguggugi.ui.main.MainActivity
-import com.too.onions.gguggugi.ui.theme.DojangTheme
+import com.too.onions.gguggugi.ui.common.theme.DojangTheme
 
 
 class SplashActivity : ComponentActivity() {
