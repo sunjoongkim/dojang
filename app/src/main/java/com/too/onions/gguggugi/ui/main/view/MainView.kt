@@ -144,6 +144,12 @@ fun MainView(
         }
     }
 
+    LaunchedEffect(drawerState.isClosed) {
+        if (drawerState.isClosed) {
+            drawerMode.value = DrawerMode.PAGE
+        }
+    }
+
     if (isAddedPage != null && isAddedPage) {
         LaunchedEffect(pagerState) {
             pagerState.scrollToPage(pagerState.currentPage)
@@ -178,6 +184,7 @@ fun MainView(
     BottomDrawer(
         drawerState = drawerState,
         gesturesEnabled = true,
+        scrimColor = Color.Transparent,
         drawerContent = {
             // DrawerView
             // 모드에 따라 drawer 생성
@@ -307,6 +314,8 @@ fun MainView(
             }
         }
     )
+
+
 }
 @OptIn(ExperimentalPagerApi::class)
 fun checkStampStatus(
