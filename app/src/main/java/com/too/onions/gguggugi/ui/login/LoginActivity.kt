@@ -1,6 +1,8 @@
 package com.too.onions.gguggugi.ui.login
 
 import android.Manifest
+import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -26,7 +28,12 @@ import androidx.navigation.compose.rememberNavController
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
+import com.too.onions.gguggugi.R
 import com.too.onions.gguggugi.ui.login.view.AllowView
 import com.too.onions.gguggugi.ui.login.view.JoinView
 import com.too.onions.gguggugi.ui.login.view.LoginView
@@ -49,16 +56,43 @@ enum class LoginMode {
 @AndroidEntryPoint
 class LoginActivity : ComponentActivity() {
 
+    private lateinit var googleSignInClient: GoogleSignInClient
+    private val RC_SIGN_IN = 9001
+
     private val viewModel: LoginViewModel by viewModels()
+
+    /*private val signInLauncher = registerForActivityResult(
+        FirebaseAuthUIActivityResultContract()
+    ) { res ->
+        onSignInResult(res)
+    }*/
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val signInLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+                try {
+                    val account = task.getResult(ApiException::class.java)
+                    val idToken = account?.idToken // 여기서 ID 토큰을 얻을 수 있습니다.
+                    val authCode = account?.serverAuthCode
+                    // 서버로 ID 토큰을 전송
+                    Log.e("@@@@@", "====> idToken : ${idToken}")
+                    Log.e("@@@@@", "====> authCode : ${authCode}")
+
+                } catch (e: ApiException) {
+                    // 로그인 실패 처리
+                }
+            }
+        }
+
         setContent {
             DojangTheme {
 
                 LoginNavHost(
-                    signInLauncher = signInLauncher,
                     viewModel = viewModel,
+                    signInLauncher = signInLauncher,
                     checkNotiPermission = { checkNotiPermission() }
                 )
             }
@@ -66,18 +100,23 @@ class LoginActivity : ComponentActivity() {
     }
 
 
-    private val signInLauncher = registerForActivityResult(
-        FirebaseAuthUIActivityResultContract()
-    ) { res ->
-        onSignInResult(res)
-    }
-
     private fun onSignInResult(result: FirebaseAuthUIAuthenticationResult) {
         val response = result.idpResponse
         if (result.resultCode == RESULT_OK) {
             // Successfully signed in
             val user = FirebaseAuth.getInstance().currentUser
             Log.e("@@@@@", "Name : ${user?.displayName}, UUID : ${user?.uid}, Email : ${user?.email}")
+
+            user?.getIdToken(true)?.addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val idToken = task.result?.token
+                    Log.e("@@@@@", "Token 111 : ${idToken}")
+
+
+                } else {
+
+                }
+            }
 
             if (user != null) {
                 viewModel.checkUser(user)
@@ -141,6 +180,23 @@ class LoginActivity : ComponentActivity() {
 
 fun startLoginProcess(
     signInLauncher: ActivityResultLauncher<Intent>,
+    context: Context
+) {
+    val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+        .requestIdToken(context.getString(R.string.default_web_client_id))
+        .requestServerAuthCode(context.getString(R.string.default_web_client_id))
+        .requestEmail()
+        .build()
+
+    val googleSignInClient = GoogleSignIn.getClient(context, gso)
+
+    val signInIntent = googleSignInClient.signInIntent
+
+    signInLauncher.launch(signInIntent)
+}
+
+/*fun startLoginProcess(
+    signInLauncher: ActivityResultLauncher<Intent>,
     loginMode: LoginMode
 ) {
 
@@ -159,7 +215,7 @@ fun startLoginProcess(
         .build()
 
     signInLauncher.launch(signInIntent)
-}
+}*/
 
 
 @Composable

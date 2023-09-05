@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -43,6 +44,8 @@ fun LoginView(
     viewModel : LoginViewModel,
     navController: NavHostController
 ) {
+    val context = LocalContext.current
+
     var colorIndex by remember { mutableStateOf(0) }
     val colorList = listOf(
         Pair(Color.Red, Color.Blue),
@@ -89,7 +92,7 @@ fun LoginView(
                     .size(300.dp, 60.dp)
                     .background(Color(0xfff3f2f4))
                     .clickable {
-                        startLoginProcess(signInLauncher, LoginMode.GOOGLE)
+                        startLoginProcess(signInLauncher, context)
                     },
                 contentAlignment = Alignment.Center
             ) {
