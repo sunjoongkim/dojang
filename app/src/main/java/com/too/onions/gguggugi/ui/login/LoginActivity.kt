@@ -27,6 +27,7 @@ import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
 import com.google.firebase.auth.FirebaseAuth
+import com.too.onions.gguggugi.service.restapi.RestApiService
 import com.too.onions.gguggugi.ui.login.view.AllowView
 import com.too.onions.gguggugi.ui.login.view.JoinView
 import com.too.onions.gguggugi.ui.login.view.LoginView
@@ -50,6 +51,7 @@ enum class LoginMode {
 class LoginActivity : ComponentActivity() {
 
     private val viewModel: LoginViewModel by viewModels()
+    private var restApiService : RestApiService = RestApiService.instance
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,7 +67,6 @@ class LoginActivity : ComponentActivity() {
         }
     }
 
-
     private val signInLauncher = registerForActivityResult(
         FirebaseAuthUIActivityResultContract()
     ) { res ->
@@ -78,6 +79,18 @@ class LoginActivity : ComponentActivity() {
             // Successfully signed in
             val user = FirebaseAuth.getInstance().currentUser
             Log.e("@@@@@", "Name : ${user?.displayName}, UUID : ${user?.uid}, Email : ${user?.email}")
+
+            user?.getIdToken(true)?.addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val idToken = task.result?.token
+
+                    restApiService.authGoogle(idToken.toString())
+                } else {
+                    // 로그 또는 오류 처리
+                    Log.e("TAG", "ID 토큰 가져오기 실패", task.exception)
+                }
+            }
+
 
             if (user != null) {
                 viewModel.checkUser(user)

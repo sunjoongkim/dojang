@@ -107,6 +107,11 @@ dependencies {
     implementation("androidx.emoji2:emoji2:1.3.0")
     implementation("androidx.emoji2:emoji2-views:1.3.0")
     implementation("androidx.emoji2:emoji2-views-helper:1.3.0")
+
+    implementation("com.squareup.retrofit2:retrofit:2.7.1")
+    implementation("com.squareup.retrofit2:converter-gson:2.7.1")
+    implementation("com.squareup.okhttp3:okhttp:3.8.0")
+    implementation("com.squareup.okhttp3:okhttp-urlconnection:3.8.1")
 }
 
 kapt {
