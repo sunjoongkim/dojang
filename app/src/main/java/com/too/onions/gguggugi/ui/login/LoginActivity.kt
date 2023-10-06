@@ -26,8 +26,10 @@ import androidx.navigation.compose.rememberNavController
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
+import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.firebase.auth.FirebaseAuth
-import com.too.onions.gguggugi.service.restapi.RestApiService
+import com.too.onions.gguggugi.service.restapi.UserApiService
+import com.too.onions.gguggugi.service.restapi.common.RestApiService
 import com.too.onions.gguggugi.ui.login.view.AllowView
 import com.too.onions.gguggugi.ui.login.view.JoinView
 import com.too.onions.gguggugi.ui.login.view.LoginView
@@ -51,7 +53,6 @@ enum class LoginMode {
 class LoginActivity : ComponentActivity() {
 
     private val viewModel: LoginViewModel by viewModels()
-    private var restApiService : RestApiService = RestApiService.instance
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -77,23 +78,18 @@ class LoginActivity : ComponentActivity() {
         val response = result.idpResponse
         if (result.resultCode == RESULT_OK) {
             // Successfully signed in
-            val user = FirebaseAuth.getInstance().currentUser
-            Log.e("@@@@@", "Name : ${user?.displayName}, UUID : ${user?.uid}, Email : ${user?.email}")
-
-            user?.getIdToken(true)?.addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val idToken = task.result?.token
-
-                    restApiService.authGoogle(idToken.toString())
-                } else {
-                    // 로그 또는 오류 처리
-                    Log.e("TAG", "ID 토큰 가져오기 실패", task.exception)
-                }
-            }
 
 
-            if (user != null) {
-                viewModel.checkUser(user)
+            val account = GoogleSignIn.getLastSignedInAccount(this)
+
+            if (account != null) {
+                var token = account.idToken
+                Log.e("@@@@@", "token : ${token}")
+                authGoogle(token!!)
+
+            } else {
+                // 로그 또는 오류 처리
+                Log.e("TAG", "ID 토큰 가져오기 실패")
             }
 
         } else {
@@ -103,6 +99,25 @@ class LoginActivity : ComponentActivity() {
             // response.getError().getErrorCode() and handle the error.
             // ...
         }
+    }
+
+    private fun authGoogle(idToken: String) {
+        UserApiService.instance.authGoogle(
+            idToken,
+            {
+                Log.e("@@@@@", "Auth Success!!")
+
+                val user = FirebaseAuth.getInstance().currentUser
+                Log.e("@@@@@", "Name : ${user?.displayName}, UUID : ${user?.uid}, Email : ${user?.email}")
+
+                if (user != null) {
+                    viewModel.checkUser(user)
+                }
+            },
+            {
+                Log.e("@@@@@", "Auth Failed!!")
+            }
+        )
     }
 
     private fun checkNotiPermission() {

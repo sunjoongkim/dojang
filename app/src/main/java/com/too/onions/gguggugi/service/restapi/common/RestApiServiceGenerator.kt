@@ -1,4 +1,4 @@
-package com.too.onions.gguggugi.service.restapi
+package com.too.onions.gguggugi.service.restapi.common
 
 import com.google.gson.GsonBuilder
 import okhttp3.*
@@ -11,8 +11,8 @@ import java.util.concurrent.TimeUnit
 
 object RestApiServiceGenerator {
 
-    private val BASE_URL = "http://3.34.99.33:8090/"
-    private val BASE_API = "stamp-api/1.0/"
+    private const val BASE_URL = "http://3.34.99.33:8090/"
+    private const val BASE_API = "stamp-api/1.0/"
 
     fun <S> createService(serviceClass: Class<S>): S {
         val cookieManager = CookieManager()
