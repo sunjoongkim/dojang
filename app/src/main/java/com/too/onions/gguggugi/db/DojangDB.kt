@@ -13,7 +13,7 @@ import com.too.onions.gguggugi.db.data.Page
 import com.too.onions.gguggugi.db.data.User
 import com.too.onions.gguggugi.db.data.converter.Converters
 
-@Database(entities = [Content::class, Page::class, User::class], version = 1, exportSchema = false)
+@Database(entities = [Content::class, Page::class], version = 1, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class DojangDB : RoomDatabase() {
 

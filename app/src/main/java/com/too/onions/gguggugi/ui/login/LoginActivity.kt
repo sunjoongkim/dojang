@@ -28,9 +28,9 @@ import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.firebase.auth.FirebaseAuth
+import com.google.gson.Gson
 import com.too.onions.gguggugi.db.data.Auth
 import com.too.onions.gguggugi.db.data.CheckDup
-import com.too.onions.gguggugi.service.restapi.UserApiService
 import com.too.onions.gguggugi.service.restapi.common.RestApiService
 import com.too.onions.gguggugi.ui.login.view.AllowView
 import com.too.onions.gguggugi.ui.login.view.JoinView
@@ -39,6 +39,10 @@ import com.too.onions.gguggugi.ui.main.MainActivity
 import com.too.onions.gguggugi.ui.common.theme.DojangTheme
 import com.too.onions.gguggugi.viewmodel.LoginViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.ResponseBody
+import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -59,7 +63,6 @@ class LoginActivity : ComponentActivity() {
 
     private val viewModel: LoginViewModel by viewModels()
 
-    private val restApiService = RestApiService.instance
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -93,7 +96,8 @@ class LoginActivity : ComponentActivity() {
                 var token = account.idToken
                 Log.e("@@@@@", "token : ${token}")
                 //checkDuplicated()
-                authGoogle(token!!)
+                //getUserInfo()
+                viewModel.signInGoogle(token!!)
 
             } else {
                 // 로그 또는 오류 처리
@@ -109,93 +113,7 @@ class LoginActivity : ComponentActivity() {
         }
     }
 
-    private fun authGoogle(idToken: String) {
-        restApiService.authGoogle(idToken).enqueue(object: Callback<Auth> {
-            override fun onResponse(call: Call<Auth>, response: Response<Auth>) {
-                val url = call.request().url
-                Log.e("@@@@@", "onResponse URL: $url")
-                Log.e("@@@@@", "======> onResponse @@@ : " + response.body())
-                if(response.isSuccessful.not()){
-                    Log.e("@@@@@", "======> No data")
-                    //return
-                }
 
-                response.body()?.let{ auth ->
-                    Log.d("@@@@@", "OK@@ : " + auth.toString())
-
-                    val user = FirebaseAuth.getInstance().currentUser
-                    Log.e("@@@@@", "Name : ${user?.displayName}, UUID : ${user?.uid}, Email : ${user?.email}")
-
-                    if (user != null) {
-                        viewModel.checkUser(user)
-                    }
-
-                } ?: run {
-                    Log.d("NG", "body is null")
-                }
-            }
-
-            override fun onFailure(call: Call<Auth>, t: Throwable) {
-                val url = call.request().url
-                Log.e("@@@@@", "Failed request URL: $url")
-                Log.e("@@@@@", "======> onFailure : " + t.toString())
-
-            }
-
-        })
-
-
-        /*UserApiService.instance.authGoogle(
-            idToken,
-            {
-                Log.e("@@@@@", "Auth Success!!")
-
-                val user = FirebaseAuth.getInstance().currentUser
-                Log.e("@@@@@", "Name : ${user?.displayName}, UUID : ${user?.uid}, Email : ${user?.email}")
-
-                if (user != null) {
-                    viewModel.checkUser(user)
-                }
-            },
-            {
-                Log.e("@@@@@", "Auth Failed!!")
-            }
-        )*/
-    }
-
-    private fun checkDuplicated() {
-        restApiService.checkDuplicated("testUser").enqueue(object: Callback<CheckDup> {
-            override fun onResponse(call: Call<CheckDup>, response: Response<CheckDup>) {
-                Log.e("@@@@@", "======> onResponse @@@ : " + response.message())
-                if(response.isSuccessful.not()){
-                    Log.e("@@@@@", "======> No data")
-                    return
-                }
-
-                response.body()?.let{ auth ->
-                    Log.d("@@@@@", "OK@@ : " + auth.toString())
-
-                    val user = FirebaseAuth.getInstance().currentUser
-                    Log.e("@@@@@", "Name : ${user?.displayName}, UUID : ${user?.uid}, Email : ${user?.email}")
-
-                    if (user != null) {
-                        viewModel.checkUser(user)
-                    }
-
-                } ?: run {
-                    Log.d("NG", "body is null")
-                }
-            }
-
-            override fun onFailure(call: Call<CheckDup>, t: Throwable) {
-                val url = call.request().url
-                Log.e("@@@@@", "Failed request URL: $url")
-                Log.e("@@@@@", "======> onFailure : " + t.toString())
-
-            }
-
-        })
-    }
     private fun checkNotiPermission() {
         if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED){
             // permission granted

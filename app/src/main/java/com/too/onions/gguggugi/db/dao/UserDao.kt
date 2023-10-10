@@ -11,7 +11,7 @@ import com.too.onions.gguggugi.db.data.User
 @Dao
 interface UserDao {
 
-    @Query("SELECT * from users where email = :email")
+    /*@Query("SELECT * from users where email = :email")
     suspend fun get(email: String) : User?
 
     @Query("UPDATE users SET stamp = :stamp")
@@ -27,5 +27,5 @@ interface UserDao {
     suspend fun delete(user: User)
 
     @Query("DELETE from users")
-    suspend fun deleteAll()
+    suspend fun deleteAll()*/
 }

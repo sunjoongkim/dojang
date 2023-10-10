@@ -190,7 +190,7 @@ fun JoinView(
                         if (isChecked.value && !nickname.value.isEmpty()) {
                             viewModel.confirmJoin(nickname.value)
 
-                            navController.navigate(LoginScreen.Allow.route)
+                            //navController.navigate(LoginScreen.Allow.route)
                         }
                     },
                 contentAlignment = Alignment.Center

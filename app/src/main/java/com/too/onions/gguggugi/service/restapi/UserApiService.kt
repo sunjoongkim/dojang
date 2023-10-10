@@ -10,9 +10,9 @@ class UserApiService(private val restApiService: RestApiService) {
         val instance = UserApiService(RestApiService.instance)
     }
 
-    fun authGoogle(token: String, successCallback: Runnable, failureCallback : Runnable){
+    /*fun authGoogle(token: String, successCallback: Runnable, failureCallback : Runnable){
         restApiService.authGoogle(token).enqueue(RestApiServiceCallback(successCallback, failureCallback))
-    }
+    }*/
 
 
 }

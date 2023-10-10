@@ -105,13 +105,13 @@ class MainViewModel @Inject constructor(private val repository: DojangRepository
     val user: LiveData<User> = _user
 
     fun setUser() {
-        Log.e("@@@@@", "======> current user  : " + repository.getCurrentUser())
-        _user.postValue(repository.getCurrentUser())
+        //Log.e("@@@@@", "======> current user  : " + repository.getCurrentUser())
+        //_user.postValue(repository.getCurrentUser())
     }
 
     fun updateUserStamp(stamp: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            repository.updateUserStamp(stamp)
+            //repository.updateUserStamp(stamp)
         }
     }
 

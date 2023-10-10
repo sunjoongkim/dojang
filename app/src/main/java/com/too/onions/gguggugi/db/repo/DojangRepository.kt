@@ -7,6 +7,33 @@ import com.too.onions.gguggugi.db.data.User
 import javax.inject.Inject
 
 class DojangRepository @Inject constructor(private val db: DojangDB) {
+
+
+    // ==== User ====
+
+    /*private var currentUser: User? = null
+
+    fun getCurrentUser() : User? {
+        return currentUser
+    }
+    suspend fun updateUserStamp(stamp: String) {
+        if (currentUser != null) {
+            currentUser = currentUser?.copy(stamp = stamp)
+            db.userDao().updateStamp(stamp = stamp)
+        }
+    }
+    suspend fun getUser(email: String) : User? {
+        currentUser = db.userDao().get(email)
+        return currentUser
+    }
+    suspend fun insertUser(user: User) {
+        currentUser = user
+        db.userDao().insert(user)
+    }*/
+
+
+    // ==== Page ====
+
     suspend fun insertPage(page: Page) {
         db.pageDao().insert(page)
     }
@@ -43,26 +70,5 @@ class DojangRepository @Inject constructor(private val db: DojangDB) {
     }
 
 
-    // ==== User ====
-
-    private var currentUser: User? = null
-
-    fun getCurrentUser() : User? {
-        return currentUser
-    }
-    suspend fun updateUserStamp(stamp: String) {
-        if (currentUser != null) {
-            currentUser = currentUser?.copy(stamp = stamp)
-            db.userDao().updateStamp(stamp = stamp)
-        }
-    }
-    suspend fun getUser(email: String) : User? {
-        currentUser = db.userDao().get(email)
-        return currentUser
-    }
-    suspend fun insertUser(user: User) {
-        currentUser = user
-        db.userDao().insert(user)
-    }
 
 }

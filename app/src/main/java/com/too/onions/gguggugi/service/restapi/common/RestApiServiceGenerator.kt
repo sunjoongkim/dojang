@@ -1,8 +1,8 @@
 package com.too.onions.gguggugi.service.restapi.common
 
 import com.google.gson.GsonBuilder
-import okhttp3.*
-import okhttp3.logging.HttpLoggingInterceptor
+import okhttp3.JavaNetCookieJar
+import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.net.CookieManager
@@ -18,10 +18,6 @@ object RestApiServiceGenerator {
         val cookieManager = CookieManager()
         cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL)
         val myCookieJar = JavaNetCookieJar(cookieManager)
-
-        val logging = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
-        }
 
         val okHttpClient = OkHttpClient.Builder()
             .connectTimeout(15, TimeUnit.SECONDS)

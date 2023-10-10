@@ -3,15 +3,13 @@ package com.too.onions.gguggugi.db.data
 import android.os.Parcelable
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.google.gson.annotations.SerializedName
 import kotlinx.android.parcel.Parcelize
 
 @Parcelize
-@Entity(tableName = "users")
 data class User (
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
-    val email: String = "",
-    val nickname: String = "",
-    val uuid: String = "",
-    val stamp: String = ""
+    @SerializedName("idx") val id: Long = 0,
+    @SerializedName("email") val email: String = "",
+    @SerializedName("username") val nickname: String = "",
+    @SerializedName("profileImgContent") val stamp: String = ""
 ) : Parcelable
