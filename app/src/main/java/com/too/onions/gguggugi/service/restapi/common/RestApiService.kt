@@ -18,7 +18,7 @@ interface RestApiService {
         val instance = RestApiServiceGenerator.createService(RestApiService::class.java)
     }
 
-    // Auth Api
+    // Auth API
     @POST("/stamp-api/1.0/user/auth/google")
     fun signInGoogle(@Body token: RequestBody) : Call<ResponseBody>
 
@@ -30,4 +30,9 @@ interface RestApiService {
 
     @GET("/stamp-api/1.0/user/info")
     fun getUserInfo(@Header("accessToken") accessToken: String) : Call<ResponseBody>
+
+
+    // Page API
+    @GET("/stamp-api/1.0/page/init")
+    fun getInitPage(@Header("accessToken") accessToken: String) : Call<ResponseBody>
 }

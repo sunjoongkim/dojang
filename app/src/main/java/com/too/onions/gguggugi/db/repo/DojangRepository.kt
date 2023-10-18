@@ -50,7 +50,7 @@ class DojangRepository @Inject constructor(private val db: DojangDB) {
 
     // ==== Content ====
 
-    suspend fun insertContent(content: Content) {
+    /*suspend fun insertContent(content: Content) {
         db.contentDao().insert(content)
     }
     suspend fun getContent(contentId: Long){
@@ -67,7 +67,7 @@ class DojangRepository @Inject constructor(private val db: DojangDB) {
     }
     suspend fun getAllContent(pageId: Long) : List<Content> {
         return db.contentDao().getAll(pageId)
-    }
+    }*/
 
 
 

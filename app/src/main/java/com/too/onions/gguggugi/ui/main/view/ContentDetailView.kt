@@ -168,11 +168,11 @@ fun ContentPagerItem(content: Content) {
         ) {
             Spacer(modifier = Modifier.size(10.dp))
             AsyncImage(
-                model = content.imageUri,
+                model = content.bgContent,
                 contentDescription = null,
                 modifier = Modifier
                     .size(274.dp, 274.dp)
-                    .background(Color(content.color))
+                    .background(Color(content.bgContent.toInt(16)))
             )
 
             Spacer(modifier = Modifier.size(15.dp))
@@ -197,7 +197,7 @@ fun ContentPagerItem(content: Content) {
 
             Spacer(modifier = Modifier.size(15.dp))
             Text(
-                text = if (!content.address.isEmpty()) "주소\n${content.address}" else "",
+                text = if (content.address?.isNotEmpty() == true) "주소\n${content.address}" else "",
                 fontSize = 14.sp,
                 color = Color(0xffa8a8a8),
                 textAlign = TextAlign.Left,

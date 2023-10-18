@@ -848,12 +848,12 @@ fun ContentListItem(
     ) {
 
         AsyncImage(
-            model = content.imageUri,
+            model = content.bgContent,
             contentDescription = null,
             modifier = Modifier
                 .size(itemSize, itemSize - 36.dp)
                 .border(1.dp, Color(0xff123485), RectangleShape)
-                .background(color = Color(content.color)),
+                .background(color = Color(content.bgContent.toInt(16))),
             contentScale = ContentScale.Crop
         )
 

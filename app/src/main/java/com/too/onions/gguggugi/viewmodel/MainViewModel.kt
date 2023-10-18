@@ -66,7 +66,7 @@ class MainViewModel @Inject constructor(private val repository: DojangRepository
     private val _contentList = MutableLiveData<List<Content>>()
     val contentList: LiveData<List<Content>> get() = _contentList
 
-    fun insertContent(content: Content) {
+    /*fun insertContent(content: Content) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.insertContent(content)
             fetchAllPagesWithContents()
@@ -97,7 +97,7 @@ class MainViewModel @Inject constructor(private val repository: DojangRepository
         viewModelScope.launch(Dispatchers.IO) {
             _contentList.postValue(repository.getAllContent(pageId))
         }
-    }
+    }*/
 
     // ===== User =====
 
@@ -120,14 +120,14 @@ class MainViewModel @Inject constructor(private val repository: DojangRepository
 
     fun fetchAllPagesWithContents() {
         viewModelScope.launch(Dispatchers.IO) {
-            val allPages = repository.getAllPage()
+            /*val allPages = repository.getAllPage()
 
             val result = allPages.map { page ->
                 val contentsForPage = repository.getAllContent(page.id)
                 PageInfo(page, contentsForPage)
             }
 
-            _pageInfos.postValue(result)
+            _pageInfos.postValue(result)*/
         }
     }
 }

@@ -1,24 +1,22 @@
 package com.too.onions.gguggugi.db.data
 
+import android.os.Parcelable
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.google.gson.annotations.SerializedName
+import kotlinx.android.parcel.Parcelize
 
-@Entity(tableName = "contents")
+@Parcelize
 data class Content (
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
-    val pageId: Long = 0L,
-    val color: Int = 0,
-    val imageUri: String?,
-    val title: String = "",
-    val description: String = "",
-    val address: String = "",
-    val stamps: List<Stamp> = emptyList()
-)
-
-data class Stamp (
-    val user: String,
-    val stamp: String,
-    val x: Int,
-    val y: Int
-)
+    @SerializedName("idx") val idx: Long = 0,
+    @SerializedName("ownerIdx") val ownerIdx: Long = 0,
+    @SerializedName("pageIdx") val pageIdx: Long = 0,
+    @SerializedName("title") val title: String = "",
+    @SerializedName("bgType") val bgType: String = "",
+    @SerializedName("bgContent") val bgContent: String = "",
+    @SerializedName("fileIdx") val fileIdx: Long = 0,
+    @SerializedName("description") val description: String = "",
+    @SerializedName("address") val address: String? = "",
+    @SerializedName("order") val order: Long = 0,
+    @SerializedName("stampList") val stampList: String = "",
+) : Parcelable

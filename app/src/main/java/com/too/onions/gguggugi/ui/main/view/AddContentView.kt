@@ -93,7 +93,7 @@ fun AddContentView(
     }
 
     RegistButton(contentName, contentDescription) {
-        val content = Content(
+        /*val content = Content(
             pageId = viewModel.currentPage.value.id,
             color = selectedColor.value.toArgb(),
             imageUri = checkAndReplaceUri(selectedImageUri.value).toString(),
@@ -103,7 +103,7 @@ fun AddContentView(
         )
 
         viewModel.insertContent(content)
-        navController.popBackStack()
+        navController.popBackStack()*/
     }
 }
 fun checkAndReplaceUri(uri: Uri?) : String? {

@@ -11,7 +11,7 @@ import com.too.onions.gguggugi.db.data.Content
 @Dao
 interface ContentDao {
 
-    @Query("SELECT * from contents where pageId = :pageId")
+    /*@Query("SELECT * from contents where pageId = :pageId")
     suspend fun getAll(pageId: Long) : List<Content>
 
     @Query("SELECT * from contents where id = :contentId")
@@ -27,5 +27,5 @@ interface ContentDao {
     suspend fun delete(content: Content)
 
     @Query("DELETE from contents where pageId = :pageId")
-    suspend fun deleteAll(pageId: Long)
+    suspend fun deleteAll(pageId: Long)*/
 }

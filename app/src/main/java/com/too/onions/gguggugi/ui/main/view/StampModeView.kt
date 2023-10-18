@@ -134,7 +134,7 @@ fun StampModeView(
                                 val adjustedY = (offsetY + size.height / 2).roundToInt()
 
                                 Log.e("@@@@@", "====> innerOffsetX : ${innerOffsetX}, innerOffsetY : ${innerOffsetY}")
-                                val stamp = Stamp(
+                                /*val stamp = Stamp(
                                     user = currentUser.nickname,
                                     stamp = currentUser.stamp,
                                     x = innerOffsetX.roundToInt(), //(centerX + offsetX),
@@ -144,7 +144,7 @@ fun StampModeView(
                                 stamps.add(stamp)
 
                                 val content = contents[overlappedIndex.value].copy(stamps = stamps)
-                                viewModel.updateContent(content)
+                                viewModel.updateContent(content)*/
                             }
                         }
                     ) { change, dragAmount ->
@@ -251,12 +251,12 @@ fun ContentListItemSel(
     ) {
         // content image
         AsyncImage(
-            model = content.imageUri,
+            model = content.bgContent,
             contentDescription = null,
             modifier = Modifier
                 .size(itemSize, itemSize - if (index == overlappedIndex.value) 11.dp else 36.dp)
                 .border(1.dp, Color(0xff123485), RectangleShape)
-                .background(color = Color(content.color))
+                .background(color = Color(content.bgContent.toInt(16)))
                 .onGloballyPositioned { coordinates ->
                     onGloballyPositioned(index, coordinates)
                 },
@@ -276,7 +276,7 @@ fun ContentListItemSel(
                     parentOffsetY.value = pos.y
                 }
         ) {
-            content.stamps.map { stamp ->
+            /*content.stamps.map { stamp ->
                 Log.e("@@@@@", "=======> x : " + stamp.x)
                 Log.e("@@@@@", "=======> y : " + stamp.y)
 
@@ -302,7 +302,7 @@ fun ContentListItemSel(
                             )
                     )
                 }
-            }
+            }*/
         }
 
         // content title

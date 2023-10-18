@@ -10,6 +10,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.gson.Gson
 import com.too.onions.gguggugi.db.data.Auth
+import com.too.onions.gguggugi.db.data.InitPage
 import com.too.onions.gguggugi.db.data.User
 import com.too.onions.gguggugi.db.repo.DojangRepository
 import com.too.onions.gguggugi.service.MainService
@@ -106,6 +107,8 @@ class LoginViewModel @Inject constructor(private val repository: DojangRepositor
                     Log.e("@@@@@", "======> email : ${user.email}")
 
                     if (user.nickname != null && user.nickname != "") {
+                        getInitPage()
+
                         _isNeedJoin.postValue(false)
                         if (MainService.getInstance() != null) {
                             MainService.getInstance()!!.setUser(user)
@@ -126,6 +129,42 @@ class LoginViewModel @Inject constructor(private val repository: DojangRepositor
 
         })
     }
+
+    private fun getInitPage() {
+        Log.e("@@@@@", "======> getInitPage")
+        restApiService.getInitPage(accessToken).enqueue(object: Callback<ResponseBody> {
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+
+                if(response.isSuccessful.not()){
+                    Log.e("@@@@@", "======> No data")
+                    return
+                }
+
+                response.body()?.let{ body ->
+                    val data = JSONObject(body.string()).getJSONObject("data")
+                    Log.e("@@@@@", "======> data : ${data}")
+
+                    val gson = Gson()
+                    val initPage: InitPage = gson.fromJson(data.toString(), InitPage::class.java)
+
+                    Log.e("@@@@@", "======> pageList : ${initPage.pageList}")
+                    Log.e("@@@@@", "======> firstPageInfo : ${initPage.firstPageInfo}")
+                    Log.e("@@@@@", "======> missionList : ${initPage.missionList}")
+                    Log.e("@@@@@", "======> participantList : ${initPage.participantList}")
+
+                } ?: run {
+                    Log.d("NG", "body is null")
+                }
+            }
+
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                Log.e("@@@@@", "======> getUser onFailure : " + t.toString())
+
+            }
+
+        })
+    }
+
     fun confirmJoin(nickname: String) {
         val confirmUser = _user.value?.copy(nickname = nickname)
         insertUser(nickname)
