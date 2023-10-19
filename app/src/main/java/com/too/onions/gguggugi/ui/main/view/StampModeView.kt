@@ -54,10 +54,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.too.onions.gguggugi.R
-import com.too.onions.gguggugi.db.data.Content
-import com.too.onions.gguggugi.db.data.Friend
-import com.too.onions.gguggugi.db.data.Stamp
-import com.too.onions.gguggugi.define.Define
+import com.too.onions.gguggugi.data.Content
+import com.too.onions.gguggugi.data.User
 import com.too.onions.gguggugi.viewmodel.MainViewModel
 import kotlin.math.roundToInt
 
@@ -65,7 +63,7 @@ import kotlin.math.roundToInt
 fun StampModeView(
     viewModel: MainViewModel,
     contents: List<Content>,
-    currentUser: Friend
+    currentUser: User?
 ) {
 
     val context = LocalContext.current

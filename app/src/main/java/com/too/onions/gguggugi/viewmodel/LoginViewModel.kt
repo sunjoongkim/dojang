@@ -1,23 +1,16 @@
 package com.too.onions.gguggugi.viewmodel
 
 import android.util.Log
-import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 import com.google.gson.Gson
-import com.too.onions.gguggugi.db.data.Auth
-import com.too.onions.gguggugi.db.data.InitPage
-import com.too.onions.gguggugi.db.data.User
-import com.too.onions.gguggugi.db.repo.DojangRepository
+import com.too.onions.gguggugi.data.Auth
+import com.too.onions.gguggugi.data.InitPage
+import com.too.onions.gguggugi.data.User
 import com.too.onions.gguggugi.service.MainService
 import com.too.onions.gguggugi.service.restapi.common.RestApiService
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.ResponseBody
@@ -27,8 +20,8 @@ import retrofit2.Callback
 import retrofit2.Response
 import javax.inject.Inject
 
-@HiltViewModel
-class LoginViewModel @Inject constructor(private val repository: DojangRepository): ViewModel() {
+
+class LoginViewModel : ViewModel() {
 
     private val restApiService = RestApiService.instance
 
@@ -64,6 +57,7 @@ class LoginViewModel @Inject constructor(private val repository: DojangRepositor
                     val auth: Auth = gson.fromJson(data.toString(), Auth::class.java)
 
                     accessToken = auth.accessToken
+                    RestApiService.token = auth.accessToken
 
                     if (auth.isNew == "Y") {
                         // 가입 화면 이동
@@ -107,12 +101,12 @@ class LoginViewModel @Inject constructor(private val repository: DojangRepositor
                     Log.e("@@@@@", "======> email : ${user.email}")
 
                     if (user.nickname != null && user.nickname != "") {
-                        getInitPage()
-
-                        _isNeedJoin.postValue(false)
                         if (MainService.getInstance() != null) {
                             MainService.getInstance()!!.setUser(user)
                         }
+
+                        getInitPage()
+                        _isNeedJoin.postValue(false)
                     } else {
                         _isNeedJoin.postValue(true)
                     }
@@ -151,6 +145,8 @@ class LoginViewModel @Inject constructor(private val repository: DojangRepositor
                     Log.e("@@@@@", "======> firstPageInfo : ${initPage.firstPageInfo}")
                     Log.e("@@@@@", "======> missionList : ${initPage.missionList}")
                     Log.e("@@@@@", "======> participantList : ${initPage.participantList}")
+
+                    MainService.getInstance()?.setInitPage(initPage)
 
                 } ?: run {
                     Log.d("NG", "body is null")

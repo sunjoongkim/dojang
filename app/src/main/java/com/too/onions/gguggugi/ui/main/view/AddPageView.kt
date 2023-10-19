@@ -51,12 +51,9 @@ import androidx.emoji2.emojipicker.EmojiViewItem
 import androidx.navigation.NavHostController
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.too.onions.gguggugi.R
-import com.too.onions.gguggugi.db.data.Page
-import com.too.onions.gguggugi.db.data.Friend
 import com.too.onions.gguggugi.ui.main.AddPageMode
 import com.too.onions.gguggugi.viewmodel.MainViewModel
 
-@OptIn(ExperimentalPagerApi::class)
 @Composable
 fun AddPageView(
     addPageMode: MutableState<AddPageMode>,
@@ -87,18 +84,7 @@ fun AddPageView(
                 AddPageTitle(title, addPageMode, navController) {
                     addPageMode.value = AddPageMode.INPUT_DONE
 
-                    val firstUser = Friend(
-                        nickname = viewModel.user.value?.nickname ?: ""
-                    )
-                    val friends = ArrayList<Friend>()
-                    friends.add(firstUser)
-
-                    val page = Page(
-                        emoji = emoji.value.emoji,
-                        title = title.value,
-                        friends = friends
-                    )
-                    viewModel.insertPage(page)
+                    viewModel.insertPage(emoji.value.emoji, title.value)
                     navController.popBackStack()
                 }
             }

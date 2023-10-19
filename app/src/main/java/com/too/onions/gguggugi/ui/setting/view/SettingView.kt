@@ -36,7 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.too.onions.gguggugi.R
-import com.too.onions.gguggugi.db.data.User
+import com.too.onions.gguggugi.data.User
 import com.too.onions.gguggugi.ui.setting.SettingScreen
 import com.too.onions.gguggugi.viewmodel.SettingViewModel
 

@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.too.onions.gguggugi.R
-import com.too.onions.gguggugi.db.data.Page
+import com.too.onions.gguggugi.data.Page
 import com.too.onions.gguggugi.viewmodel.MainViewModel
 
 @OptIn(ExperimentalMaterialApi::class)

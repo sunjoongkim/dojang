@@ -7,21 +7,31 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.too.onions.gguggugi.db.data.Content
-import com.too.onions.gguggugi.db.data.Page
-import com.too.onions.gguggugi.db.data.User
-import com.too.onions.gguggugi.db.repo.DojangRepository
+import com.google.gson.Gson
+import com.too.onions.gguggugi.data.Content
+import com.too.onions.gguggugi.data.Page
+import com.too.onions.gguggugi.data.User
+import com.too.onions.gguggugi.service.MainService
+import com.too.onions.gguggugi.service.restapi.common.RestApiService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.ResponseBody
+import org.json.JSONObject
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import javax.inject.Inject
 
 data class PageInfo (
     val page: Page,
     val contents: List<Content>,
 )
-@HiltViewModel
-class MainViewModel @Inject constructor(private val repository: DojangRepository): ViewModel() {
+class MainViewModel : ViewModel() {
+
+    private val restApiService = RestApiService.instance
 
     private val _isStampMode = MutableLiveData(false)
     val isStampMode: LiveData<Boolean> get() = _isStampMode
@@ -37,29 +47,53 @@ class MainViewModel @Inject constructor(private val repository: DojangRepository
     private val _pageList = MutableLiveData<List<Page>>()
     val pageList: LiveData<List<Page>> get() = _pageList
 
-    fun insertPage(page: Page) {
-        viewModelScope.launch(Dispatchers.IO) {
+    fun insertPage(emoji: String, title: String) {
+        /*viewModelScope.launch(Dispatchers.IO) {
             repository.insertPage(page)
             fetchAllPagesWithContents()
-        }
-    }
-    fun updatePage(page: Page){
-        viewModelScope.launch(Dispatchers.IO) {
-            repository.updatePage(page)
-            fetchAllPagesWithContents()
-        }
-    }
-    fun deletePage(page: Page) {
-        viewModelScope.launch(Dispatchers.IO) {
-            repository.deletePage(page)
-        }
-    }
-    fun refreshPageList() {
-        viewModelScope.launch(Dispatchers.IO) {
-            _pageList.postValue(repository.getAllPage())
-        }
-    }
+        }*/
 
+        val jsonObject = JSONObject()
+        jsonObject.put("symbol", emoji)
+        jsonObject.put("title", title)
+
+        val body = jsonObject.toString().toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+
+        restApiService.insertPage(RestApiService.token, body).enqueue(object:
+            Callback<ResponseBody> {
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                if(response.isSuccessful.not()){
+                    Log.e("@@@@@", "======> insertPage No data")
+                    return
+                }
+
+                response.body()?.let{ body ->
+                    val data = JSONObject(body.string()).getJSONObject("data")
+
+                    val gson = Gson()
+                    val page: Page = gson.fromJson(data.toString(), Page::class.java)
+                    Log.e("@@@@@", "======> page idx : ${page.idx}")
+                    Log.e("@@@@@", "======> page ownerIdx : ${page.ownerIdx}")
+                    Log.e("@@@@@", "======> page type : ${page.type}")
+                    Log.e("@@@@@", "======> page symbol : ${page.emoji}")
+                    Log.e("@@@@@", "======> page title : ${page.title}")
+                    Log.e("@@@@@", "======> page maxParticipants : ${page.maxParticipants}")
+                    Log.e("@@@@@", "======> page maxMissions : ${page.maxMissions}")
+
+                    currentPage.value = page
+
+                } ?: run {
+                    Log.d("NG", "body is null")
+                }
+            }
+
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                Log.e("@@@@@", "======> insertPage onFailure : " + t.toString())
+
+            }
+
+        })
+    }
 
 
     // ==== Content ====
@@ -106,7 +140,7 @@ class MainViewModel @Inject constructor(private val repository: DojangRepository
 
     fun setUser() {
         //Log.e("@@@@@", "======> current user  : " + repository.getCurrentUser())
-        //_user.postValue(repository.getCurrentUser())
+        _user.postValue(MainService.getInstance()?.getUser())
     }
 
     fun updateUserStamp(stamp: String) {

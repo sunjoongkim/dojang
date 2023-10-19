@@ -48,7 +48,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.too.onions.gguggugi.R
-import com.too.onions.gguggugi.db.data.Content
+import com.too.onions.gguggugi.data.Content
 import com.too.onions.gguggugi.viewmodel.MainViewModel
 
 @Composable

@@ -41,7 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.too.onions.gguggugi.R
-import com.too.onions.gguggugi.db.data.Page
+import com.too.onions.gguggugi.data.Page
 import com.too.onions.gguggugi.define.Define
 import com.too.onions.gguggugi.ui.main.MainScreen
 import com.too.onions.gguggugi.viewmodel.MainViewModel
@@ -181,7 +181,7 @@ fun StampDrawer(
 
                         if (seletedStamp.value == Define.SEL_STAMP_DEFAULT) {
                             // 현재 user에 해당하는 pageUser 를 가져와 stamp 변환후 update
-                            val updated = page?.friends?.map { friend ->
+                            /*val updated = page?.friends?.map { friend ->
                                 if (friend.nickname == viewModel.user.value?.nickname) {
                                     friend.copy(stamp = Define.STAMP_DEFAULT)
                                 } else {
@@ -191,7 +191,7 @@ fun StampDrawer(
                             val newPage = page?.copy(friends = updated ?: emptyList())
                             if (newPage != null) {
                                 viewModel.updatePage(newPage)
-                            }
+                            }*/
 
                             viewModel.setStampMode(true)
                             drawerState.close()

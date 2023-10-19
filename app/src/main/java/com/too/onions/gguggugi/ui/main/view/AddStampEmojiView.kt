@@ -81,7 +81,7 @@ fun AddStampEmojiView(
         Button(
             onClick = {
                 // 현재 user에 해당하는 pageUser 를 가져와 stamp 변환후 update
-                val updated = viewModel.currentPage.value.friends.map { friend ->
+                /*val updated = viewModel.currentPage.value.friends.map { friend ->
                     if (friend.nickname == viewModel.user.value?.nickname) {
                         friend.copy(stamp = emoji.value.emoji)
                     } else {
@@ -92,7 +92,7 @@ fun AddStampEmojiView(
                 viewModel.updatePage(newPage)
 
                 //viewModel.updateUserStamp(emoji.value.emoji)
-                viewModel.setStampMode(true)
+                viewModel.setStampMode(true)*/
                 navController.popBackStack()
             },
             colors = ButtonDefaults.buttonColors(

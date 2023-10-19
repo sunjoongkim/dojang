@@ -36,7 +36,7 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import com.too.onions.gguggugi.R
-import com.too.onions.gguggugi.db.data.Content
+import com.too.onions.gguggugi.data.Content
 import com.too.onions.gguggugi.viewmodel.MainViewModel
 
 @OptIn(ExperimentalPagerApi::class)

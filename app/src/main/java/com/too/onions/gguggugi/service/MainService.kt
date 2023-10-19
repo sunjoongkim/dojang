@@ -4,11 +4,13 @@ import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 import android.util.Log
-import com.too.onions.gguggugi.db.data.User
+import com.too.onions.gguggugi.data.InitPage
+import com.too.onions.gguggugi.data.User
 
 class MainService : Service() {
 
     private var currentUser: User? = null
+    private var initPage: InitPage? = null
 
     companion object {
         private var instance: MainService? = null
@@ -31,13 +33,20 @@ class MainService : Service() {
         return super.onStartCommand(intent, flags, startId)
         Log.e("MainService", "onStartCommand")
     }
-    fun getInstance() : MainService = this
 
-    fun setUser(user: User?) {
+    fun setUser(user: User) {
         currentUser = user
     }
     fun getUser() : User? {
         return currentUser
+    }
+
+    fun setInitPage(initPage: InitPage) {
+        this.initPage = initPage
+    }
+
+    fun getInitPage() : InitPage? {
+        return initPage
     }
 
 }

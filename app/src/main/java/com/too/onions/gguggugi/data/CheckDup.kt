@@ -1,4 +1,4 @@
-package com.too.onions.gguggugi.db.data
+package com.too.onions.gguggugi.data
 
 import com.google.gson.annotations.SerializedName
 

@@ -29,8 +29,8 @@ import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.firebase.auth.FirebaseAuth
 import com.google.gson.Gson
-import com.too.onions.gguggugi.db.data.Auth
-import com.too.onions.gguggugi.db.data.CheckDup
+import com.too.onions.gguggugi.data.Auth
+import com.too.onions.gguggugi.data.CheckDup
 import com.too.onions.gguggugi.service.restapi.common.RestApiService
 import com.too.onions.gguggugi.ui.login.view.AllowView
 import com.too.onions.gguggugi.ui.login.view.JoinView

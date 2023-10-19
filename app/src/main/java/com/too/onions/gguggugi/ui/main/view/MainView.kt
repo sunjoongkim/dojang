@@ -66,9 +66,9 @@ import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.PagerState
 import com.google.accompanist.pager.rememberPagerState
 import com.too.onions.gguggugi.R
-import com.too.onions.gguggugi.db.data.Content
-import com.too.onions.gguggugi.db.data.Friend
-import com.too.onions.gguggugi.db.data.Page
+import com.too.onions.gguggugi.data.Content
+import com.too.onions.gguggugi.data.Page
+import com.too.onions.gguggugi.data.User
 import com.too.onions.gguggugi.define.Define.STAMP_DEFAULT
 import com.too.onions.gguggugi.ui.common.CommonDialog
 import com.too.onions.gguggugi.ui.main.AddPageMode
@@ -124,11 +124,10 @@ fun MainView(
 
     val pagerState = rememberPagerState(
         pageCount = if (pages.isEmpty()) 1 else pages.size,
-        initialPage = viewModel.currentPage.value.index
+        initialPage = viewModel.currentPage.value.idx.toInt()
     )
 
     var currentPlayMode by remember { mutableStateOf(PlayMode.SINGLE)}
-    var currentUser : Friend by remember { mutableStateOf(Friend(""))}
 
     val onMoveAddPage = {
         isNeedInit.value = false
@@ -164,20 +163,19 @@ fun MainView(
     LaunchedEffect(user) {
         if (pages.isEmpty()) {
             currentPlayMode = PlayMode.SINGLE
-            currentUser = Friend(nickname = viewModel.user.value?.nickname ?: "")
         }
     }
 
     LaunchedEffect(pages) {
         if (pages.isNotEmpty()) {
-            currentPlayMode =
+            /*currentPlayMode =
                 if (pages[pagerState.currentPage].page.friends.size == 1) PlayMode.SINGLE else PlayMode.MULTI
 
             pages[pagerState.currentPage].page.friends.map { friend ->
                 if (friend.nickname == viewModel.user.value?.nickname) {
                     currentUser = friend
                 }
-            }
+            }*/
         }
     }
 
@@ -233,7 +231,7 @@ fun MainView(
                     pages = pages,
                     viewModel = viewModel,
                     isNeedInit = isNeedInit,
-                    currentUser = currentUser
+                    currentUser = user
                 )
 
                 Spacer(modifier = Modifier.size(15.dp))
@@ -255,7 +253,7 @@ fun MainView(
                 // 일반 화면 BottomBar
                 BottomBar(viewModel)
                 StampButton(
-                    currentUser = currentUser,
+                    currentUser = user,
                     onClick = {
                         scope.launch {
                             when (checkStampStatus(
@@ -276,7 +274,7 @@ fun MainView(
                 StampModeView(
                     viewModel = viewModel,
                     contents = pages[pagerState.currentPage].contents,
-                    currentUser = currentUser
+                    currentUser = user
                 )
             }
 
@@ -330,11 +328,11 @@ fun checkStampStatus(
     } else {
         var stamp = ""
 
-        pages[pagerState.currentPage].page.friends.map { friend ->
+        /*pages[pagerState.currentPage].page.friends.map { friend ->
             if (friend.nickname == viewModel.user.value?.nickname) {
                 stamp = friend.stamp
             }
-        }
+        }*/
 
         return if (stamp.isEmpty()) {
             StampStatus.EMPTY_STAMP
@@ -619,7 +617,7 @@ fun FriendsBar(
     pages: List<PageInfo>,
     viewModel: MainViewModel,
     isNeedInit: MutableState<Boolean>,
-    currentUser: Friend
+    currentUser: User?
 ) {
     Row(
         modifier = Modifier
@@ -631,16 +629,16 @@ fun FriendsBar(
         Box(
             modifier = Modifier
                 .background(
-                    color = if (currentUser.stamp.isNotEmpty()) Color.White else Color(0xffe3ea97),
+                    color = if (currentUser?.stamp?.isNotEmpty() == true) Color.White else Color(0xffe3ea97),
                     shape = CircleShape
                 )
                 .border(width = 2.dp, color = Color(0x20000000), shape = CircleShape)
                 .size(40.dp),
             contentAlignment = Alignment.Center
         ) {
-            if (currentUser.stamp.isEmpty()) {
+            if (currentUser?.stamp?.isEmpty() == true) {
                 Text(
-                    text = if (currentUser.nickname == "") "" else currentUser.nickname.first().toString(),
+                    text = if (currentUser?.nickname == "") "" else currentUser.nickname.first().toString(),
                     modifier = Modifier
                         .wrapContentSize(),
                     textAlign = TextAlign.Center,
@@ -648,7 +646,7 @@ fun FriendsBar(
                 )
             } else {
 
-                if (currentUser.stamp == STAMP_DEFAULT) {
+                if (currentUser?.stamp == STAMP_DEFAULT) {
                     Image(
                         painterResource(id = R.drawable.ic_btn_stamp),
                         contentDescription = null,
@@ -656,7 +654,7 @@ fun FriendsBar(
                     )
                 } else {
                     Text(
-                        text = currentUser.stamp,
+                        text = currentUser?.stamp ?: "",
                         modifier = Modifier
                             .wrapContentSize()
                             .padding(top = 2.dp),
@@ -923,7 +921,7 @@ fun BottomBar(viewModel: MainViewModel) {
 }
 @Composable
 fun StampButton(
-    currentUser: Friend,
+    currentUser: User?,
     onClick: () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -952,7 +950,7 @@ fun StampButton(
                     .fillMaxWidth()
             )
 
-            if (currentUser.stamp == "" || currentUser.stamp == STAMP_DEFAULT) {
+            if (currentUser?.stamp == "" || currentUser?.stamp == STAMP_DEFAULT) {
                 Image(
                     painterResource(id = R.drawable.ic_btn_stamp),
                     contentDescription = null,
@@ -961,7 +959,7 @@ fun StampButton(
                 )
             } else {
                 Text(
-                    text = currentUser.stamp,
+                    text = currentUser?.stamp ?: "",
                     modifier = Modifier
                         .wrapContentSize()
                         .padding(top = 5.dp),

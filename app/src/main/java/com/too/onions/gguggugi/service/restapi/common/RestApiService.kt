@@ -1,6 +1,6 @@
 package com.too.onions.gguggugi.service.restapi.common
 
-import com.too.onions.gguggugi.db.data.CheckDup
+import com.too.onions.gguggugi.data.CheckDup
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
 import retrofit2.Call
@@ -16,6 +16,7 @@ interface RestApiService {
 
     companion object {
         val instance = RestApiServiceGenerator.createService(RestApiService::class.java)
+        var token: String = ""
     }
 
     // Auth API
@@ -35,4 +36,7 @@ interface RestApiService {
     // Page API
     @GET("/stamp-api/1.0/page/init")
     fun getInitPage(@Header("accessToken") accessToken: String) : Call<ResponseBody>
+
+    @POST("/stamp-api/1.0/page/add")
+    fun insertPage(@Header("accessToken") accessToken: String, @Body page: RequestBody) : Call<ResponseBody>
 }
