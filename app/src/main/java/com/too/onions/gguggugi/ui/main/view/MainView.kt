@@ -78,7 +78,6 @@ import com.too.onions.gguggugi.ui.main.view.drawer.PageDrawer
 import com.too.onions.gguggugi.ui.main.view.drawer.StampDrawer
 import com.too.onions.gguggugi.ui.setting.SettingActivity
 import com.too.onions.gguggugi.viewmodel.MainViewModel
-import com.too.onions.gguggugi.viewmodel.PageInfo
 import kotlinx.coroutines.launch
 import java.lang.Math.abs
 
@@ -120,11 +119,15 @@ fun MainView(
     val user by viewModel.user.observeAsState()
     val isStampMode by viewModel.isStampMode.observeAsState(false)
 
-    val pages: List<PageInfo> by viewModel.pageInfos.observeAsState(emptyList())
+    val currentPage by viewModel.currentPage.observeAsState()
+
+    val pages by viewModel.pageList.observeAsState()
 
     val pagerState = rememberPagerState(
-        pageCount = if (pages.isEmpty()) 1 else pages.size,
-        initialPage = viewModel.currentPage.value.idx.toInt()
+        pageCount = if (pages?.isNotEmpty() == true) pages!!.size else 1,
+        initialPage = if (pages != null && pages!!.isNotEmpty()) pages!!.indexOfFirst {
+            it.idx == currentPage?.idx
+        } else 0
     )
 
     var currentPlayMode by remember { mutableStateOf(PlayMode.SINGLE)}
@@ -168,14 +171,14 @@ fun MainView(
 
     LaunchedEffect(pages) {
         if (pages.isNotEmpty()) {
-            /*currentPlayMode =
+            currentPlayMode =
                 if (pages[pagerState.currentPage].page.friends.size == 1) PlayMode.SINGLE else PlayMode.MULTI
 
             pages[pagerState.currentPage].page.friends.map { friend ->
                 if (friend.nickname == viewModel.user.value?.nickname) {
                     currentUser = friend
                 }
-            }*/
+            }
         }
     }
 
@@ -629,7 +632,9 @@ fun FriendsBar(
         Box(
             modifier = Modifier
                 .background(
-                    color = if (currentUser?.stamp?.isNotEmpty() == true) Color.White else Color(0xffe3ea97),
+                    color = if (currentUser?.stamp?.isNotEmpty() == true) Color.White else Color(
+                        0xffe3ea97
+                    ),
                     shape = CircleShape
                 )
                 .border(width = 2.dp, color = Color(0x20000000), shape = CircleShape)

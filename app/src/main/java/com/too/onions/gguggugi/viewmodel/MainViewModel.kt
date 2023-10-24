@@ -1,19 +1,17 @@
 package com.too.onions.gguggugi.viewmodel
 
 import android.util.Log
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.too.onions.gguggugi.data.Content
+import com.too.onions.gguggugi.data.Member
 import com.too.onions.gguggugi.data.Page
 import com.too.onions.gguggugi.data.User
 import com.too.onions.gguggugi.service.MainService
 import com.too.onions.gguggugi.service.restapi.common.RestApiService
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -23,12 +21,7 @@ import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import javax.inject.Inject
 
-data class PageInfo (
-    val page: Page,
-    val contents: List<Content>,
-)
 class MainViewModel : ViewModel() {
 
     private val restApiService = RestApiService.instance
@@ -42,10 +35,30 @@ class MainViewModel : ViewModel() {
 
     // ===== Page ======
 
-    var currentPage: MutableState<Page> = mutableStateOf(Page())
 
-    private val _pageList = MutableLiveData<List<Page>>()
-    val pageList: LiveData<List<Page>> get() = _pageList
+
+    private var _currentPage = MutableLiveData<Page?>()
+    val currentPage: LiveData<Page?> get() = _currentPage
+
+    private val _pageList = MutableLiveData<List<Page>?>()
+    val pageList: LiveData<List<Page>?> get() = _pageList
+
+    private val _memberList = MutableLiveData<List<Member>>()
+    val memberList: LiveData<List<Member>> get() = _memberList
+
+    private val _contentList = MutableLiveData<List<Content>?>()
+    val contentList: LiveData<List<Content>?> get() = _contentList
+
+    init {
+        val initPage = MainService.getInstance()?.getInitPage()
+
+        if (initPage != null) {
+            _currentPage.postValue(initPage.firstPageInfo)
+            _pageList.postValue(initPage.pageList)
+            _memberList.postValue(initPage.memberList)
+            _contentList.postValue(initPage.contentList)
+        }
+    }
 
     fun insertPage(emoji: String, title: String) {
         /*viewModelScope.launch(Dispatchers.IO) {
@@ -80,7 +93,7 @@ class MainViewModel : ViewModel() {
                     Log.e("@@@@@", "======> page maxParticipants : ${page.maxParticipants}")
                     Log.e("@@@@@", "======> page maxMissions : ${page.maxMissions}")
 
-                    currentPage.value = page
+                    _currentPage.postValue(page)
 
                 } ?: run {
                     Log.d("NG", "body is null")
@@ -97,8 +110,6 @@ class MainViewModel : ViewModel() {
 
 
     // ==== Content ====
-    private val _contentList = MutableLiveData<List<Content>>()
-    val contentList: LiveData<List<Content>> get() = _contentList
 
     /*fun insertContent(content: Content) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -148,10 +159,6 @@ class MainViewModel : ViewModel() {
             //repository.updateUserStamp(stamp)
         }
     }
-
-    private val _pageInfos = MutableLiveData<List<PageInfo>>()
-    val pageInfos: LiveData<List<PageInfo>> get() = _pageInfos
-
     fun fetchAllPagesWithContents() {
         viewModelScope.launch(Dispatchers.IO) {
             /*val allPages = repository.getAllPage()

@@ -10,7 +10,6 @@ import com.too.onions.gguggugi.data.InitPage
 import com.too.onions.gguggugi.data.User
 import com.too.onions.gguggugi.service.MainService
 import com.too.onions.gguggugi.service.restapi.common.RestApiService
-import dagger.hilt.android.lifecycle.HiltViewModel
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.ResponseBody
@@ -18,7 +17,6 @@ import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import javax.inject.Inject
 
 
 class LoginViewModel : ViewModel() {
@@ -143,8 +141,8 @@ class LoginViewModel : ViewModel() {
 
                     Log.e("@@@@@", "======> pageList : ${initPage.pageList}")
                     Log.e("@@@@@", "======> firstPageInfo : ${initPage.firstPageInfo}")
-                    Log.e("@@@@@", "======> missionList : ${initPage.missionList}")
-                    Log.e("@@@@@", "======> participantList : ${initPage.participantList}")
+                    Log.e("@@@@@", "======> missionList : ${initPage.contentList}")
+                    Log.e("@@@@@", "======> participantList : ${initPage.memberList}")
 
                     MainService.getInstance()?.setInitPage(initPage)
 
@@ -190,6 +188,7 @@ class LoginViewModel : ViewModel() {
                     // insert 성공하지 못하면 팝업 가이드
                     if (data == "1") {
                         Log.e("@@@@@", "userName : $userName")
+                        getInitPage()
                         _isNeedJoin.postValue(false)
                     } else {
                         Log.e("@@@@@", "message : ${JSONObject(data).getString("message")}")
