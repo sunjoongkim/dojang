@@ -8,6 +8,6 @@ import kotlinx.android.parcel.Parcelize
 data class InitPage (
     @SerializedName("participantList") val memberList: List<Member> = emptyList(),
     @SerializedName("missionList") val contentList: List<Content>? = emptyList(),
-    @SerializedName("pageList") val pageList: List<Page>? = emptyList(),
-    @SerializedName("firstPageInfo") val firstPageInfo: Page? = null
+    @SerializedName("pageList") val pageList: List<PageInfo>? = emptyList(),
+    @SerializedName("firstPageInfo") val firstPageInfo: PageInfo? = null
 ) : Parcelable

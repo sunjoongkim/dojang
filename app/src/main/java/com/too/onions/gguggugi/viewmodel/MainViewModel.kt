@@ -9,6 +9,7 @@ import com.google.gson.Gson
 import com.too.onions.gguggugi.data.Content
 import com.too.onions.gguggugi.data.Member
 import com.too.onions.gguggugi.data.Page
+import com.too.onions.gguggugi.data.PageInfo
 import com.too.onions.gguggugi.data.User
 import com.too.onions.gguggugi.service.MainService
 import com.too.onions.gguggugi.service.restapi.common.RestApiService
@@ -37,17 +38,20 @@ class MainViewModel : ViewModel() {
 
 
 
-    private var _currentPage = MutableLiveData<Page?>()
-    val currentPage: LiveData<Page?> get() = _currentPage
+    private var _currentPage = MutableLiveData<PageInfo?>()
+    val currentPage: LiveData<PageInfo?> get() = _currentPage
 
-    private val _pageList = MutableLiveData<List<Page>?>()
-    val pageList: LiveData<List<Page>?> get() = _pageList
+    private val _pageList = MutableLiveData<List<PageInfo>?>()
+    val pageList: LiveData<List<PageInfo>?> get() = _pageList
 
     private val _memberList = MutableLiveData<List<Member>>()
     val memberList: LiveData<List<Member>> get() = _memberList
 
     private val _contentList = MutableLiveData<List<Content>?>()
     val contentList: LiveData<List<Content>?> get() = _contentList
+
+    private val _currentUser = MutableLiveData<User>()
+    val currentUser: LiveData<User> get() = _currentUser
 
     init {
         val initPage = MainService.getInstance()?.getInitPage()
@@ -58,6 +62,55 @@ class MainViewModel : ViewModel() {
             _memberList.postValue(initPage.memberList)
             _contentList.postValue(initPage.contentList)
         }
+    }
+
+
+    fun setCurrentUser() {
+        _currentUser.postValue(MainService.getInstance()?.getUser())
+    }
+
+    fun movePage(page: PageInfo) {
+
+        restApiService.getPage(RestApiService.token, page.idx).enqueue(object:
+            Callback<ResponseBody> {
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                if(response.isSuccessful.not()){
+                    Log.e("@@@@@", "======> getPage No data")
+                    return
+                }
+
+                response.body()?.let{ body ->
+                    val data = JSONObject(body.string()).getJSONObject("data")
+
+                    val gson = Gson()
+                    val page: Page = gson.fromJson(data.toString(), Page::class.java)
+
+                    _memberList.postValue(page.memberList)
+                    _contentList.postValue(page.contentList)
+
+                } ?: run {
+                    Log.d("NG", "body is null")
+                }
+            }
+
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                Log.e("@@@@@", "======> getPage onFailure : $t")
+
+            }
+
+        })
+
+        _currentPage.postValue(page)
+
+
+    }
+
+    fun setMemberList(members: List<Member>) {
+        _memberList.postValue(members)
+    }
+
+    fun setContentList(contents: List<Content>) {
+        _contentList.postValue(contents)
     }
 
     fun insertPage(emoji: String, title: String) {
@@ -84,7 +137,7 @@ class MainViewModel : ViewModel() {
                     val data = JSONObject(body.string()).getJSONObject("data")
 
                     val gson = Gson()
-                    val page: Page = gson.fromJson(data.toString(), Page::class.java)
+                    val page: PageInfo = gson.fromJson(data.toString(), PageInfo::class.java)
                     Log.e("@@@@@", "======> page idx : ${page.idx}")
                     Log.e("@@@@@", "======> page ownerIdx : ${page.ownerIdx}")
                     Log.e("@@@@@", "======> page type : ${page.type}")
@@ -101,7 +154,7 @@ class MainViewModel : ViewModel() {
             }
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Log.e("@@@@@", "======> insertPage onFailure : " + t.toString())
+                Log.e("@@@@@", "======> insertPage onFailure : $t")
 
             }
 
@@ -146,13 +199,7 @@ class MainViewModel : ViewModel() {
 
     // ===== User =====
 
-    private val _user = MutableLiveData<User>()
-    val user: LiveData<User> = _user
 
-    fun setUser() {
-        //Log.e("@@@@@", "======> current user  : " + repository.getCurrentUser())
-        _user.postValue(MainService.getInstance()?.getUser())
-    }
 
     fun updateUserStamp(stamp: String) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -161,6 +208,7 @@ class MainViewModel : ViewModel() {
     }
     fun fetchAllPagesWithContents() {
         viewModelScope.launch(Dispatchers.IO) {
+
             /*val allPages = repository.getAllPage()
 
             val result = allPages.map { page ->

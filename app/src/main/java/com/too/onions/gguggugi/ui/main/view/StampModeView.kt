@@ -62,7 +62,7 @@ import kotlin.math.roundToInt
 @Composable
 fun StampModeView(
     viewModel: MainViewModel,
-    contents: List<Content>,
+    contents: List<Content>?,
     currentUser: User?
 ) {
 
@@ -109,7 +109,6 @@ fun StampModeView(
         )
 
         ContentListSel(
-            viewModel = viewModel,
             contents = contents,
             overlappedIndex = overlappedIndex,
             onGloballyPositioned = { index, coordinates ->
@@ -195,8 +194,7 @@ fun performHapticFeedback(vibrator: Vibrator, intensity: Int) {
 }
 @Composable
 fun ContentListSel(
-    viewModel: MainViewModel,
-    contents: List<Content>,
+    contents: List<Content>?,
     overlappedIndex: MutableState<Int>,
     onGloballyPositioned: (Int, LayoutCoordinates) -> Unit
 ) {
@@ -212,7 +210,7 @@ fun ContentListSel(
             modifier = Modifier
                 .fillMaxSize(),
         ) {
-            val count = contents.size
+            val count = contents!!.size
 
             items(count) {index ->
                 ContentListItemSel(

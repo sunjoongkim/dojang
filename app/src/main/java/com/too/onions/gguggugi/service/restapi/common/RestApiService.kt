@@ -39,4 +39,7 @@ interface RestApiService {
 
     @POST("/stamp-api/1.0/page/add")
     fun insertPage(@Header("accessToken") accessToken: String, @Body page: RequestBody) : Call<ResponseBody>
+
+    @GET("/stamp-api/1.0/page/{pageIndex}")
+    fun getPage(@Header("accessToken") accessToken: String, @Path("pageIndex") pageIndex: Long) : Call<ResponseBody>
 }

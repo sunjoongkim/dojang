@@ -39,7 +39,6 @@ fun AddStampEmojiView(
     viewModel: MainViewModel,
     navController: NavHostController
 ) {
-    val pages by viewModel.pageInfos.observeAsState(emptyList())
     val emoji = remember { mutableStateOf(EmojiViewItem("", emptyList())) }
 
     Column (

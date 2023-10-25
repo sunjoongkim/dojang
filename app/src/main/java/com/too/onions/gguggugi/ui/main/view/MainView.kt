@@ -67,7 +67,7 @@ import com.google.accompanist.pager.PagerState
 import com.google.accompanist.pager.rememberPagerState
 import com.too.onions.gguggugi.R
 import com.too.onions.gguggugi.data.Content
-import com.too.onions.gguggugi.data.Page
+import com.too.onions.gguggugi.data.PageInfo
 import com.too.onions.gguggugi.data.User
 import com.too.onions.gguggugi.define.Define.STAMP_DEFAULT
 import com.too.onions.gguggugi.ui.common.CommonDialog
@@ -116,11 +116,15 @@ fun MainView(
 
     val contentPageIndex = remember { mutableStateOf(0) }
 
-    val user by viewModel.user.observeAsState()
+    val currentUser by viewModel.currentUser.observeAsState()
     val isStampMode by viewModel.isStampMode.observeAsState(false)
 
+    // init page 에서 초기화, page 변경시 업데이트
     val currentPage by viewModel.currentPage.observeAsState()
+    val members by viewModel.memberList.observeAsState()
+    val contents by viewModel.contentList.observeAsState()
 
+    //  init page 에서 초기화, page 추가/삭제시 업데이트
     val pages by viewModel.pageList.observeAsState()
 
     val pagerState = rememberPagerState(
@@ -159,26 +163,12 @@ fun MainView(
     }
 
     LaunchedEffect(viewModel) {
-        viewModel.fetchAllPagesWithContents()
-        viewModel.setUser()
+        viewModel.setCurrentUser()
     }
 
-    LaunchedEffect(user) {
-        if (pages.isEmpty()) {
-            currentPlayMode = PlayMode.SINGLE
-        }
-    }
-
-    LaunchedEffect(pages) {
-        if (pages.isNotEmpty()) {
-            currentPlayMode =
-                if (pages[pagerState.currentPage].page.friends.size == 1) PlayMode.SINGLE else PlayMode.MULTI
-
-            pages[pagerState.currentPage].page.friends.map { friend ->
-                if (friend.nickname == viewModel.user.value?.nickname) {
-                    currentUser = friend
-                }
-            }
+    LaunchedEffect(members) {
+        if (members?.size ?: 0 > 1) {
+            currentPlayMode = PlayMode.MULTI
         }
     }
 
@@ -195,7 +185,7 @@ fun MainView(
                         viewModel = viewModel,
                         navController = navController,
                         drawerState = drawerState,
-                        page = if (pages.isNotEmpty()) pages[pagerState.currentPage].page else null
+                        page = currentPage
                     )
                 }
                 DrawerMode.PAGE -> {
@@ -203,7 +193,7 @@ fun MainView(
                         viewModel = viewModel,
                         navController = navController,
                         drawerState = drawerState,
-                        page = if (pages.isNotEmpty()) pages[pagerState.currentPage].page else null
+                        page = currentPage
                     )
                 }
                 DrawerMode.CONTENT -> {}
@@ -234,7 +224,8 @@ fun MainView(
                     pages = pages,
                     viewModel = viewModel,
                     isNeedInit = isNeedInit,
-                    currentUser = user
+                    currentUser = currentUser,
+                    currentPage = currentPage
                 )
 
                 Spacer(modifier = Modifier.size(15.dp))
@@ -243,6 +234,7 @@ fun MainView(
                     PageItemPager(
                         pagerState,
                         pages,
+                        contents,
                         isNeedInit,
                         viewModel,
                         navController,
@@ -256,13 +248,14 @@ fun MainView(
                 // 일반 화면 BottomBar
                 BottomBar(viewModel)
                 StampButton(
-                    currentUser = user,
+                    currentUser = currentUser,
                     onClick = {
                         scope.launch {
                             when (checkStampStatus(
                                 pages = pages,
+                                contents = contents,
                                 pagerState = pagerState,
-                                viewModel = viewModel
+                                currentPage = currentPage
                             )) {
                                 StampStatus.EMPTY_PAGE -> isNeedInit.value = true
                                 StampStatus.EMPTY_CONTENT -> isNeedAddContent.value = true
@@ -276,8 +269,8 @@ fun MainView(
                 // 도장찍기 모드 화면
                 StampModeView(
                     viewModel = viewModel,
-                    contents = pages[pagerState.currentPage].contents,
-                    currentUser = user
+                    contents = contents,
+                    currentUser = currentUser
                 )
             }
 
@@ -295,9 +288,8 @@ fun MainView(
             if (isShowContentDetail.value) {
                 ContentDetailView(
                     isShowContentDetail = isShowContentDetail,
-                    contentList = pages[pagerState.currentPage].contents,
-                    contentPageIndex = contentPageIndex.value,
-                    viewModel = viewModel
+                    contentList = contents,
+                    contentPageIndex = contentPageIndex.value
                 )
             }
             // content 없을때 도장 선택시 팝업
@@ -320,13 +312,14 @@ fun MainView(
 }
 @OptIn(ExperimentalPagerApi::class)
 fun checkStampStatus(
-    pages: List<PageInfo>,
+    pages: List<PageInfo>?,
+    contents: List<Content>?,
     pagerState: PagerState,
-    viewModel: MainViewModel
+    currentPage: PageInfo?
 ) : StampStatus {
-    if (pages.isEmpty() || viewModel.currentPage.value.title.isEmpty()) {
+    if (pages.isNullOrEmpty() || currentPage?.title.isNullOrEmpty()) {
         return StampStatus.EMPTY_PAGE
-    } else if (pages[pagerState.currentPage].contents.isEmpty()) {
+    } else if (contents.isNullOrEmpty()) {
         return StampStatus.EMPTY_CONTENT
     } else {
         var stamp = ""
@@ -349,7 +342,7 @@ fun checkStampStatus(
 @Composable
 fun TitleBar(
     viewModel: MainViewModel,
-    pages: List<PageInfo>,
+    pages: List<PageInfo>?,
     pagerState: PagerState,
     onMoveAddPage: () -> Unit,
     onOpenDrawer: (DrawerMode) -> Unit
@@ -371,7 +364,7 @@ fun TitleBar(
                 .padding(start = 24.dp, end = 24.dp)
         ) {
 
-            if (pages.isEmpty()) {
+            if (pages.isNullOrEmpty()) {
                 DefaultTitleBar(onMoveAddPage)
             } else {
                 pages.forEachIndexed { index, page ->
@@ -384,10 +377,10 @@ fun TitleBar(
 
                     if (pagerState.currentPage == index) {
                         // page 선택될때 currentPage 변경
-                        viewModel.currentPage.value = page.page
+                        viewModel.movePage(page)
 
                         SelectedTab(
-                            pages[index].page,
+                            pages[index],
                             Modifier
                                 .weight(1f)
                                 .height(40.dp)
@@ -412,7 +405,7 @@ fun TitleBar(
                                     .width(22.dp)
                                     .align(Alignment.CenterStart)
                                     .padding(start = 9.dp, top = 2.dp),
-                                text = page.page.emoji,
+                                text = page.emoji,
                                 fontSize = 18.sp
                             )
                         }
@@ -567,7 +560,7 @@ fun DefaultTitleBar(onMoveAddPage: () -> Unit) {
 }
 @Composable
 fun SelectedTab(
-    page: Page,
+    page: PageInfo,
     modifier: Modifier,
     onOpenDrawer: (DrawerMode) -> Unit
 ) {
@@ -617,10 +610,11 @@ fun SelectedTab(
 }
 @Composable
 fun FriendsBar(
-    pages: List<PageInfo>,
+    pages: List<PageInfo>?,
     viewModel: MainViewModel,
     isNeedInit: MutableState<Boolean>,
-    currentUser: User?
+    currentUser: User?,
+    currentPage: PageInfo?
 ) {
     Row(
         modifier = Modifier
@@ -682,7 +676,7 @@ fun FriendsBar(
         Spacer(modifier = Modifier.size(10.dp))
         ElevatedButton(
             onClick = {
-                if (pages.isEmpty() || viewModel.currentPage.value.title.isEmpty()) {
+                if (pages.isNullOrEmpty() || currentPage?.title.isNullOrEmpty()) {
                     isNeedInit.value = true
                 } else {
                     // 친구 추천 화면
@@ -707,7 +701,8 @@ fun FriendsBar(
 @Composable
 fun PageItemPager(
     pagerState: PagerState,
-    pages: List<PageInfo>,
+    pages: List<PageInfo>?,
+    contents : List<Content>?,
     isNeedInit: MutableState<Boolean>,
     viewModel: MainViewModel,
     navController: NavHostController,
@@ -729,6 +724,7 @@ fun PageItemPager(
             ContentList(
                 pageIndex = index,
                 pages = pages,
+                contents = contents,
                 isNeedInit = isNeedInit,
                 viewModel = viewModel,
                 navController = navController,
@@ -741,7 +737,8 @@ fun PageItemPager(
 @Composable
 fun ContentList(
     pageIndex: Int,
-    pages: List<PageInfo>,
+    pages: List<PageInfo>?,
+    contents : List<Content>?,
     isNeedInit: MutableState<Boolean>,
     viewModel: MainViewModel,
     navController: NavHostController,
@@ -757,22 +754,23 @@ fun ContentList(
                 .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(25.dp)
         ) {
-            val count = if (pages.isEmpty()) 1 else pages[pageIndex].contents.size + 1
+            val count = if (pages.isNullOrEmpty()) 1 else contents?.size ?: 0 + 1
 
             items(count) {index ->
-                val size = if (pages.isEmpty()) 0 else pages[pageIndex].contents.size
+                val size = if (pages.isNullOrEmpty()) 0 else contents?.size ?: 0
 
                 if (index < size) {
                     ContentListItem(
                         isShowContentDetail = isShowContentDetail,
                         contentPagerIndex = contentPageIndex,
-                        content = pages[pageIndex].contents[index],
+                        content = contents!![index],
                         index = index,
                         itemSize = itemSize
                     )
                 } else {
                     AddContentButton(
                         pages = pages,
+                        currentPage = if (pages.isNullOrEmpty()) null else pages[pageIndex],
                         isNeedInit = isNeedInit,
                         viewModel = viewModel,
                         navController = navController,
@@ -786,7 +784,8 @@ fun ContentList(
 }
 @Composable
 fun AddContentButton(
-    pages: List<PageInfo>,
+    pages: List<PageInfo>?,
+    currentPage: PageInfo?,
     isNeedInit: MutableState<Boolean>,
     viewModel: MainViewModel,
     navController: NavHostController,
@@ -803,7 +802,7 @@ fun AddContentButton(
     ) {
         Button(
             onClick = {
-                if (pages.isEmpty() || viewModel.currentPage.value.title.isEmpty()) {
+                if (pages.isNullOrEmpty() || currentPage?.title.isNullOrEmpty()) {
                     isNeedInit.value = true
                 } else {
                     navController.navigate(MainScreen.AddContent.route)
@@ -916,7 +915,7 @@ fun BottomBar(viewModel: MainViewModel) {
                 contentDescription = null,
                 modifier = Modifier.clickable {
                     val intent = Intent(context, SettingActivity::class.java)
-                    intent.putExtra("user", viewModel.user.value)
+                    intent.putExtra("user", viewModel.currentUser.value)
                     context.startActivity(intent)
                 }
 

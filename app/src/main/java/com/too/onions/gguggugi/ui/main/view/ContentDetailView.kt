@@ -43,15 +43,14 @@ import com.too.onions.gguggugi.viewmodel.MainViewModel
 @Composable
 fun ContentDetailView(
     isShowContentDetail: MutableState<Boolean>,
-    contentList: List<Content>,
-    contentPageIndex: Int,
-    viewModel: MainViewModel
+    contentList: List<Content>?,
+    contentPageIndex: Int
 ) {
 
     val pagerState = rememberPagerState(
         initialPage = contentPageIndex,
         initialOffscreenLimit = 3,
-        pageCount = contentList.size,
+        pageCount = contentList!!.size,
     )
 
     Dialog(

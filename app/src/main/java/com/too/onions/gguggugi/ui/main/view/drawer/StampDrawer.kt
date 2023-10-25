@@ -41,7 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.too.onions.gguggugi.R
-import com.too.onions.gguggugi.data.Page
+import com.too.onions.gguggugi.data.PageInfo
 import com.too.onions.gguggugi.define.Define
 import com.too.onions.gguggugi.ui.main.MainScreen
 import com.too.onions.gguggugi.viewmodel.MainViewModel
@@ -53,7 +53,7 @@ fun StampDrawer(
     viewModel: MainViewModel,
     navController: NavHostController,
     drawerState: BottomDrawerState,
-    page: Page?
+    page: PageInfo?
 ) {
     val seletedStamp = remember { mutableStateOf(Define.SEL_STAMP_NONE)}
     val interactionSource = remember { MutableInteractionSource() }

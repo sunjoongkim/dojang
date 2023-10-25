@@ -19,12 +19,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.too.onions.gguggugi.R
-import com.too.onions.gguggugi.data.Page
+import com.too.onions.gguggugi.data.PageInfo
 import com.too.onions.gguggugi.viewmodel.MainViewModel
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -33,7 +32,7 @@ fun PageDrawer(
     viewModel: MainViewModel,
     navController: NavHostController,
     drawerState: BottomDrawerState,
-    page: Page?
+    page: PageInfo?
 ) {
 
     Column(
