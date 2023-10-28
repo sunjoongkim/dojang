@@ -187,10 +187,9 @@ fun JoinView(
                     .fillMaxWidth()
                     .height(46.dp)
                     .clickable {
-                        if (isChecked.value && !nickname.value.isEmpty()) {
+                        if (isChecked.value && nickname.value.isNotEmpty()) {
                             viewModel.confirmJoin(nickname.value)
-
-                            //navController.navigate(LoginScreen.Allow.route)
+                            navController.navigate(LoginScreen.Allow.route)
                         }
                     },
                 contentAlignment = Alignment.Center

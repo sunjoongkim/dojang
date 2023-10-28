@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.too.onions.gguggugi.data.Content
+import com.too.onions.gguggugi.data.InitPage
 import com.too.onions.gguggugi.data.Member
 import com.too.onions.gguggugi.data.Page
 import com.too.onions.gguggugi.data.PageInfo
@@ -54,6 +55,10 @@ class MainViewModel : ViewModel() {
     val currentUser: LiveData<User> get() = _currentUser
 
     init {
+        setInitPage()
+    }
+
+    private fun setInitPage() {
         val initPage = MainService.getInstance()?.getInitPage()
 
         if (initPage != null) {
@@ -64,9 +69,41 @@ class MainViewModel : ViewModel() {
         }
     }
 
+    fun getInitPage() {
+        restApiService.getInitPage(RestApiService.token).enqueue(object: Callback<ResponseBody> {
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+
+                if(response.isSuccessful.not()){
+                    Log.e("@@@@@", "======> No data")
+                    return
+                }
+
+                response.body()?.let{ body ->
+                    val data = JSONObject(body.string()).getJSONObject("data")
+
+                    val gson = Gson()
+                    val initPage: InitPage = gson.fromJson(data.toString(), InitPage::class.java)
+
+                    MainService.getInstance()?.setInitPage(initPage)
+                    setInitPage()
+
+                } ?: run {
+                    Log.d("NG", "body is null")
+                }
+            }
+
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                Log.e("@@@@@", "======> getInitPage onFailure : $t")
+
+            }
+
+        })
+    }
 
     fun setCurrentUser() {
         _currentUser.postValue(MainService.getInstance()?.getUser())
+        Log.e("@@@@@", "======> currentUser : ${MainService.getInstance()?.getUser()}")
+        Log.e("@@@@@", "======> nickname : ${MainService.getInstance()?.getUser()?.nickname}")
     }
 
     fun movePage(page: PageInfo) {
@@ -113,7 +150,7 @@ class MainViewModel : ViewModel() {
         _contentList.postValue(contents)
     }
 
-    fun insertPage(emoji: String, title: String) {
+    fun addPage(emoji: String, title: String) {
         /*viewModelScope.launch(Dispatchers.IO) {
             repository.insertPage(page)
             fetchAllPagesWithContents()
@@ -125,7 +162,7 @@ class MainViewModel : ViewModel() {
 
         val body = jsonObject.toString().toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
 
-        restApiService.insertPage(RestApiService.token, body).enqueue(object:
+        restApiService.addPage(RestApiService.token, body).enqueue(object:
             Callback<ResponseBody> {
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                 if(response.isSuccessful.not()){
@@ -146,7 +183,7 @@ class MainViewModel : ViewModel() {
                     Log.e("@@@@@", "======> page maxParticipants : ${page.maxParticipants}")
                     Log.e("@@@@@", "======> page maxMissions : ${page.maxMissions}")
 
-                    _currentPage.postValue(page)
+                    getInitPage()
 
                 } ?: run {
                     Log.d("NG", "body is null")
@@ -164,13 +201,46 @@ class MainViewModel : ViewModel() {
 
     // ==== Content ====
 
-    /*fun insertContent(content: Content) {
-        viewModelScope.launch(Dispatchers.IO) {
-            repository.insertContent(content)
-            fetchAllPagesWithContents()
-        }
+    fun addContent(content: Content) {
+        val jsonObject = JSONObject()
+        jsonObject.put("pageIdx", content.pageIdx)
+        jsonObject.put("title", content.title)
+        jsonObject.put("bgType", content.bgType)
+        jsonObject.put("bgContent", content.bgContent)
+        jsonObject.put("description", content.description)
+
+        val body = jsonObject.toString().toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+
+        restApiService.addContent(RestApiService.token, body).enqueue(object:
+            Callback<ResponseBody> {
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                if(response.isSuccessful.not()){
+                    Log.e("@@@@@", "======> insertPage No data")
+                    return
+                }
+
+                response.body()?.let{ body ->
+                    val data = JSONObject(body.string()).getJSONObject("data")
+
+                    val gson = Gson()
+                    val content: Content = gson.fromJson(data.toString(), Content::class.java)
+                    Log.e("@@@@@", "======> content idx : ${content.idx}")
+
+
+
+                } ?: run {
+                    Log.d("NG", "body is null")
+                }
+            }
+
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                Log.e("@@@@@", "======> insertPage onFailure : $t")
+
+            }
+
+        })
     }
-    fun getContent(contentId: Long) {
+    /*fun getContent(contentId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.getContent(contentId)
         }

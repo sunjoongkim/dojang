@@ -49,7 +49,6 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.emoji2.emojipicker.EmojiPickerView
 import androidx.emoji2.emojipicker.EmojiViewItem
 import androidx.navigation.NavHostController
-import com.google.accompanist.pager.ExperimentalPagerApi
 import com.too.onions.gguggugi.R
 import com.too.onions.gguggugi.ui.main.AddPageMode
 import com.too.onions.gguggugi.viewmodel.MainViewModel
@@ -84,7 +83,7 @@ fun AddPageView(
                 AddPageTitle(title, addPageMode, navController) {
                     addPageMode.value = AddPageMode.INPUT_DONE
 
-                    viewModel.insertPage(emoji.value.emoji, title.value)
+                    viewModel.addPage(emoji.value.emoji, title.value)
                     navController.popBackStack()
                 }
             }

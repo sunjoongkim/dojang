@@ -7,7 +7,6 @@ import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
-import retrofit2.http.Headers
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -38,8 +37,12 @@ interface RestApiService {
     fun getInitPage(@Header("accessToken") accessToken: String) : Call<ResponseBody>
 
     @POST("/stamp-api/1.0/page/add")
-    fun insertPage(@Header("accessToken") accessToken: String, @Body page: RequestBody) : Call<ResponseBody>
+    fun addPage(@Header("accessToken") accessToken: String, @Body page: RequestBody) : Call<ResponseBody>
 
     @GET("/stamp-api/1.0/page/{pageIndex}")
     fun getPage(@Header("accessToken") accessToken: String, @Path("pageIndex") pageIndex: Long) : Call<ResponseBody>
+
+    // Content API
+    @POST("/stamp-api/1.0/mission/add")
+    fun addContent(@Header("accessToken") accessToken: String, @Body content: RequestBody) : Call<ResponseBody>
 }

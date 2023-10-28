@@ -102,7 +102,7 @@ fun AddContentView(
             address = address.value
         )
 
-        viewModel.insertContent(content)
+        viewModel.addContent(content)
         navController.popBackStack()*/
     }
 }

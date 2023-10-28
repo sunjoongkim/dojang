@@ -135,7 +135,10 @@ fun AllowView(
                     .fillMaxWidth()
                     .height(46.dp)
                     .clickable (
-                        onClick = checkNotiPermission
+                        onClick = {
+                            viewModel.insertUser()
+                            checkNotiPermission
+                        }
                     ),
                 contentAlignment = Alignment.Center
 

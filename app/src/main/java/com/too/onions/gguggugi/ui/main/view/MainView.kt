@@ -2,6 +2,7 @@ package com.too.onions.gguggugi.ui.main.view
 
 import android.content.Intent
 import android.content.res.Configuration
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -69,7 +70,8 @@ import com.too.onions.gguggugi.R
 import com.too.onions.gguggugi.data.Content
 import com.too.onions.gguggugi.data.PageInfo
 import com.too.onions.gguggugi.data.User
-import com.too.onions.gguggugi.define.Define.STAMP_DEFAULT
+import com.too.onions.gguggugi.define.Define
+import com.too.onions.gguggugi.define.Define.STAMP_TYPE_DEFAULT
 import com.too.onions.gguggugi.ui.common.CommonDialog
 import com.too.onions.gguggugi.ui.main.AddPageMode
 import com.too.onions.gguggugi.ui.main.MainScreen
@@ -163,6 +165,7 @@ fun MainView(
     }
 
     LaunchedEffect(viewModel) {
+        Log.e("@@@@@", "======> setCurrentUser!!!")
         viewModel.setCurrentUser()
     }
 
@@ -248,7 +251,7 @@ fun MainView(
                 // 일반 화면 BottomBar
                 BottomBar(viewModel)
                 StampButton(
-                    currentUser = currentUser,
+                    pageInfo = currentPage,
                     onClick = {
                         scope.launch {
                             when (checkStampStatus(
@@ -635,9 +638,11 @@ fun FriendsBar(
                 .size(40.dp),
             contentAlignment = Alignment.Center
         ) {
-            if (currentUser?.stamp?.isEmpty() == true) {
+            Log.e("@@@@@", "=======> currentPage : $currentPage")
+            if (currentPage == null || currentPage.stamp.isNullOrEmpty()) {
+                Log.e("@@@@@", "=======> currentUser?.nickname?.first()?.toString() : ${currentUser?.nickname?.first()?.toString()}")
                 Text(
-                    text = if (currentUser?.nickname == "") "" else currentUser.nickname.first().toString(),
+                    text = currentUser?.nickname?.first()?.toString() ?: "",
                     modifier = Modifier
                         .wrapContentSize(),
                     textAlign = TextAlign.Center,
@@ -645,7 +650,7 @@ fun FriendsBar(
                 )
             } else {
 
-                if (currentUser?.stamp == STAMP_DEFAULT) {
+                if (currentPage?.stampType == STAMP_TYPE_DEFAULT) {
                     Image(
                         painterResource(id = R.drawable.ic_btn_stamp),
                         contentDescription = null,
@@ -653,7 +658,7 @@ fun FriendsBar(
                     )
                 } else {
                     Text(
-                        text = currentUser?.stamp ?: "",
+                        text = currentPage?.stamp ?: "",
                         modifier = Modifier
                             .wrapContentSize()
                             .padding(top = 2.dp),
@@ -925,7 +930,7 @@ fun BottomBar(viewModel: MainViewModel) {
 }
 @Composable
 fun StampButton(
-    currentUser: User?,
+    pageInfo: PageInfo?,
     onClick: () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -954,7 +959,7 @@ fun StampButton(
                     .fillMaxWidth()
             )
 
-            if (currentUser?.stamp == "" || currentUser?.stamp == STAMP_DEFAULT) {
+            if (pageInfo?.stampType == null || pageInfo?.stampType == STAMP_TYPE_DEFAULT) {
                 Image(
                     painterResource(id = R.drawable.ic_btn_stamp),
                     contentDescription = null,
@@ -963,7 +968,7 @@ fun StampButton(
                 )
             } else {
                 Text(
-                    text = currentUser?.stamp ?: "",
+                    text = pageInfo?.stamp ?: "",
                     modifier = Modifier
                         .wrapContentSize()
                         .padding(top = 5.dp),

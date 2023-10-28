@@ -25,11 +25,11 @@ class LoginViewModel : ViewModel() {
 
     private var accessToken = ""
 
-    private val _user = MutableLiveData<User?>()
-    val user: LiveData<User?> get() = _user
-
     private val _isNeedJoin = MutableLiveData<Boolean?>()
     val isNeedJoin: LiveData<Boolean?> get() = _isNeedJoin
+
+    var nickname: String = ""
+
 
     fun resetInNeedJoin(isNeed: Boolean? = null) {
         _isNeedJoin.postValue(isNeed)
@@ -160,17 +160,12 @@ class LoginViewModel : ViewModel() {
     }
 
     fun confirmJoin(nickname: String) {
-        val confirmUser = _user.value?.copy(nickname = nickname)
-        insertUser(nickname)
-
-        if (confirmUser != null) {
-            _user.postValue(confirmUser)
-            insertUser(nickname)
-        }
+        this.nickname = nickname
     }
-    private fun insertUser(userName: String) {
+
+    fun insertUser() {
         val jsonObject = JSONObject()
-        jsonObject.put("username", userName)
+        jsonObject.put("username", nickname)
 
         val body = jsonObject.toString().toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
 
@@ -187,9 +182,8 @@ class LoginViewModel : ViewModel() {
 
                     // insert 성공하지 못하면 팝업 가이드
                     if (data == "1") {
-                        Log.e("@@@@@", "userName : $userName")
-                        getInitPage()
-                        _isNeedJoin.postValue(false)
+                        Log.e("@@@@@", "userName : $nickname")
+                        getUser()
                     } else {
                         Log.e("@@@@@", "message : ${JSONObject(data).getString("message")}")
                     }
