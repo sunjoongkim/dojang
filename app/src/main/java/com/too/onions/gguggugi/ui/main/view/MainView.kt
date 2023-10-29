@@ -71,7 +71,7 @@ import com.too.onions.gguggugi.data.Content
 import com.too.onions.gguggugi.data.PageInfo
 import com.too.onions.gguggugi.data.User
 import com.too.onions.gguggugi.define.Define
-import com.too.onions.gguggugi.define.Define.STAMP_TYPE_DEFAULT
+import com.too.onions.gguggugi.define.Define.STAMP_TYPE_STAMP
 import com.too.onions.gguggugi.ui.common.CommonDialog
 import com.too.onions.gguggugi.ui.main.AddPageMode
 import com.too.onions.gguggugi.ui.main.MainScreen
@@ -380,7 +380,7 @@ fun TitleBar(
 
                     if (pagerState.currentPage == index) {
                         // page 선택될때 currentPage 변경
-                        viewModel.movePage(page)
+                        viewModel.getPage(page.idx)
 
                         SelectedTab(
                             pages[index],
@@ -650,7 +650,7 @@ fun FriendsBar(
                 )
             } else {
 
-                if (currentPage?.stampType == STAMP_TYPE_DEFAULT) {
+                if (currentPage?.stampType == STAMP_TYPE_STAMP) {
                     Image(
                         painterResource(id = R.drawable.ic_btn_stamp),
                         contentDescription = null,
@@ -707,7 +707,7 @@ fun FriendsBar(
 fun PageItemPager(
     pagerState: PagerState,
     pages: List<PageInfo>?,
-    contents : List<Content>?,
+    contents : List<List<Content>?>?,
     isNeedInit: MutableState<Boolean>,
     viewModel: MainViewModel,
     navController: NavHostController,
@@ -729,7 +729,7 @@ fun PageItemPager(
             ContentList(
                 pageIndex = index,
                 pages = pages,
-                contents = contents,
+                contents = contents?.get(index),
                 isNeedInit = isNeedInit,
                 viewModel = viewModel,
                 navController = navController,
@@ -759,7 +759,7 @@ fun ContentList(
                 .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(25.dp)
         ) {
-            val count = if (pages.isNullOrEmpty()) 1 else contents?.size ?: 0 + 1
+            val count = if (pages.isNullOrEmpty()) 1 else (contents?.size ?: 0) + 1
 
             items(count) {index ->
                 val size = if (pages.isNullOrEmpty()) 0 else contents?.size ?: 0
@@ -855,12 +855,12 @@ fun ContentListItem(
     ) {
 
         AsyncImage(
-            model = content.bgContent,
+            model = if (content.bgType == Define.CONTENT_BG_TYPE_IMAGE) content.bgContent else null,
             contentDescription = null,
             modifier = Modifier
                 .size(itemSize, itemSize - 36.dp)
                 .border(1.dp, Color(0xff123485), RectangleShape)
-                .background(color = Color(content.bgContent.toInt(16))),
+                .background(color = hexToColor(content.bgContent)),
             contentScale = ContentScale.Crop
         )
 
@@ -885,6 +885,14 @@ fun ContentListItem(
         }
     }
 }
+
+fun hexToColor(hex: String): Color {
+    val r = Integer.parseInt(hex.substring(0, 2), 16)
+    val g = Integer.parseInt(hex.substring(2, 4), 16)
+    val b = Integer.parseInt(hex.substring(4, 6), 16)
+    return Color(r, g, b)
+}
+
 @Composable
 fun BottomBar(viewModel: MainViewModel) {
 
@@ -959,7 +967,7 @@ fun StampButton(
                     .fillMaxWidth()
             )
 
-            if (pageInfo?.stampType == null || pageInfo?.stampType == STAMP_TYPE_DEFAULT) {
+            if (pageInfo?.stampType == null || pageInfo?.stampType == STAMP_TYPE_STAMP) {
                 Image(
                     painterResource(id = R.drawable.ic_btn_stamp),
                     contentDescription = null,

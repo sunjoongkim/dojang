@@ -31,6 +31,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -49,6 +50,7 @@ import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.too.onions.gguggugi.R
 import com.too.onions.gguggugi.data.Content
+import com.too.onions.gguggugi.define.Define
 import com.too.onions.gguggugi.viewmodel.MainViewModel
 
 @Composable
@@ -61,6 +63,9 @@ fun AddContentView(
     val contentName = remember { mutableStateOf("") }
     val contentDescription = remember { mutableStateOf("") }
     val address = remember { mutableStateOf("") }
+
+    val currentPage by viewModel.currentPage.observeAsState()
+
     
     Box(
         modifier = Modifier
@@ -69,7 +74,8 @@ fun AddContentView(
     )
 
     Column(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
             .padding(bottom = 94.dp)
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -93,18 +99,27 @@ fun AddContentView(
     }
 
     RegistButton(contentName, contentDescription) {
-        /*val content = Content(
-            pageId = viewModel.currentPage.value.id,
-            color = selectedColor.value.toArgb(),
-            imageUri = checkAndReplaceUri(selectedImageUri.value).toString(),
+
+        val content = Content(
+            pageIdx = currentPage?.idx ?: 0,
             title = contentName.value,
+            bgType = Define.CONTENT_BG_TYPE_COLOR,
             description = contentDescription.value,
-            address = address.value
+            bgContent = colorToHex(selectedColor.value),
+            //imageUri = checkAndReplaceUri(selectedImageUri.value).toString(),
+            //address = address.value
         )
 
         viewModel.addContent(content)
-        navController.popBackStack()*/
+        navController.popBackStack()
     }
+}
+fun colorToHex(color: Color): String {
+    return "%02x%02x%02x".format(
+        (color.red * 255).toInt(),
+        (color.green * 255).toInt(),
+        (color.blue * 255).toInt()
+    ).uppercase()
 }
 fun checkAndReplaceUri(uri: Uri?) : String? {
     if (uri == null) return null

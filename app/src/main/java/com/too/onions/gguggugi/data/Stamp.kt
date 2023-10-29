@@ -17,7 +17,4 @@ data class Stamp (
     @SerializedName("locX") val locX: Int = 0,
     @SerializedName("locY") val locY: Int = 0,
     @SerializedName("rotation") val rotation: Int = 0,
-    val stamp: String,
-    val x: Int,
-    val y: Int
 ) : Parcelable

@@ -10,6 +10,7 @@ import kotlinx.android.parcel.Parcelize
 data class Content (
     @SerializedName("idx") val idx: Long = 0,
     @SerializedName("ownerIdx") val ownerIdx: Long = 0,
+    @SerializedName("userIdx") val userIdx: Long = 0,
     @SerializedName("pageIdx") val pageIdx: Long = 0,
     @SerializedName("title") val title: String = "",
     @SerializedName("bgType") val bgType: String = "",
@@ -18,5 +19,5 @@ data class Content (
     @SerializedName("description") val description: String = "",
     @SerializedName("address") val address: String? = "",
     @SerializedName("order") val order: Long = 0,
-    @SerializedName("stampList") val stampList: String = "",
+    @SerializedName("stampList") val stampList: List<Stamp> = listOf(),
 ) : Parcelable

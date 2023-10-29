@@ -106,9 +106,9 @@ class MainViewModel : ViewModel() {
         Log.e("@@@@@", "======> nickname : ${MainService.getInstance()?.getUser()?.nickname}")
     }
 
-    fun movePage(page: PageInfo) {
+    fun getPage(pageIdx: Long) {
 
-        restApiService.getPage(RestApiService.token, page.idx).enqueue(object:
+        restApiService.getPage(RestApiService.token, pageIdx).enqueue(object:
             Callback<ResponseBody> {
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                 if(response.isSuccessful.not()){
@@ -124,6 +124,7 @@ class MainViewModel : ViewModel() {
 
                     _memberList.postValue(page.memberList)
                     _contentList.postValue(page.contentList)
+                    _currentPage.postValue(page.pageInfo)
 
                 } ?: run {
                     Log.d("NG", "body is null")
@@ -137,7 +138,6 @@ class MainViewModel : ViewModel() {
 
         })
 
-        _currentPage.postValue(page)
 
 
     }
@@ -226,7 +226,7 @@ class MainViewModel : ViewModel() {
                     val content: Content = gson.fromJson(data.toString(), Content::class.java)
                     Log.e("@@@@@", "======> content idx : ${content.idx}")
 
-
+                    getPage(content.pageIdx)
 
                 } ?: run {
                     Log.d("NG", "body is null")
