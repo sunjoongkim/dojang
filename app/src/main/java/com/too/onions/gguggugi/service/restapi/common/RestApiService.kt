@@ -1,9 +1,12 @@
 package com.too.onions.gguggugi.service.restapi.common
 
 import com.too.onions.gguggugi.data.CheckDup
+import com.too.onions.gguggugi.data.DataResponse
+import com.too.onions.gguggugi.data.Page
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
 import retrofit2.Call
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -40,7 +43,7 @@ interface RestApiService {
     fun addPage(@Header("accessToken") accessToken: String, @Body page: RequestBody) : Call<ResponseBody>
 
     @GET("/stamp-api/1.0/page/{pageIndex}")
-    fun getPage(@Header("accessToken") accessToken: String, @Path("pageIndex") pageIndex: Long) : Call<ResponseBody>
+    suspend fun getPage(@Header("accessToken") accessToken: String, @Path("pageIndex") pageIndex: Long) : Response<DataResponse>
 
     // Content API
     @POST("/stamp-api/1.0/mission/add")

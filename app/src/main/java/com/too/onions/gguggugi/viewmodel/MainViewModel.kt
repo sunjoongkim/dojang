@@ -38,6 +38,8 @@ class MainViewModel : ViewModel() {
     // ===== Page ======
 
 
+    private val _pages = MutableLiveData<List<Page>>()
+    val pages: LiveData<List<Page>> get() = _pages
 
     private var _currentPage = MutableLiveData<PageInfo?>()
     val currentPage: LiveData<PageInfo?> get() = _currentPage
@@ -55,10 +57,6 @@ class MainViewModel : ViewModel() {
     val currentUser: LiveData<User> get() = _currentUser
 
     init {
-        setInitPage()
-    }
-
-    private fun setInitPage() {
         val initPage = MainService.getInstance()?.getInitPage()
 
         if (initPage != null) {
@@ -67,6 +65,16 @@ class MainViewModel : ViewModel() {
             _memberList.postValue(initPage.memberList)
             _contentList.postValue(initPage.contentList)
         }
+    }
+
+    fun movePage(pageIdx: Long) {
+        viewModelScope.launch {
+            val fetchedPage = getPage(pageIdx)
+        }
+    }
+
+    private fun setInitPage() {
+
     }
 
     fun getInitPage() {
@@ -106,40 +114,29 @@ class MainViewModel : ViewModel() {
         Log.e("@@@@@", "======> nickname : ${MainService.getInstance()?.getUser()?.nickname}")
     }
 
-    fun getPage(pageIdx: Long) {
+    suspend fun getPage(pageIdx: Long): Page? {
 
-        restApiService.getPage(RestApiService.token, pageIdx).enqueue(object:
-            Callback<ResponseBody> {
-            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
-                if(response.isSuccessful.not()){
-                    Log.e("@@@@@", "======> getPage No data")
-                    return
-                }
+        val response = restApiService.getPage(RestApiService.token, pageIdx)
 
-                response.body()?.let{ body ->
-                    val data = JSONObject(body.string()).getJSONObject("data")
+        return if (response.isSuccessful) {
+            Log.e("@@@@@", "=========> response.body() : " + response.body())
+            response.body()?.data as Page
+        } else {
+            null
+        }
+        /*response.body()?.let{ body ->
+            val data = JSONObject(body.string()).getJSONObject("data")
 
-                    val gson = Gson()
-                    val page: Page = gson.fromJson(data.toString(), Page::class.java)
+            val gson = Gson()
+            val page: Page = gson.fromJson(data.toString(), Page::class.java)
 
-                    _memberList.postValue(page.memberList)
-                    _contentList.postValue(page.contentList)
-                    _currentPage.postValue(page.pageInfo)
+            _memberList.postValue(page.memberList)
+            _contentList.postValue(page.contentList)
+            _currentPage.postValue(page.pageInfo)
 
-                } ?: run {
-                    Log.d("NG", "body is null")
-                }
-            }
-
-            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Log.e("@@@@@", "======> getPage onFailure : $t")
-
-            }
-
-        })
-
-
-
+        } ?: run {
+            Log.d("NG", "body is null")
+        }*/
     }
 
     fun setMemberList(members: List<Member>) {
@@ -226,7 +223,7 @@ class MainViewModel : ViewModel() {
                     val content: Content = gson.fromJson(data.toString(), Content::class.java)
                     Log.e("@@@@@", "======> content idx : ${content.idx}")
 
-                    getPage(content.pageIdx)
+                    //getPage(content.pageIdx)
 
                 } ?: run {
                     Log.d("NG", "body is null")

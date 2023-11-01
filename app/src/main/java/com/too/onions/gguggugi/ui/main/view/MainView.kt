@@ -380,7 +380,7 @@ fun TitleBar(
 
                     if (pagerState.currentPage == index) {
                         // page 선택될때 currentPage 변경
-                        viewModel.getPage(page.idx)
+                        viewModel.movePage(page.idx)
 
                         SelectedTab(
                             pages[index],
