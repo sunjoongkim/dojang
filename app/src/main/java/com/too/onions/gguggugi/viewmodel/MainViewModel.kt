@@ -7,7 +7,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.too.onions.gguggugi.data.Content
-import com.too.onions.gguggugi.data.InitPage
 import com.too.onions.gguggugi.data.Member
 import com.too.onions.gguggugi.data.Page
 import com.too.onions.gguggugi.data.PageInfo
@@ -18,11 +17,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.ResponseBody
 import org.json.JSONObject
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
 class MainViewModel : ViewModel() {
 
@@ -77,7 +72,7 @@ class MainViewModel : ViewModel() {
 
     }
 
-    fun getInitPage() {
+    /*fun getInitPage() {
         restApiService.getInitPage(RestApiService.token).enqueue(object: Callback<ResponseBody> {
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
 
@@ -106,7 +101,7 @@ class MainViewModel : ViewModel() {
             }
 
         })
-    }
+    }*/
 
     fun setCurrentUser() {
         _currentUser.postValue(MainService.getInstance()?.getUser())
@@ -159,40 +154,24 @@ class MainViewModel : ViewModel() {
 
         val body = jsonObject.toString().toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
 
-        restApiService.addPage(RestApiService.token, body).enqueue(object:
-            Callback<ResponseBody> {
-            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
-                if(response.isSuccessful.not()){
-                    Log.e("@@@@@", "======> insertPage No data")
-                    return
-                }
+        val response = restApiService.addPage(RestApiService.token, body)
 
-                response.body()?.let{ body ->
-                    val data = JSONObject(body.string()).getJSONObject("data")
+        if (response.isSuccessful) {
+            val page: PageInfo = Gson().fromJson(response.body()?.data, PageInfo::class.java)
 
-                    val gson = Gson()
-                    val page: PageInfo = gson.fromJson(data.toString(), PageInfo::class.java)
-                    Log.e("@@@@@", "======> page idx : ${page.idx}")
-                    Log.e("@@@@@", "======> page ownerIdx : ${page.ownerIdx}")
-                    Log.e("@@@@@", "======> page type : ${page.type}")
-                    Log.e("@@@@@", "======> page symbol : ${page.emoji}")
-                    Log.e("@@@@@", "======> page title : ${page.title}")
-                    Log.e("@@@@@", "======> page maxParticipants : ${page.maxParticipants}")
-                    Log.e("@@@@@", "======> page maxMissions : ${page.maxMissions}")
+            Log.e("@@@@@", "======> page idx : ${page.idx}")
+            Log.e("@@@@@", "======> page ownerIdx : ${page.ownerIdx}")
+            Log.e("@@@@@", "======> page type : ${page.type}")
+            Log.e("@@@@@", "======> page symbol : ${page.emoji}")
+            Log.e("@@@@@", "======> page title : ${page.title}")
+            Log.e("@@@@@", "======> page maxParticipants : ${page.maxParticipants}")
+            Log.e("@@@@@", "======> page maxMissions : ${page.maxMissions}")
 
-                    getInitPage()
+            //getInitPage()
 
-                } ?: run {
-                    Log.d("NG", "body is null")
-                }
-            }
+        } else {
 
-            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Log.e("@@@@@", "======> insertPage onFailure : $t")
-
-            }
-
-        })
+        }
     }
 
 
@@ -208,34 +187,17 @@ class MainViewModel : ViewModel() {
 
         val body = jsonObject.toString().toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
 
-        restApiService.addContent(RestApiService.token, body).enqueue(object:
-            Callback<ResponseBody> {
-            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
-                if(response.isSuccessful.not()){
-                    Log.e("@@@@@", "======> insertPage No data")
-                    return
-                }
+        val response = restApiService.addContent(RestApiService.token, body)
 
-                response.body()?.let{ body ->
-                    val data = JSONObject(body.string()).getJSONObject("data")
+        if (response.isSuccessful) {
+            val content: Content = Gson().fromJson(response.body()?.data, Content::class.java)
 
-                    val gson = Gson()
-                    val content: Content = gson.fromJson(data.toString(), Content::class.java)
-                    Log.e("@@@@@", "======> content idx : ${content.idx}")
+            //getPage(content.pageIdx)
+        } else {
 
-                    //getPage(content.pageIdx)
+        }
 
-                } ?: run {
-                    Log.d("NG", "body is null")
-                }
-            }
 
-            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Log.e("@@@@@", "======> insertPage onFailure : $t")
-
-            }
-
-        })
     }
     /*fun getContent(contentId: Long) {
         viewModelScope.launch(Dispatchers.IO) {

@@ -4,12 +4,15 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.too.onions.gguggugi.data.Auth
 import com.too.onions.gguggugi.data.InitPage
+import com.too.onions.gguggugi.data.Page
 import com.too.onions.gguggugi.data.User
 import com.too.onions.gguggugi.service.MainService
 import com.too.onions.gguggugi.service.restapi.common.RestApiService
+import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.ResponseBody
@@ -41,122 +44,71 @@ class LoginViewModel : ViewModel() {
 
         val body = jsonObject.toString().toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
 
-        restApiService.signInGoogle(body).enqueue(object: Callback<ResponseBody> {
-            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
-                if(response.isSuccessful.not()){
-                    Log.e("@@@@@", "======> No data")
-                    return
-                }
+        val response = restApiService.signInGoogle(body)
 
-                response.body()?.let{ body ->
-                    val data = JSONObject(body.string()).getJSONObject("data")
+        if (response.isSuccessful) {
+            val auth: Auth = Gson().fromJson(response.body()?.data, Auth::class.java)
 
-                    val gson = Gson()
-                    val auth: Auth = gson.fromJson(data.toString(), Auth::class.java)
+            accessToken = auth.accessToken
+            RestApiService.token = auth.accessToken
 
-                    accessToken = auth.accessToken
-                    RestApiService.token = auth.accessToken
-
-                    if (auth.isNew == "Y") {
-                        // 가입 화면 이동
-                        _isNeedJoin.postValue(true)
-                    } else {
-                        // user info 확인후 username 으로 로그인
-                        getUser()
-                    }
-
-
-
-                } ?: run {
-                    Log.d("NG", "body is null")
-                }
+            if (auth.isNew == "Y") {
+                // 가입 화면 이동
+                _isNeedJoin.postValue(true)
+            } else {
+                // user info 확인후 username 으로 로그인
+                getUser()
             }
+        } else {
+            Log.e("@@@@@", "======> authGoogle fail : " + response.errorBody().toString())
+        }
 
-            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Log.e("@@@@@", "======> authGoogle onFailure : " + t.toString())
-
-            }
-
-        })
     }
     private fun getUser() {
-        restApiService.getUserInfo(accessToken).enqueue(object: Callback<ResponseBody> {
-            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
 
-                if(response.isSuccessful.not()){
-                    Log.e("@@@@@", "======> No data")
-                    return
+        val response = restApiService.getUserInfo(accessToken)
+
+        if (response.isSuccessful) {
+            val user: User = Gson().fromJson(response.body()?.data, User::class.java)
+
+            Log.e("@@@@@", "======> accessToken : $accessToken")
+            Log.e("@@@@@", "======> user : ${user.nickname}")
+            Log.e("@@@@@", "======> email : ${user.email}")
+
+            if (user.nickname != null && user.nickname != "") {
+                if (MainService.getInstance() != null) {
+                    MainService.getInstance()!!.setUser(user)
                 }
 
-                response.body()?.let{ body ->
-                    val data = JSONObject(body.string()).getJSONObject("data")
-
-                    val gson = Gson()
-                    val user: User = gson.fromJson(data.toString(), User::class.java)
-
-                    Log.e("@@@@@", "======> accessToken : $accessToken")
-                    Log.e("@@@@@", "======> user : ${user.nickname}")
-                    Log.e("@@@@@", "======> email : ${user.email}")
-
-                    if (user.nickname != null && user.nickname != "") {
-                        if (MainService.getInstance() != null) {
-                            MainService.getInstance()!!.setUser(user)
-                        }
-
-                        getInitPage()
-                        _isNeedJoin.postValue(false)
-                    } else {
-                        _isNeedJoin.postValue(true)
-                    }
-
-                } ?: run {
-                    Log.d("NG", "body is null")
-                }
+                getInitPage()
+                _isNeedJoin.postValue(false)
+            } else {
+                _isNeedJoin.postValue(true)
             }
 
-            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Log.e("@@@@@", "======> getUser onFailure : " + t.toString())
+        } else {
+            Log.e("@@@@@", "======> getUser fail : " + response.errorBody().toString())
 
-            }
-
-        })
+        }
     }
 
     private fun getInitPage() {
-        Log.e("@@@@@", "======> getInitPage")
-        restApiService.getInitPage(accessToken).enqueue(object: Callback<ResponseBody> {
-            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+        viewModelScope.launch {
+            val response = restApiService.getInitPage(RestApiService.token)
 
-                if(response.isSuccessful.not()){
-                    Log.e("@@@@@", "======> No data")
-                    return
-                }
+            if (response.isSuccessful) {
+                val initPage: InitPage = Gson().fromJson(response.body()?.data, InitPage::class.java)
 
-                response.body()?.let{ body ->
-                    val data = JSONObject(body.string()).getJSONObject("data")
-                    Log.e("@@@@@", "======> data : ${data}")
+                Log.e("@@@@@", "======> pageList : ${initPage.pageList}")
+                Log.e("@@@@@", "======> firstPageInfo : ${initPage.firstPageInfo}")
+                Log.e("@@@@@", "======> missionList : ${initPage.contentList}")
+                Log.e("@@@@@", "======> participantList : ${initPage.memberList}")
 
-                    val gson = Gson()
-                    val initPage: InitPage = gson.fromJson(data.toString(), InitPage::class.java)
-
-                    Log.e("@@@@@", "======> pageList : ${initPage.pageList}")
-                    Log.e("@@@@@", "======> firstPageInfo : ${initPage.firstPageInfo}")
-                    Log.e("@@@@@", "======> missionList : ${initPage.contentList}")
-                    Log.e("@@@@@", "======> participantList : ${initPage.memberList}")
-
-                    MainService.getInstance()?.setInitPage(initPage)
-
-                } ?: run {
-                    Log.d("NG", "body is null")
-                }
+                MainService.getInstance()?.setInitPage(initPage)
+            } else {
+                Log.e("@@@@@", "=========> getInitPage fail!!")
             }
-
-            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Log.e("@@@@@", "======> getUser onFailure : " + t.toString())
-
-            }
-
-        })
+        }
     }
 
     fun confirmJoin(nickname: String) {
@@ -169,71 +121,19 @@ class LoginViewModel : ViewModel() {
 
         val body = jsonObject.toString().toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
 
-        restApiService.saveUserName(accessToken, body).enqueue(object: Callback<ResponseBody> {
-            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+        val response = restApiService.saveUserName(accessToken, body)
 
-                if(response.isSuccessful.not()){
-                    Log.e("@@@@@", "======> insertUser No data")
-                    return
-                }
-
-                response.body()?.let{ body ->
-                    val data = JSONObject(body.string()).getString("data")
-
-                    // insert 성공하지 못하면 팝업 가이드
-                    if (data == "1") {
-                        Log.e("@@@@@", "userName : $nickname")
-                        getUser()
-                    } else {
-                        Log.e("@@@@@", "message : ${JSONObject(data).getString("message")}")
-                    }
-
-
-                } ?: run {
-                    Log.d("NG", "body is null")
-                }
-            }
-
-            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Log.e("@@@@@", "======> onFailure : $t")
-            }
-
-        })
-    }
-
-    /*fun checkUser(user: FirebaseUser) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val retrievedUser = repository.getUser(user?.email ?: "")
-
-            if (retrievedUser == null) {
-                _isNeedJoin.postValue(true)
+        if (response.isSuccessful) {
+            if (response.body()?.data.toString() == "1") {
+                Log.e("@@@@@", "userName : $nickname")
+                getUser()
             } else {
-                _isNeedJoin.postValue(false)
-                if (MainService.getInstance() != null) {
-                    MainService.getInstance()!!.setUser(retrievedUser)
-                }
+                Log.e("@@@@@", "message : ${response.body()?.message}")
             }
+        } else {
 
-            setUser(user)
         }
+
     }
-    fun insertUser(user: User) {
-        viewModelScope.launch(Dispatchers.IO) {
-            repository.insertUser(user)
-        }
-    }
-
-    private fun setUser(user: FirebaseUser) {
-        val connectedUser = User(
-            email = user.email ?: "",
-            nickname = "",
-            uuid = user.uid,
-            stamp = ""
-        )
-
-        _user.postValue(connectedUser)
-    }*/
-
-
 
 }

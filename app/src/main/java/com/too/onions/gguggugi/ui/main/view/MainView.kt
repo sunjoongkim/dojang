@@ -707,7 +707,7 @@ fun FriendsBar(
 fun PageItemPager(
     pagerState: PagerState,
     pages: List<PageInfo>?,
-    contents : List<List<Content>?>?,
+    contents : List<Content>?,
     isNeedInit: MutableState<Boolean>,
     viewModel: MainViewModel,
     navController: NavHostController,
@@ -729,7 +729,7 @@ fun PageItemPager(
             ContentList(
                 pageIndex = index,
                 pages = pages,
-                contents = contents?.get(index),
+                contents = contents,
                 isNeedInit = isNeedInit,
                 viewModel = viewModel,
                 navController = navController,
