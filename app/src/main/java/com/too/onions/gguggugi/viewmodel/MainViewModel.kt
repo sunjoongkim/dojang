@@ -39,14 +39,14 @@ class MainViewModel : ViewModel() {
     private var _currentPage = MutableLiveData<PageInfo?>()
     val currentPage: LiveData<PageInfo?> get() = _currentPage
 
-    private val _pageList = MutableLiveData<List<PageInfo>?>()
+    /*private val _pageList = MutableLiveData<List<PageInfo>?>()
     val pageList: LiveData<List<PageInfo>?> get() = _pageList
 
     private val _memberList = MutableLiveData<List<Member>>()
     val memberList: LiveData<List<Member>> get() = _memberList
 
     private val _contentList = MutableLiveData<List<Content>?>()
-    val contentList: LiveData<List<Content>?> get() = _contentList
+    val contentList: LiveData<List<Content>?> get() = _contentList*/
 
     private val _currentUser = MutableLiveData<User>()
     val currentUser: LiveData<User> get() = _currentUser
@@ -55,16 +55,33 @@ class MainViewModel : ViewModel() {
         val initPage = MainService.getInstance()?.getInitPage()
 
         if (initPage != null) {
-            _currentPage.postValue(initPage.firstPageInfo)
+            /*_currentPage.postValue(initPage.firstPageInfo)
             _pageList.postValue(initPage.pageList)
             _memberList.postValue(initPage.memberList)
-            _contentList.postValue(initPage.contentList)
+            _contentList.postValue(initPage.contentList)*/
+
+            _pages.value = initPage.pageList?.map { pageInfo ->
+                Page(pageInfo = pageInfo)
+            } ?: emptyList()
+
         }
     }
 
-    fun movePage(pageIdx: Long) {
+    fun loadPageData(pageIdx: Long) {
         viewModelScope.launch {
-            val fetchedPage = getPage(pageIdx)
+            val newPage = getPage(pageIdx) ?: return@launch
+
+            _currentPage.value = newPage.pageInfo
+
+            _pages.value = _pages.value?.toMutableList()?.apply {
+
+                val pos = indexOfFirst { it.pageInfo.idx == pageIdx }
+                if (pos != -1) {
+                    this[pos] = newPage
+                } else {
+                    add(newPage)
+                }
+            }
         }
     }
 
@@ -109,38 +126,27 @@ class MainViewModel : ViewModel() {
         Log.e("@@@@@", "======> nickname : ${MainService.getInstance()?.getUser()?.nickname}")
     }
 
-    suspend fun getPage(pageIdx: Long): Page? {
+    private fun getPage(pageIdx: Long): Page? {
 
-        val response = restApiService.getPage(RestApiService.token, pageIdx)
+        viewModelScope.launch {
+            val response = restApiService.getPage(RestApiService.token, pageIdx)
 
-        return if (response.isSuccessful) {
-            Log.e("@@@@@", "=========> response.body() : " + response.body())
-            response.body()?.data as Page
-        } else {
-            null
+            if (response.isSuccessful) {
+                Gson().fromJson(response.body()?.data, Page::class.java)
+            } else {
+                null
+            }
         }
-        /*response.body()?.let{ body ->
-            val data = JSONObject(body.string()).getJSONObject("data")
-
-            val gson = Gson()
-            val page: Page = gson.fromJson(data.toString(), Page::class.java)
-
-            _memberList.postValue(page.memberList)
-            _contentList.postValue(page.contentList)
-            _currentPage.postValue(page.pageInfo)
-
-        } ?: run {
-            Log.d("NG", "body is null")
-        }*/
+        return null
     }
 
-    fun setMemberList(members: List<Member>) {
+    /*fun setMemberList(members: List<Member>) {
         _memberList.postValue(members)
     }
 
     fun setContentList(contents: List<Content>) {
         _contentList.postValue(contents)
-    }
+    }*/
 
     fun addPage(emoji: String, title: String) {
         /*viewModelScope.launch(Dispatchers.IO) {

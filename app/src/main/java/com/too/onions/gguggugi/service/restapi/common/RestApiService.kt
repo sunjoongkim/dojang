@@ -22,7 +22,7 @@ interface RestApiService {
 
     // Auth API
     @POST("/stamp-api/1.0/user/auth/google")
-    fun signInGoogle(@Body token: RequestBody) : Response<ApiResponse>
+    fun signInGoogle(@Body token: RequestBody) : Call<ResponseBody>
 
     @GET("/stamp-api/1.0/user/check-dup/username")
     fun checkDuplicated(@Query("username") user: String) : Call<CheckDup>
@@ -31,7 +31,7 @@ interface RestApiService {
     fun saveUserName(@Header("accessToken") token: String, @Body user: RequestBody) : Response<ApiResponse>
 
     @GET("/stamp-api/1.0/user/info")
-    fun getUserInfo(@Header("accessToken") accessToken: String) : Response<ApiResponse>
+    suspend fun getUserInfo(@Header("accessToken") accessToken: String) : Response<ApiResponse>
 
 
     // Page API

@@ -1,11 +1,13 @@
 package com.too.onions.gguggugi.viewmodel
 
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
+import com.too.onions.gguggugi.data.ApiResponse
 import com.too.onions.gguggugi.data.Auth
 import com.too.onions.gguggugi.data.InitPage
 import com.too.onions.gguggugi.data.Page
@@ -44,52 +46,71 @@ class LoginViewModel : ViewModel() {
 
         val body = jsonObject.toString().toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
 
-        val response = restApiService.signInGoogle(body)
+        restApiService.signInGoogle(body).enqueue(object : Callback<ResponseBody> {
 
-        if (response.isSuccessful) {
-            val auth: Auth = Gson().fromJson(response.body()?.data, Auth::class.java)
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                if(response.isSuccessful.not()){
+                    Log.e("@@@@@", "======> No data")
+                    return
+                }
 
-            accessToken = auth.accessToken
-            RestApiService.token = auth.accessToken
+                response.body()?.let{ body ->
+                    val data = JSONObject(body.string()).getJSONObject("data")
 
-            if (auth.isNew == "Y") {
-                // 가입 화면 이동
-                _isNeedJoin.postValue(true)
-            } else {
-                // user info 확인후 username 으로 로그인
-                getUser()
+                    val gson = Gson()
+                    val auth: Auth = gson.fromJson(data.toString(), Auth::class.java)
+
+                    accessToken = auth.accessToken
+                    RestApiService.token = auth.accessToken
+
+                    if (auth.isNew == "Y") {
+                        // 가입 화면 이동
+                        _isNeedJoin.postValue(true)
+                    } else {
+                        // user info 확인후 username 으로 로그인
+                        getUser()
+                    }
+                } ?: run {
+                    Log.d("NG", "body is null")
+                }
             }
-        } else {
-            Log.e("@@@@@", "======> authGoogle fail : " + response.errorBody().toString())
-        }
+
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                Log.i("@@@@@", "onFailure : $t")
+            }
+
+        })
 
     }
     private fun getUser() {
 
-        val response = restApiService.getUserInfo(accessToken)
+        viewModelScope.launch {
+            val response = restApiService.getUserInfo(accessToken)
 
-        if (response.isSuccessful) {
-            val user: User = Gson().fromJson(response.body()?.data, User::class.java)
+            if (response.isSuccessful) {
+                val user: User = Gson().fromJson(response.body()?.data, User::class.java)
 
-            Log.e("@@@@@", "======> accessToken : $accessToken")
-            Log.e("@@@@@", "======> user : ${user.nickname}")
-            Log.e("@@@@@", "======> email : ${user.email}")
+                Log.e("@@@@@", "======> accessToken : $accessToken")
+                Log.e("@@@@@", "======> user : ${user.nickname}")
+                Log.e("@@@@@", "======> email : ${user.email}")
 
-            if (user.nickname != null && user.nickname != "") {
-                if (MainService.getInstance() != null) {
-                    MainService.getInstance()!!.setUser(user)
+                if (user.nickname != null && user.nickname != "") {
+                    if (MainService.getInstance() != null) {
+                        MainService.getInstance()!!.setUser(user)
+                    }
+
+                    getInitPage()
+                    _isNeedJoin.postValue(false)
+                } else {
+                    _isNeedJoin.postValue(true)
                 }
 
-                getInitPage()
-                _isNeedJoin.postValue(false)
             } else {
-                _isNeedJoin.postValue(true)
+                Log.e("@@@@@", "======> getUser fail : " + response.errorBody().toString())
+
             }
-
-        } else {
-            Log.e("@@@@@", "======> getUser fail : " + response.errorBody().toString())
-
         }
+
     }
 
     private fun getInitPage() {
