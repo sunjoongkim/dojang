@@ -7,6 +7,8 @@ import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.Field
+import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
@@ -39,12 +41,21 @@ interface RestApiService {
     suspend fun getInitPage(@Header("accessToken") accessToken: String) : Response<ApiResponse>
 
     @POST("/stamp-api/1.0/page/add")
-    fun addPage(@Header("accessToken") accessToken: String, @Body page: RequestBody) : Response<ApiResponse>
+    suspend fun addPage(@Header("accessToken") accessToken: String, @Body page: RequestBody) : Response<ApiResponse>
 
     @GET("/stamp-api/1.0/page/{pageIndex}")
     suspend fun getPage(@Header("accessToken") accessToken: String, @Path("pageIndex") pageIndex: Long) : Response<ApiResponse>
 
     // Content API
+    @FormUrlEncoded
     @POST("/stamp-api/1.0/mission/add")
-    fun addContent(@Header("accessToken") accessToken: String, @Body content: RequestBody) : Response<ApiResponse>
+    suspend fun addContent(
+        @Header("accessToken") accessToken: String,
+        @Field("pageIdx") pageIdx: String,
+        @Field("title") title: String,
+        @Field("bgType") bgType: String,
+        @Field("bgContent") bgContent: String,
+        @Field("description") description: String
+    ) : Response<ApiResponse>
+
 }

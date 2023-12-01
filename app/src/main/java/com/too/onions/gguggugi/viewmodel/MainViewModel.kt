@@ -83,15 +83,13 @@ class MainViewModel : ViewModel() {
             _pages.value = _pages.value?.toMutableList()?.apply {
 
                 val pos = indexOfFirst { it.pageInfo.idx == pageIdx }
-                Log.e("@@@@@", "====> pos $pos")
-                Log.e("@@@@@", "====> newPage $newPage")
+
                 if (pos != -1) {
                     this[pos] = newPage
                 } else {
                     add(newPage)
                 }
             }
-            Log.e("@@@@@", "====> pages : ${pages.value}")
         }
     }
 
@@ -158,59 +156,66 @@ class MainViewModel : ViewModel() {
     }*/
 
     fun addPage(emoji: String, title: String) {
-        /*viewModelScope.launch(Dispatchers.IO) {
-            repository.insertPage(page)
-            fetchAllPagesWithContents()
-        }*/
 
-        val jsonObject = JSONObject()
-        jsonObject.put("symbol", emoji)
-        jsonObject.put("title", title)
+        viewModelScope.launch {
+            val jsonObject = JSONObject()
+            jsonObject.put("symbol", emoji)
+            jsonObject.put("title", title)
 
-        val body = jsonObject.toString().toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+            val body = jsonObject.toString().toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
 
-        val response = restApiService.addPage(RestApiService.token, body)
+            val response = restApiService.addPage(RestApiService.token, body)
 
-        if (response.isSuccessful) {
-            val page: PageInfo = Gson().fromJson(response.body()?.data, PageInfo::class.java)
+            if (response.isSuccessful) {
+                val page: PageInfo = Gson().fromJson(response.body()?.data, PageInfo::class.java)
 
-            Log.e("@@@@@", "======> page idx : ${page.idx}")
-            Log.e("@@@@@", "======> page ownerIdx : ${page.ownerIdx}")
-            Log.e("@@@@@", "======> page type : ${page.type}")
-            Log.e("@@@@@", "======> page symbol : ${page.emoji}")
-            Log.e("@@@@@", "======> page title : ${page.title}")
-            Log.e("@@@@@", "======> page maxParticipants : ${page.maxParticipants}")
-            Log.e("@@@@@", "======> page maxMissions : ${page.maxMissions}")
+                Log.e("@@@@@", "======> page idx : ${page.idx}")
+                Log.e("@@@@@", "======> page ownerIdx : ${page.ownerIdx}")
+                Log.e("@@@@@", "======> page type : ${page.type}")
+                Log.e("@@@@@", "======> page symbol : ${page.emoji}")
+                Log.e("@@@@@", "======> page title : ${page.title}")
+                Log.e("@@@@@", "======> page maxParticipants : ${page.maxParticipants}")
+                Log.e("@@@@@", "======> page maxMissions : ${page.maxMissions}")
 
-            //getInitPage()
+                loadPageData(page.idx)
 
-        } else {
+            } else {
 
+            }
         }
+
     }
 
 
     // ==== Content ====
 
     fun addContent(content: Content) {
-        val jsonObject = JSONObject()
-        jsonObject.put("pageIdx", content.pageIdx)
-        jsonObject.put("title", content.title)
-        jsonObject.put("bgType", content.bgType)
-        jsonObject.put("bgContent", content.bgContent)
-        jsonObject.put("description", content.description)
 
-        val body = jsonObject.toString().toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+        viewModelScope.launch {
 
-        val response = restApiService.addContent(RestApiService.token, body)
+            val response = restApiService.addContent(
+                RestApiService.token,
+                content.pageIdx.toString(),
+                content.title,
+                content.bgType,
+                content.bgContent,
+                content.description,
+            )
 
-        if (response.isSuccessful) {
-            val content: Content = Gson().fromJson(response.body()?.data, Content::class.java)
+            if (response.isSuccessful) {
+                val content: Content = Gson().fromJson(response.body()?.data, Content::class.java)
 
-            //getPage(content.pageIdx)
-        } else {
+                Log.e("@@@@@", "======> content idx : ${content.idx}")
+                Log.e("@@@@@", "======> content bgContent : ${content.bgContent}")
+                Log.e("@@@@@", "======> content bgType : ${content.bgType}")
 
+                loadPageData(content.pageIdx)
+            } else {
+                Log.e("@@@@@", "======> addContent failed : ${response.errorBody()?.string()}")
+
+            }
         }
+
 
 
     }

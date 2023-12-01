@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,7 +32,6 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.rememberBottomDrawerState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -381,10 +379,6 @@ fun TitleBar(
                     if (pagerState.currentPage == index) {
                         // page 선택될때 currentPage 변경
 
-
-                        Log.e("@@@@@", "====> page.pageInfo.idx ${page.pageInfo.idx}")
-                        Log.e("@@@@@", "====> viewModel.currentPageIdx.value ${viewModel.currentPageIdx.value}")
-
                         if (page.pageInfo.idx != viewModel.currentPageIdx.value) {
                             viewModel.loadPageData(page.pageInfo.idx)
                             viewModel.updatePageIdx(page.pageInfo.idx)
@@ -610,9 +604,7 @@ fun SelectedTab(
             contentDescription = null,
             modifier = Modifier
                 .size(24.dp, 24.dp)
-                .clickable(
-
-                ) {
+                .clickable {
                     onOpenDrawer(DrawerMode.PAGE)
                 } ,
             alignment = Alignment.CenterEnd
@@ -646,9 +638,8 @@ fun FriendsBar(
                 .size(40.dp),
             contentAlignment = Alignment.Center
         ) {
-            Log.e("@@@@@", "=======> currentPage : $currentPage")
             if (currentPage == null || currentPage.stamp.isNullOrEmpty()) {
-                Log.e("@@@@@", "=======> currentUser?.nickname?.first()?.toString() : ${currentUser?.nickname?.first()?.toString()}")
+
                 Text(
                     text = currentUser?.nickname?.first()?.toString() ?: "",
                     modifier = Modifier
@@ -687,23 +678,23 @@ fun FriendsBar(
 
         }
         Spacer(modifier = Modifier.size(10.dp))
-        ElevatedButton(
-            onClick = {
-                if (pages.isNullOrEmpty() || currentPage?.title.isNullOrEmpty()) {
-                    isNeedInit.value = true
-                } else {
-                    // 친구 추천 화면
-                }
-            },
-            shape = CircleShape,
-            contentPadding = PaddingValues(0.dp),
-            elevation = ButtonDefaults.buttonElevation(20.dp, 15.dp, 0.dp, 15.dp, 10.dp),
+        Box(
             modifier = Modifier.size(40.dp)
+                .clickable {
+                    if (pages.isNullOrEmpty() || currentPage?.title.isNullOrEmpty()) {
+                        isNeedInit.value = true
+                    } else {
+                        // 친구 추천 화면
+                    }
+                }
+                .background(color = Color.White, shape = CircleShape)
+                .border(width = 2.dp, shape = CircleShape, color = Color(0x19000000))
 
         ) {
-            Icon(
-                painterResource(id = R.drawable.ic_btn_add_friend),
-                contentDescription = null,
+            Image(
+                painter = painterResource(id = R.drawable.ic_btn_add_friend),
+                contentDescription = "Button Image",
+                modifier = Modifier.align(Alignment.Center)
             )
         }
     }
