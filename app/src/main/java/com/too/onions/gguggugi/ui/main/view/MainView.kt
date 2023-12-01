@@ -232,7 +232,7 @@ fun MainView(
                 )
 
                 Spacer(modifier = Modifier.size(15.dp))
-
+                Log.e("@@@@@", "=====> pagerState.currentPage : ${pagerState.currentPage}")
                 if (!isStampMode) {
                     PageItemPager(
                         pagerState,
@@ -380,7 +380,15 @@ fun TitleBar(
 
                     if (pagerState.currentPage == index) {
                         // page 선택될때 currentPage 변경
-                        viewModel.loadPageData(page.pageInfo.idx)
+
+
+                        Log.e("@@@@@", "====> page.pageInfo.idx ${page.pageInfo.idx}")
+                        Log.e("@@@@@", "====> viewModel.currentPageIdx.value ${viewModel.currentPageIdx.value}")
+
+                        if (page.pageInfo.idx != viewModel.currentPageIdx.value) {
+                            viewModel.loadPageData(page.pageInfo.idx)
+                            viewModel.updatePageIdx(page.pageInfo.idx)
+                        }
 
                         SelectedTab(
                             page.pageInfo,
@@ -725,11 +733,10 @@ fun PageItemPager(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
             ContentList(
                 pageIndex = index,
                 pages = pages,
-                contents = contents,
+                contents = pages?.get(index)?.contentList,
                 isNeedInit = isNeedInit,
                 viewModel = viewModel,
                 navController = navController,

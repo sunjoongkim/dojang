@@ -15,6 +15,7 @@ import com.too.onions.gguggugi.service.MainService
 import com.too.onions.gguggugi.service.restapi.common.RestApiService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
@@ -38,6 +39,9 @@ class MainViewModel : ViewModel() {
 
     private var _currentPage = MutableLiveData<PageInfo?>()
     val currentPage: LiveData<PageInfo?> get() = _currentPage
+
+    private var _currentPageIdx = MutableLiveData<Long>()
+    val currentPageIdx: LiveData<Long> get() = _currentPageIdx
 
     /*private val _pageList = MutableLiveData<List<PageInfo>?>()
     val pageList: LiveData<List<PageInfo>?> get() = _pageList
@@ -66,6 +70,9 @@ class MainViewModel : ViewModel() {
 
         }
     }
+    fun updatePageIdx(pageIdx: Long) {
+        _currentPageIdx.value = pageIdx
+    }
 
     fun loadPageData(pageIdx: Long) {
         viewModelScope.launch {
@@ -76,12 +83,15 @@ class MainViewModel : ViewModel() {
             _pages.value = _pages.value?.toMutableList()?.apply {
 
                 val pos = indexOfFirst { it.pageInfo.idx == pageIdx }
+                Log.e("@@@@@", "====> pos $pos")
+                Log.e("@@@@@", "====> newPage $newPage")
                 if (pos != -1) {
                     this[pos] = newPage
                 } else {
                     add(newPage)
                 }
             }
+            Log.e("@@@@@", "====> pages : ${pages.value}")
         }
     }
 
@@ -126,9 +136,9 @@ class MainViewModel : ViewModel() {
         Log.e("@@@@@", "======> nickname : ${MainService.getInstance()?.getUser()?.nickname}")
     }
 
-    private fun getPage(pageIdx: Long): Page? {
+    private suspend fun getPage(pageIdx: Long): Page? {
 
-        viewModelScope.launch {
+        return withContext(Dispatchers.IO) {
             val response = restApiService.getPage(RestApiService.token, pageIdx)
 
             if (response.isSuccessful) {
@@ -137,7 +147,6 @@ class MainViewModel : ViewModel() {
                 null
             }
         }
-        return null
     }
 
     /*fun setMemberList(members: List<Member>) {
