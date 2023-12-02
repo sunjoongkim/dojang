@@ -41,9 +41,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.too.onions.gguggugi.R
-import com.too.onions.gguggugi.data.PageInfo
 import com.too.onions.gguggugi.define.Define
-import com.too.onions.gguggugi.ui.main.MainScreen
+import com.too.onions.gguggugi.ui.main.view.DrawerMode
 import com.too.onions.gguggugi.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
 
@@ -53,11 +52,13 @@ fun StampDrawer(
     viewModel: MainViewModel,
     navController: NavHostController,
     drawerState: BottomDrawerState,
-    title: String
+    isFromStamp: Boolean,
+    onOpenDrawer: (DrawerMode) -> Unit
 ) {
     val seletedStamp = remember { mutableStateOf(Define.SEL_STAMP_NONE)}
     val interactionSource = remember { MutableInteractionSource() }
     val scope = rememberCoroutineScope()
+
 
     Column(
         modifier = Modifier
@@ -81,7 +82,7 @@ fun StampDrawer(
         Spacer(modifier = Modifier.size(30.dp))
 
         Text(
-            text = title,
+            text = if (isFromStamp) stringResource(id = R.string.drawer_stamp_info_by_stamp) else stringResource(id = R.string.drawer_stamp_info_by_user),
             fontSize = 16.sp,
             textAlign = TextAlign.Center,
             color = Color(0xff123485)
@@ -177,28 +178,15 @@ fun StampDrawer(
 
             Button(
                 onClick = {
-                    scope.launch {
+                    if (seletedStamp.value == Define.SEL_STAMP_DEFAULT) {
 
-                        if (seletedStamp.value == Define.SEL_STAMP_DEFAULT) {
-                            // 현재 user에 해당하는 pageUser 를 가져와 stamp 변환후 update
-                            /*val updated = page?.friends?.map { friend ->
-                                if (friend.nickname == viewModel.user.value?.nickname) {
-                                    friend.copy(stamp = Define.STAMP_DEFAULT)
-                                } else {
-                                    friend
-                                }
-                            }
-                            val newPage = page?.copy(friends = updated ?: emptyList())
-                            if (newPage != null) {
-                                viewModel.updatePage(newPage)
-                            }*/
-
-                            viewModel.setStampMode(true)
+                        scope.launch {
                             drawerState.close()
-                        } else {
-                            drawerState.close()
-                            navController.navigate(MainScreen.AddStampEmoji.route)
                         }
+                        viewModel.saveStamp(viewModel.currentPageIdx.value!!, Define.STAMP_TYPE_STAMP, "")
+                        if (isFromStamp) viewModel.setStampMode(true)
+                    } else {
+                        onOpenDrawer(DrawerMode.STAMP_EMOJI)
                     }
                 },
                 colors = ButtonDefaults.buttonColors(
@@ -217,6 +205,7 @@ fun StampDrawer(
                 )
             }
         }
+
 
     }
 }

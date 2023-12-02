@@ -58,4 +58,7 @@ interface RestApiService {
         @Field("description") description: String
     ) : Response<ApiResponse>
 
+    @POST("/stamp-api/1.0/participant/save/stamp")
+    suspend fun saveStamp(@Header("accessToken") accessToken: String, @Body stamp: RequestBody) : Response<ApiResponse>
+
 }

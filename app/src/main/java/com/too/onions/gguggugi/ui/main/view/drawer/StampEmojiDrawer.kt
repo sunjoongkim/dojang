@@ -3,12 +3,11 @@ package com.too.onions.gguggugi.ui.main.view.drawer
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -39,30 +38,34 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.emoji2.emojipicker.EmojiPickerView
 import androidx.navigation.NavHostController
 import com.too.onions.gguggugi.R
-import com.too.onions.gguggugi.data.PageInfo
 import com.too.onions.gguggugi.define.Define
-import com.too.onions.gguggugi.ui.main.MainScreen
+import com.too.onions.gguggugi.ui.main.view.DrawerMode
 import com.too.onions.gguggugi.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun StampDrawerByUser(
+fun StampEmojiDrawer(
     viewModel: MainViewModel,
     navController: NavHostController,
     drawerState: BottomDrawerState,
-    title: String
+    isFromStamp: Boolean,
+    onOpenDrawer: (DrawerMode) -> Unit
 ) {
-    val seletedStamp = remember { mutableStateOf(Define.SEL_STAMP_NONE)}
-    val interactionSource = remember { MutableInteractionSource() }
+    val emoji = remember { mutableStateOf("") }
+    val emojiPickerHeight = 280.dp
+
     val scope = rememberCoroutineScope()
+
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .height(330.dp)
+            .height(330.dp + emojiPickerHeight)
             .verticalScroll(rememberScrollState())
             .background(
                 brush = Brush.verticalGradient(
@@ -81,7 +84,7 @@ fun StampDrawerByUser(
         Spacer(modifier = Modifier.size(30.dp))
 
         Text(
-            text = title,
+            text = stringResource(id = R.string.drawer_stamp_info_emoji),
             fontSize = 16.sp,
             textAlign = TextAlign.Center,
             color = Color(0xff123485)
@@ -89,61 +92,32 @@ fun StampDrawerByUser(
 
         Spacer(modifier = Modifier.size(35.dp))
 
-        Row(
-            modifier = Modifier.size(240.dp, 108.dp)
+        Box(
+            modifier = Modifier.size(108.dp, 108.dp)
         ) {
             Box(
                 modifier = Modifier
                     .size(108.dp)
-                    .background(color = if (seletedStamp.value == Define.SEL_STAMP_DEFAULT) Color.White else Color(0x99ffffff),
-                        shape = CircleShape)
-                    .border(width = if (seletedStamp.value == Define.SEL_STAMP_DEFAULT) 4.dp else 0.dp,
-                        color = if (seletedStamp.value == Define.SEL_STAMP_DEFAULT) Color(0xff123485) else Color(0x99ffffff),
-                        shape = CircleShape)
-                    .clickable(
-                        interactionSource = interactionSource,
-                        indication = null
-                    ) {
-                        seletedStamp.value = Define.SEL_STAMP_DEFAULT
-                    },
+                    .background(color = Color(0x99ffffff), shape = CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Image(
-                    painterResource(id = R.drawable.ic_btn_stamp),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(82.47.dp)
-                )
+                if (emoji.value == "") {
+                    Image(
+                        painterResource(id = R.drawable.ic_default_emoticon),
+                        contentDescription = null,
+                        modifier = Modifier.size(45.dp)
+                    )
+                } else {
+                    Text(
+                        modifier = Modifier.fillMaxWidth()
+                            .wrapContentHeight()
+                            .padding(top = 5.dp),
+                        text = emoji.value,
+                        textAlign = TextAlign.Center,
+                        fontSize = 50.sp
+                    )
+                }
             }
-
-            Spacer(modifier = Modifier.size(24.dp))
-
-            Box(
-                modifier = Modifier
-                    .size(108.dp)
-                    .background(color = if (seletedStamp.value == Define.SEL_STAMP_EMOJI) Color.White else Color(0x99ffffff),
-                        shape = CircleShape)
-                    .border(width = if (seletedStamp.value == Define.SEL_STAMP_EMOJI) 4.dp else 0.dp,
-                        color = if (seletedStamp.value == Define.SEL_STAMP_EMOJI) Color(0xff123485) else Color(0x99ffffff),
-                        shape = CircleShape)
-                    .clickable(
-                        interactionSource = interactionSource,
-                        indication = null
-                    ) {
-                        seletedStamp.value = Define.SEL_STAMP_EMOJI
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = String(Character.toChars(0x1F600)),
-                    fontSize = 45.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .wrapContentHeight()
-                        .padding(top = 7.dp)
-                )
-            }
-
         }
 
         Spacer(modifier = Modifier.size(35.dp))
@@ -154,9 +128,7 @@ fun StampDrawerByUser(
         ) {
             Button(
                 onClick = {
-                    scope.launch {
-                        drawerState.close()
-                    }
+                    onOpenDrawer(DrawerMode.STAMP)
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Transparent
@@ -167,7 +139,7 @@ fun StampDrawerByUser(
                     .border(2.dp, color = Color(0xff000000))
             ) {
                 Text(
-                    text = stringResource(id = R.string.drawer_stamp_cancel),
+                    text = stringResource(id = R.string.drawer_stamp_emoji_cancel),
                     fontSize = 14.sp,
                     fontFamily = FontFamily(Font(R.font.neo_dunggeunmo_pro))
                 )
@@ -178,27 +150,9 @@ fun StampDrawerByUser(
             Button(
                 onClick = {
                     scope.launch {
-
-                        if (seletedStamp.value == Define.SEL_STAMP_DEFAULT) {
-                            // 현재 user에 해당하는 pageUser 를 가져와 stamp 변환후 update
-                            /*val updated = page?.friends?.map { friend ->
-                                if (friend.nickname == viewModel.user.value?.nickname) {
-                                    friend.copy(stamp = Define.STAMP_DEFAULT)
-                                } else {
-                                    friend
-                                }
-                            }
-                            val newPage = page?.copy(friends = updated ?: emptyList())
-                            if (newPage != null) {
-                                viewModel.updatePage(newPage)
-                            }*/
-
-                            viewModel.setStampMode(true)
-                            drawerState.close()
-                        } else {
-                            drawerState.close()
-                            navController.navigate(MainScreen.AddStampEmoji.route)
-                        }
+                        viewModel.saveStamp(viewModel.currentPageIdx.value!!, Define.STAMP_TYPE_EMOJI, emoji.value)
+                        if (isFromStamp) viewModel.setStampMode(true)
+                        drawerState.close()
                     }
                 },
                 colors = ButtonDefaults.buttonColors(
@@ -208,7 +162,7 @@ fun StampDrawerByUser(
                     .size(170.dp, 46.dp)
                     .background(color = Color(0xff123485), shape = RectangleShape)
                     .border(2.dp, color = Color(0xff17274e)),
-                enabled = seletedStamp.value != Define.SEL_STAMP_NONE
+                enabled = emoji.value != ""
             ) {
                 Text(
                     text = stringResource(id = R.string.drawer_stamp_confirm),
@@ -218,5 +172,27 @@ fun StampDrawerByUser(
             }
         }
 
+        Spacer(modifier = Modifier.size(29.dp))
+
+        val scrollState = rememberScrollState()
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(emojiPickerHeight)
+                .verticalScroll(scrollState)
+        ) {
+            AndroidView(
+                factory = { context ->
+                    EmojiPickerView(context).apply {
+                        setOnEmojiPickedListener {
+                            emoji.value = it.emoji
+                        }
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0xffedecee))
+            )
+        }
     }
 }

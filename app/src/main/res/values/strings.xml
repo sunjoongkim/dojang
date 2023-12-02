@@ -23,11 +23,14 @@
     <string name="allow_confirm">🤙 알림 허용하기</string>
 
     <string name="drawer_stamp_info_by_user">친구와 같이 하기 위해서는\n도장을 선택해 주세요.</string>
-    <string name="drawer_stamp_info">도장을 찍기 전 어떤 도장으로 할지\n선택해 주세요.</string>
+    <string name="drawer_stamp_info_by_stamp">도장을 찍기 전 어떤 도장으로 할지\n선택해 주세요.</string>
     <string name="drawer_stamp_cancel">취소</string>
     <string name="drawer_stamp_confirm">선택 완료</string>
     <string name="drawer_stamp_add_info">사용할 이모티콘을 선택하세요.</string>
     <string name="drawer_stamp_add_confirm">선택 완료</string>
+
+    <string name="drawer_stamp_emoji_cancel"><![CDATA[<]]> 뒤로</string>
+    <string name="drawer_stamp_info_emoji">이모티콘을 선택해 주세요.\n(이후 선택 불가)</string>
 
     <string name="drawer_page_modify_emoji">대표 이모티콘 변경</string>
     <string name="drawer_page_modify_title">페이지명 변경</string>

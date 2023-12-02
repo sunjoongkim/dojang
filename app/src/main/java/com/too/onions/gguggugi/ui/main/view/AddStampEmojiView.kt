@@ -12,8 +12,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -32,6 +30,7 @@ import androidx.emoji2.emojipicker.EmojiPickerView
 import androidx.emoji2.emojipicker.EmojiViewItem
 import androidx.navigation.NavHostController
 import com.too.onions.gguggugi.R
+import com.too.onions.gguggugi.define.Define
 import com.too.onions.gguggugi.viewmodel.MainViewModel
 
 @Composable
@@ -79,19 +78,9 @@ fun AddStampEmojiView(
 
         Button(
             onClick = {
-                // 현재 user에 해당하는 pageUser 를 가져와 stamp 변환후 update
-                /*val updated = viewModel.currentPage.value.friends.map { friend ->
-                    if (friend.nickname == viewModel.user.value?.nickname) {
-                        friend.copy(stamp = emoji.value.emoji)
-                    } else {
-                        friend
-                    }
-                }
-                val newPage = viewModel.currentPage.value.copy(friends = updated)
-                viewModel.updatePage(newPage)
 
-                //viewModel.updateUserStamp(emoji.value.emoji)
-                viewModel.setStampMode(true)*/
+                viewModel.saveStamp(viewModel.currentPageIdx.value!!, Define.STAMP_TYPE_EMOJI, emoji.value.emoji)
+                viewModel.setStampMode(true)
                 navController.popBackStack()
             },
             colors = ButtonDefaults.buttonColors(
@@ -101,7 +90,7 @@ fun AddStampEmojiView(
                 .size(120.dp, 46.dp)
                 .background(color = Color(0xff123485), shape = RectangleShape)
                 .border(2.dp, color = Color(0xff17274e)),
-            enabled = !(emoji.value.emoji == "")
+            enabled = emoji.value.emoji != ""
         ) {
             Text(
                 text = stringResource(id = R.string.drawer_stamp_add_confirm),

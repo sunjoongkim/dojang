@@ -7,7 +7,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.too.onions.gguggugi.data.Content
-import com.too.onions.gguggugi.data.Member
 import com.too.onions.gguggugi.data.Page
 import com.too.onions.gguggugi.data.PageInfo
 import com.too.onions.gguggugi.data.User
@@ -31,8 +30,6 @@ class MainViewModel : ViewModel() {
         _isStampMode.postValue(isStamp)
     }
 
-    // ===== Page ======
-
 
     private val _pages = MutableLiveData<List<Page>>()
     val pages: LiveData<List<Page>> get() = _pages
@@ -43,14 +40,6 @@ class MainViewModel : ViewModel() {
     private var _currentPageIdx = MutableLiveData<Long>()
     val currentPageIdx: LiveData<Long> get() = _currentPageIdx
 
-    /*private val _pageList = MutableLiveData<List<PageInfo>?>()
-    val pageList: LiveData<List<PageInfo>?> get() = _pageList
-
-    private val _memberList = MutableLiveData<List<Member>>()
-    val memberList: LiveData<List<Member>> get() = _memberList
-
-    private val _contentList = MutableLiveData<List<Content>?>()
-    val contentList: LiveData<List<Content>?> get() = _contentList*/
 
     private val _currentUser = MutableLiveData<User>()
     val currentUser: LiveData<User> get() = _currentUser
@@ -59,10 +48,6 @@ class MainViewModel : ViewModel() {
         val initPage = MainService.getInstance()?.getInitPage()
 
         if (initPage != null) {
-            /*_currentPage.postValue(initPage.firstPageInfo)
-            _pageList.postValue(initPage.pageList)
-            _memberList.postValue(initPage.memberList)
-            _contentList.postValue(initPage.contentList)*/
 
             _pages.value = initPage.pageList?.map { pageInfo ->
                 Page(pageInfo = pageInfo)
@@ -93,41 +78,6 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    private fun setInitPage() {
-
-    }
-
-    /*fun getInitPage() {
-        restApiService.getInitPage(RestApiService.token).enqueue(object: Callback<ResponseBody> {
-            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
-
-                if(response.isSuccessful.not()){
-                    Log.e("@@@@@", "======> No data")
-                    return
-                }
-
-                response.body()?.let{ body ->
-                    val data = JSONObject(body.string()).getJSONObject("data")
-
-                    val gson = Gson()
-                    val initPage: InitPage = gson.fromJson(data.toString(), InitPage::class.java)
-
-                    MainService.getInstance()?.setInitPage(initPage)
-                    setInitPage()
-
-                } ?: run {
-                    Log.d("NG", "body is null")
-                }
-            }
-
-            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Log.e("@@@@@", "======> getInitPage onFailure : $t")
-
-            }
-
-        })
-    }*/
-
     fun setCurrentUser() {
         _currentUser.postValue(MainService.getInstance()?.getUser())
         Log.e("@@@@@", "======> currentUser : ${MainService.getInstance()?.getUser()}")
@@ -146,14 +96,6 @@ class MainViewModel : ViewModel() {
             }
         }
     }
-
-    /*fun setMemberList(members: List<Member>) {
-        _memberList.postValue(members)
-    }
-
-    fun setContentList(contents: List<Content>) {
-        _contentList.postValue(contents)
-    }*/
 
     fun addPage(emoji: String, title: String) {
 
@@ -187,8 +129,6 @@ class MainViewModel : ViewModel() {
     }
 
 
-    // ==== Content ====
-
     fun addContent(content: Content) {
 
         viewModelScope.launch {
@@ -219,53 +159,30 @@ class MainViewModel : ViewModel() {
 
 
     }
-    /*fun getContent(contentId: Long) {
-        viewModelScope.launch(Dispatchers.IO) {
-            repository.getContent(contentId)
-        }
-    }
-    fun deleteContent(content: Content) {
-        viewModelScope.launch(Dispatchers.IO) {
-            repository.deleteContent(content)
-        }
-    }
-    fun updateContent(content: Content) {
-        viewModelScope.launch(Dispatchers.IO) {
-            repository.updateContent(content)
-            fetchAllPagesWithContents()
-        }
-    }
-    fun deleteAllContent(pageId: Long) {
-        viewModelScope.launch(Dispatchers.IO) {
-            repository.deleteAllContent(pageId)
-        }
-    }
-    fun refreshContentList(pageId: Long) {
-        viewModelScope.launch(Dispatchers.IO) {
-            _contentList.postValue(repository.getAllContent(pageId))
-        }
-    }*/
 
-    // ===== User =====
-
-
-
-    fun updateUserStamp(stamp: String) {
+    fun saveStamp(pageIdx: Long, stampType: String, stampContent: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            //repository.updateUserStamp(stamp)
-        }
-    }
-    fun fetchAllPagesWithContents() {
-        viewModelScope.launch(Dispatchers.IO) {
+            val jsonObject = JSONObject()
+            jsonObject.put("pageIdx", pageIdx)
+            jsonObject.put("stampType", stampType)
+            jsonObject.put("stampContent", stampContent)
 
-            /*val allPages = repository.getAllPage()
+            val body = jsonObject.toString().toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
 
-            val result = allPages.map { page ->
-                val contentsForPage = repository.getAllContent(page.id)
-                PageInfo(page, contentsForPage)
+            val response = restApiService.saveStamp(RestApiService.token, body)
+
+            if (response.isSuccessful) {
+                //val stamp: Stamp = Gson().fromJson(response.body()?.data, Stamp::class.java)
+
+                Log.e("@@@@@", "======> message : ${response.body()?.message}")
+                Log.e("@@@@@", "======> data : ${response.body()?.data}")
+
+                loadPageData(currentPageIdx.value!!)
+
+            } else {
+
             }
-
-            _pageInfos.postValue(result)*/
         }
     }
+
 }
