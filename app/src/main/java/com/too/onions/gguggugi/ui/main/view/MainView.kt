@@ -77,6 +77,7 @@ import com.too.onions.gguggugi.ui.main.MainScreen
 import com.too.onions.gguggugi.ui.main.PlayMode
 import com.too.onions.gguggugi.ui.main.view.drawer.PageDrawer
 import com.too.onions.gguggugi.ui.main.view.drawer.StampDrawer
+import com.too.onions.gguggugi.ui.main.view.drawer.StampDrawerByUser
 import com.too.onions.gguggugi.ui.setting.SettingActivity
 import com.too.onions.gguggugi.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
@@ -91,7 +92,8 @@ enum class StampStatus {
 }
 
 enum class DrawerMode {
-    STAMP,
+    STAMP_BY_STAMP,
+    STAMP_BY_USER,
     PAGE,
     FRIEND,
     CONTENT
@@ -111,7 +113,7 @@ fun MainView(
     val isShowContentDetail = remember { mutableStateOf(false) }
     val isNeedAddContent = remember { mutableStateOf(false) }
 
-    val drawerMode = remember { mutableStateOf(DrawerMode.STAMP) }
+    val drawerMode = remember { mutableStateOf(DrawerMode.STAMP_BY_STAMP) }
 
     val drawerState = rememberBottomDrawerState(BottomDrawerValue.Closed)
 
@@ -181,12 +183,20 @@ fun MainView(
             // DrawerView
             // 모드에 따라 drawer 생성
             when (drawerMode.value) {
-                DrawerMode.STAMP -> {
+                DrawerMode.STAMP_BY_STAMP -> {
                     StampDrawer(
                         viewModel = viewModel,
                         navController = navController,
                         drawerState = drawerState,
-                        page = pages?.getOrNull(pagerState.currentPage)?.pageInfo
+                        title = stringResource(id = R.string.drawer_stamp_info)
+                    )
+                }
+                DrawerMode.STAMP_BY_USER -> {
+                    StampDrawerByUser(
+                        viewModel = viewModel,
+                        navController = navController,
+                        drawerState = drawerState,
+                        title = stringResource(id = R.string.drawer_stamp_info_by_user)
                     )
                 }
                 DrawerMode.PAGE -> {
@@ -226,7 +236,8 @@ fun MainView(
                     viewModel = viewModel,
                     isNeedInit = isNeedInit,
                     currentUser = currentUser,
-                    currentPage = pages?.getOrNull(pagerState.currentPage)?.pageInfo
+                    currentPage = pages?.getOrNull(pagerState.currentPage)?.pageInfo,
+                    onOpenDrawer = onOpenDrawer
                 )
 
                 Spacer(modifier = Modifier.size(15.dp))
@@ -260,7 +271,7 @@ fun MainView(
                             )) {
                                 StampStatus.EMPTY_PAGE -> isNeedInit.value = true
                                 StampStatus.EMPTY_CONTENT -> isNeedAddContent.value = true
-                                StampStatus.EMPTY_STAMP -> onOpenDrawer(DrawerMode.STAMP)
+                                StampStatus.EMPTY_STAMP -> onOpenDrawer(DrawerMode.STAMP_BY_STAMP)
                                 StampStatus.READY_DONE -> viewModel.setStampMode(true)
                             }
                         }
@@ -617,8 +628,11 @@ fun FriendsBar(
     viewModel: MainViewModel,
     isNeedInit: MutableState<Boolean>,
     currentUser: User?,
-    currentPage: PageInfo?
+    currentPage: PageInfo?,
+    onOpenDrawer: (DrawerMode) -> Unit
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -677,13 +691,21 @@ fun FriendsBar(
         ) {
 
         }
+
         Spacer(modifier = Modifier.size(10.dp))
         Box(
             modifier = Modifier.size(40.dp)
-                .clickable {
+                .clickable (
+                    interactionSource = interactionSource,
+                    indication = null
+                ){
                     if (pages.isNullOrEmpty() || currentPage?.title.isNullOrEmpty()) {
                         isNeedInit.value = true
-                    } else {
+                    }
+                    else if (currentPage?.stamp.isNullOrEmpty()){
+                        onOpenDrawer(DrawerMode.STAMP_BY_USER)
+                    }
+                    else {
                         // 친구 추천 화면
                     }
                 }

@@ -49,7 +49,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun StampDrawer(
+fun StampDrawerByUser(
     viewModel: MainViewModel,
     navController: NavHostController,
     drawerState: BottomDrawerState,
