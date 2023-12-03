@@ -41,6 +41,11 @@
 
     <string name="main_stamp_sel_info">도장깨기를 한 컨텐츠에\n도장을 드래그해서 놔두세요.</string>
 
+    <string name="user_title"><![CDATA[<]]> 친구와 같이 깨기</string>
+    <string name="user_info">친구의 별명을 검색하세요.</string>
+    <string name="user_hint">별명입력</string>
+    <string name="user_search">친구 찾기</string>
+    <string name="user_invite">초대하기</string>
 
     <string name="setting_title"><![CDATA[<]]> 설정</string>
     <string name="setting_menu_noti">알림 설정</string>

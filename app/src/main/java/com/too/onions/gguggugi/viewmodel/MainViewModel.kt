@@ -84,6 +84,7 @@ class MainViewModel : ViewModel() {
         Log.e("@@@@@", "======> nickname : ${MainService.getInstance()?.getUser()?.nickname}")
     }
 
+    // ===================== Page =========================
     private suspend fun getPage(pageIdx: Long): Page? {
 
         return withContext(Dispatchers.IO) {
@@ -129,6 +130,7 @@ class MainViewModel : ViewModel() {
     }
 
 
+    // ===================== Content =========================
     fun addContent(content: Content) {
 
         viewModelScope.launch {
@@ -180,6 +182,21 @@ class MainViewModel : ViewModel() {
                 loadPageData(currentPageIdx.value!!)
 
             } else {
+
+            }
+        }
+    }
+
+
+    // ===================== Friend =========================
+
+    fun searchFriend(keyword: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = restApiService.searchFriend(RestApiService.token, keyword)
+
+            if (response.isSuccessful) {
+                Log.e("@@@@@", "======> searchUser message : ${response.body()?.message}")
+                Log.e("@@@@@", "======> searchUser data : ${response.body()?.data}")
 
             }
         }

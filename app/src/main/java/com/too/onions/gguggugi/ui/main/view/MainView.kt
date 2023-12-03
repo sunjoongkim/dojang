@@ -236,7 +236,7 @@ fun MainView(
                 Spacer(modifier = Modifier.size(15.dp))
                 FriendsBar(
                     pages = pages,
-                    viewModel = viewModel,
+                    navController = navController,
                     isNeedInit = isNeedInit,
                     currentUser = currentUser,
                     currentPage = pages?.getOrNull(pagerState.currentPage)?.pageInfo,
@@ -624,7 +624,7 @@ fun SelectedTab(
 @Composable
 fun FriendsBar(
     pages: List<Page>?,
-    viewModel: MainViewModel,
+    navController: NavHostController,
     isNeedInit: MutableState<Boolean>,
     currentUser: User?,
     currentPage: PageInfo?,
@@ -707,7 +707,7 @@ fun FriendsBar(
                         onOpenDrawer(DrawerMode.STAMP)
                     }
                     else {
-                        // 친구 추천 화면
+                        navController.navigate(MainScreen.AddFriend.route)
                     }
                 }
                 .background(color = Color.White, shape = CircleShape)

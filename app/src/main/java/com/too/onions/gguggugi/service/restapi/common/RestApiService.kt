@@ -61,4 +61,8 @@ interface RestApiService {
     @POST("/stamp-api/1.0/participant/save/stamp")
     suspend fun saveStamp(@Header("accessToken") accessToken: String, @Body stamp: RequestBody) : Response<ApiResponse>
 
+
+    // User API
+    @GET("/stamp-api/1.0/friend/search")
+    suspend fun searchFriend(@Header("accessToken") accessToken: String, @Query("searchUsername") user: String) : Response<ApiResponse>
 }

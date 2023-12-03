@@ -28,6 +28,7 @@ import com.too.onions.gguggugi.ui.main.view.AddPageView
 import com.too.onions.gguggugi.ui.main.view.AddStampEmojiView
 import com.too.onions.gguggugi.ui.main.view.MainView
 import com.too.onions.gguggugi.ui.common.theme.DojangTheme
+import com.too.onions.gguggugi.ui.login.view.AddFriendView
 import com.too.onions.gguggugi.viewmodel.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -168,6 +169,11 @@ fun MainNavHost(
         }
         composable(MainScreen.AddContent.route) {
             AddContentView(
+                viewModel = viewModel.value,
+                navController = navController)
+        }
+        composable(MainScreen.AddFriend.route) {
+            AddFriendView(
                 viewModel = viewModel.value,
                 navController = navController)
         }
