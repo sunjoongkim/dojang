@@ -174,13 +174,8 @@ class MainViewModel : ViewModel() {
             val response = restApiService.saveStamp(RestApiService.token, body)
 
             if (response.isSuccessful) {
-                //val stamp: Stamp = Gson().fromJson(response.body()?.data, Stamp::class.java)
-
-                Log.e("@@@@@", "======> message : ${response.body()?.message}")
-                Log.e("@@@@@", "======> data : ${response.body()?.data}")
 
                 loadPageData(currentPageIdx.value!!)
-
             } else {
 
             }
@@ -190,16 +185,34 @@ class MainViewModel : ViewModel() {
 
     // ===================== Friend =========================
 
-    fun searchFriend(keyword: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val response = restApiService.searchFriend(RestApiService.token, keyword)
+    suspend fun searchFriend(keyword: String) : List<Pair<Long, String>> {
+        val response = restApiService.searchFriend(RestApiService.token, keyword)
 
-            if (response.isSuccessful) {
-                Log.e("@@@@@", "======> searchUser message : ${response.body()?.message}")
-                Log.e("@@@@@", "======> searchUser data : ${response.body()?.data}")
+        return if (response.isSuccessful) {
+            val users: List<User> = Gson().fromJson(response.body()?.data, Array<User>::class.java).toList()
 
+            users.map { user ->
+                Pair(user.id, user.nickname)
             }
+        } else {
+            emptyList()
         }
     }
 
+    suspend fun inviteFriend(friendIdx: Long) : Boolean {
+        val jsonObject = JSONObject()
+        jsonObject.put("friendIdx", friendIdx)
+        jsonObject.put("pageIdx", currentPageIdx.value)
+
+        val body = jsonObject.toString().toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+
+        val response = restApiService.inviteFriend(RestApiService.token, body)
+
+        return if (response.isSuccessful) {
+            loadPageData(currentPageIdx.value!!)
+            true
+        } else {
+            false
+        }
+    }
 }

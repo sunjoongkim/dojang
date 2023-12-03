@@ -75,5 +75,10 @@
     <string name="popup_add_content_cancel">닫기</string>
     <string name="popup_add_content_confirm">콘텐츠\n만들기</string>
 
+    <string name="popup_friend_invite_title">님을\n초대 하시겠습니까?</string>
+    <string name="popup_friend_invite_cancel">취소</string>
+    <string name="popup_friend_invite_confirm">초대하기</string>
+    <string name="popup_friend_invite_success">초대장을 보냈습니다.</string>
+    <string name="popup_friend_invite_fail">초대장을 보내지 못했습니다.</string>
 
 </resources>
