@@ -15,9 +15,13 @@ import com.too.onions.gguggugi.service.restapi.common.RestApiService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
+import java.io.File
 
 class MainViewModel : ViewModel() {
 
@@ -131,17 +135,18 @@ class MainViewModel : ViewModel() {
 
 
     // ===================== Content =========================
-    fun addContent(content: Content) {
+    fun addContentColor(content: Content) {
 
         viewModelScope.launch {
 
-            val response = restApiService.addContent(
+            val response = restApiService.addContentColor(
                 RestApiService.token,
                 content.pageIdx.toString(),
                 content.title,
                 content.bgType,
                 content.bgContent,
                 content.description,
+                content.address
             )
 
             if (response.isSuccessful) {
@@ -157,9 +162,41 @@ class MainViewModel : ViewModel() {
 
             }
         }
+    }
+    fun addContentImage(content: Content, imgFile: File) {
 
+        viewModelScope.launch {
 
+            val pageIdx = content.pageIdx.toString().toRequestBody("text/plain".toMediaType())
+            val title = content.title.toRequestBody("text/plain".toMediaType())
+            val bgType = content.bgType.toRequestBody("text/plain".toMediaType())
+            val description = content.description.toRequestBody("text/plain".toMediaType())
+            val address = content.address?.toRequestBody("text/plain".toMediaType())
 
+            val requestFile = imgFile.asRequestBody("image/jpeg".toMediaType())
+            val bgImgFile = MultipartBody.Part.createFormData("bgImgFile", imgFile.name, requestFile)
+
+            val response = restApiService.addContentImage(
+                RestApiService.token,
+                pageIdx,
+                title,
+                bgType,
+                bgImgFile,
+                description,
+                address
+            )
+
+            if (response.isSuccessful) {
+                val content: Content = Gson().fromJson(response.body()?.data, Content::class.java)
+
+                Log.e("@@@@@", "======> content data : ${content}")
+
+                loadPageData(content.pageIdx)
+            } else {
+                Log.e("@@@@@", "======> addContent failed : ${response.errorBody()?.string()}")
+
+            }
+        }
     }
 
     fun saveStamp(pageIdx: Long, stampType: String, stampContent: String) {

@@ -1,5 +1,6 @@
 package com.too.onions.gguggugi.ui.main.view
 
+import android.content.Context
 import android.net.Uri
 import android.provider.DocumentsContract
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -39,8 +40,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
@@ -52,12 +53,16 @@ import com.too.onions.gguggugi.R
 import com.too.onions.gguggugi.data.Content
 import com.too.onions.gguggugi.define.Define
 import com.too.onions.gguggugi.viewmodel.MainViewModel
+import java.io.File
+import java.io.FileOutputStream
 
 @Composable
 fun AddContentView(
     viewModel: MainViewModel,
     navController: NavHostController
 ) {
+    val context = LocalContext.current
+
     val selectedColor = remember { mutableStateOf(Color(0xFFDBCEEC)) }
     val selectedImageUri = remember { mutableStateOf<Uri?>(null) }
     val contentName = remember { mutableStateOf("") }
@@ -106,11 +111,18 @@ fun AddContentView(
             bgType = Define.CONTENT_BG_TYPE_COLOR,
             description = contentDescription.value,
             bgContent = colorToHex(selectedColor.value),
-            //imageUri = checkAndReplaceUri(selectedImageUri.value).toString(),
-            //address = address.value
+            address = address.value
         )
 
-        viewModel.addContent(content)
+        if (selectedImageUri.value == null) {
+            viewModel.addContentColor(content)
+
+        } else {
+            val imageUri = checkAndReplaceUri(selectedImageUri.value)
+            val imageFile = uriToFile(Uri.parse(imageUri), context)
+
+            viewModel.addContentImage(content, imageFile)
+        }
         navController.popBackStack()
     }
 }
@@ -141,6 +153,16 @@ fun getUriFromDocumentUri(documentUri: Uri): String? {
         return "content://media/external/images/media/" + documentId[1]
     }
     return null
+}
+fun uriToFile(uri: Uri, context: Context): File {
+    context.contentResolver.openInputStream(uri)?.use { inputStream ->
+        val file = File(context.cacheDir, "bg_img_file")
+        FileOutputStream(file).use { outputStream ->
+            inputStream.copyTo(outputStream)
+        }
+        return file
+    }
+    return File("")
 }
 @Composable
 fun ContentTitleBar(navController: NavHostController) {

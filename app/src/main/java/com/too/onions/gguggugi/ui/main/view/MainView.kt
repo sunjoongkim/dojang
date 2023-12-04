@@ -715,14 +715,23 @@ fun FriendsBar(
                     contentAlignment = Alignment.Center
                 ) {
                     if (friend.stampContent?.isNotEmpty() == true) {
-                        Text(
-                            text = friend.stampContent,
-                            modifier = Modifier
-                                .wrapContentSize(),
-                            textAlign = TextAlign.Center,
-                            color = Color(0xffa2a958),
-                            fontSize = 18.sp
-                        )
+
+                        if (friend.stampType == STAMP_TYPE_STAMP) {
+                            AsyncImage(
+                                model = friend.stampContent,
+                                contentDescription = null,
+                            )
+                        } else {
+                            Text(
+                                text = friend.stampContent,
+                                modifier = Modifier
+                                    .wrapContentSize(),
+                                textAlign = TextAlign.Center,
+                                color = Color(0xffa2a958),
+                                fontSize = 18.sp
+                            )
+                        }
+
                     }
                 }
             }

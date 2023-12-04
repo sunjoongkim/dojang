@@ -2,6 +2,7 @@ package com.too.onions.gguggugi.service.restapi.common
 
 import com.too.onions.gguggugi.data.CheckDup
 import com.too.onions.gguggugi.data.ApiResponse
+import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
 import retrofit2.Call
@@ -11,7 +12,9 @@ import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.Header
+import retrofit2.http.Multipart
 import retrofit2.http.POST
+import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -49,13 +52,26 @@ interface RestApiService {
     // Content API
     @FormUrlEncoded
     @POST("/stamp-api/1.0/mission/add")
-    suspend fun addContent(
+    suspend fun addContentColor(
         @Header("accessToken") accessToken: String,
         @Field("pageIdx") pageIdx: String,
         @Field("title") title: String,
         @Field("bgType") bgType: String,
         @Field("bgContent") bgContent: String,
-        @Field("description") description: String
+        @Field("description") description: String,
+        @Field("address") address: String?
+    ) : Response<ApiResponse>
+
+    @Multipart
+    @POST("/stamp-api/1.0/mission/add")
+    suspend fun addContentImage(
+        @Header("accessToken") accessToken: String,
+        @Part("pageIdx") pageIdx: RequestBody,
+        @Part("title") title: RequestBody,
+        @Part("bgType") bgType: RequestBody,
+        @Part bgImgFile: MultipartBody.Part,
+        @Part("description") description: RequestBody,
+        @Field("address") address: RequestBody?
     ) : Response<ApiResponse>
 
     @POST("/stamp-api/1.0/participant/save/stamp")
