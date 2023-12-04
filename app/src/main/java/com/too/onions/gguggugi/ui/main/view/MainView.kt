@@ -3,6 +3,7 @@ package com.too.onions.gguggugi.ui.main.view
 import android.content.Intent
 import android.content.res.Configuration
 import android.util.Log
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -23,8 +24,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.BottomDrawer
 import androidx.compose.material.BottomDrawerValue
@@ -46,9 +49,16 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.DefaultStrokeLineMiter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -58,6 +68,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.google.accompanist.pager.ExperimentalPagerApi
@@ -71,6 +82,7 @@ import com.too.onions.gguggugi.data.PageInfo
 import com.too.onions.gguggugi.data.User
 import com.too.onions.gguggugi.define.Define
 import com.too.onions.gguggugi.define.Define.STAMP_TYPE_STAMP
+import com.too.onions.gguggugi.define.Define.STATE_FRIEND_ACTIVE
 import com.too.onions.gguggugi.ui.common.CommonDialog
 import com.too.onions.gguggugi.ui.main.AddPageMode
 import com.too.onions.gguggugi.ui.main.MainScreen
@@ -170,9 +182,11 @@ fun MainView(
         viewModel.setCurrentUser()
     }
 
-    LaunchedEffect(pages) {
-        if (pages?.size ?: 0 > 0 && pages?.getOrNull(pagerState.currentPage)?.memberList?.size ?: 0 > 1) {
+    LaunchedEffect(pagerState.currentPage) {
+        if (pages?.size ?: 0 > 0 && pages?.getOrNull(pagerState.currentPage)?.friendList?.size ?: 0 > 1) {
             currentPlayMode = PlayMode.MULTI
+        } else {
+            currentPlayMode = PlayMode.SINGLE
         }
     }
 
@@ -218,7 +232,7 @@ fun MainView(
         content = {
             // Main 화면
             Image(
-                painterResource(id = R.drawable.bg_single),
+                painterResource(id = if (currentPlayMode == PlayMode.SINGLE) R.drawable.bg_single else R.drawable.bg_multi),
                 contentDescription = null,
                 contentScale = ContentScale.FillBounds,
                 modifier = Modifier.fillMaxSize()
@@ -239,7 +253,7 @@ fun MainView(
                     navController = navController,
                     isNeedInit = isNeedInit,
                     currentUser = currentUser,
-                    currentPage = pages?.getOrNull(pagerState.currentPage)?.pageInfo,
+                    currentPage = pages?.getOrNull(pagerState.currentPage),
                     isFromStamp = isFromStamp,
                     onOpenDrawer = onOpenDrawer
                 )
@@ -419,7 +433,7 @@ fun TitleBar(
                                     .wrapContentHeight()
                                     .width(22.dp)
                                     .align(Alignment.CenterStart)
-                                    .padding(start = 9.dp, top = 2.dp),
+                                    .padding(start = 9.dp),
                                 text = page.pageInfo.emoji,
                                 fontSize = 18.sp
                             )
@@ -589,8 +603,7 @@ fun SelectedTab(
         Text(
             modifier = Modifier
                 .wrapContentHeight()
-                .size(22.dp)
-                .padding(top = 2.dp),
+                .size(22.dp),
             text = page.emoji,
             textAlign = TextAlign.Center,
             fontSize = 18.sp
@@ -627,7 +640,7 @@ fun FriendsBar(
     navController: NavHostController,
     isNeedInit: MutableState<Boolean>,
     currentUser: User?,
-    currentPage: PageInfo?,
+    currentPage: Page?,
     isFromStamp: MutableState<Boolean>,
     onOpenDrawer: (DrawerMode) -> Unit
 ) {
@@ -640,10 +653,11 @@ fun FriendsBar(
             .padding(start = 24.dp, end = 24.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        // 좌측 내 Stamp 영역
         Box(
             modifier = Modifier
                 .background(
-                    color = if (currentUser?.stamp?.isNotEmpty() == true) Color.White else Color(
+                    color = if (currentPage?.pageInfo?.stamp?.isNotEmpty() == true) Color.White else Color(
                         0xffe3ea97
                     ),
                     shape = CircleShape
@@ -652,7 +666,8 @@ fun FriendsBar(
                 .size(40.dp),
             contentAlignment = Alignment.Center
         ) {
-            if (currentPage == null || currentPage.stamp.isNullOrEmpty()) {
+            // 최초 생성시 stamp는 닉네임 첫글자
+            if (currentPage == null || currentPage.pageInfo.stamp.isNullOrEmpty()) {
 
                 Text(
                     text = currentUser?.nickname?.first()?.toString() ?: "",
@@ -662,56 +677,78 @@ fun FriendsBar(
                     color = Color(0xffa2a958)
                 )
             } else {
-
-                if (currentPage?.stampType == STAMP_TYPE_STAMP) {
-                    Image(
-                        painterResource(id = R.drawable.ic_btn_stamp),
+                // stamp type 일땐 stamp content url 사용
+                if (currentPage.pageInfo.stampType == STAMP_TYPE_STAMP) {
+                    AsyncImage(
+                        model = currentPage.pageInfo.stamp,
                         contentDescription = null,
-
                     )
+                // emoji type 일땐 emoji 사용
                 } else {
                     Text(
-                        text = currentPage?.stamp ?: "",
+                        text = currentPage.pageInfo.stamp,
                         modifier = Modifier
-                            .wrapContentSize()
-                            .padding(top = 2.dp),
+                            .wrapContentSize(),
                         textAlign = TextAlign.Center,
-                        color = Color(0xffa2a958)
+                        color = Color(0xffa2a958),
+                        fontSize = 18.sp
                     )
                 }
             }
 
         }
 
-        Spacer(modifier = Modifier.size(10.dp))
-        Box(
+        Spacer(modifier = Modifier.size(15.dp))
+
+        // 가운데 친구들 Stamp 영역
+        LazyRow(
             modifier = Modifier
                 .weight(1f)
-                .background(Color.Red)
+                .height(40.dp),
+            horizontalArrangement = Arrangement.spacedBy((-8).dp)
         ) {
-
+            itemsIndexed(
+                items = currentPage?.friendList?.drop(1) ?: emptyList()
+            ) { index, friend ->
+                Box(
+                    modifier = if (friend.state == STATE_FRIEND_ACTIVE) activeModifier(index) else invitedModifier(index),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (friend.stampContent?.isNotEmpty() == true) {
+                        Text(
+                            text = friend.stampContent,
+                            modifier = Modifier
+                                .wrapContentSize(),
+                            textAlign = TextAlign.Center,
+                            color = Color(0xffa2a958),
+                            fontSize = 18.sp
+                        )
+                    }
+                }
+            }
         }
 
-        Spacer(modifier = Modifier.size(10.dp))
+        Spacer(modifier = Modifier.size(15.dp))
+
+        // 우측 친구추가 버튼
         Box(
-            modifier = Modifier.size(40.dp)
-                .clickable (
+            modifier = Modifier
+                .size(40.dp)
+                .clickable(
                     interactionSource = interactionSource,
                     indication = null
-                ){
-                    if (pages.isNullOrEmpty() || currentPage?.title.isNullOrEmpty()) {
+                ) {
+                    if (pages.isNullOrEmpty() || currentPage?.pageInfo?.title.isNullOrEmpty()) {
                         isNeedInit.value = true
-                    }
-                    else if (currentPage?.stamp.isNullOrEmpty()){
+                    } else if (currentPage?.pageInfo?.stamp.isNullOrEmpty()) {
                         isFromStamp.value = false
                         onOpenDrawer(DrawerMode.STAMP)
-                    }
-                    else {
+                    } else {
                         navController.navigate(MainScreen.AddFriend.route)
                     }
                 }
                 .background(color = Color.White, shape = CircleShape)
-                .border(width = 2.dp, shape = CircleShape, color = Color(0x19000000))
+                .border(width = 2.dp, shape = CircleShape, color = Color(0x20000000))
 
         ) {
             Image(
@@ -722,6 +759,31 @@ fun FriendsBar(
         }
     }
 
+}
+
+fun invitedModifier(index: Int) : Modifier {
+
+    return Modifier
+        .size(40.dp)
+        .background(color = Color(0xffe3ea97), shape = CircleShape)
+        .drawBehind {
+            drawCircle(
+                color = Color(0x20000000), style = Stroke(
+                    width = 4f,
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(7f, 7f), 0f)
+                )
+            )
+        }
+        .zIndex(-index.toFloat())
+}
+
+fun activeModifier(index: Int) : Modifier {
+
+    return Modifier
+        .size(40.dp)
+        .background(color = Color.White, shape = CircleShape)
+        .border(width = 2.dp, color = Color(0x19000000), shape = CircleShape)
+        .zIndex(-index.toFloat())
 }
 
 @OptIn(ExperimentalPagerApi::class)
@@ -988,19 +1050,28 @@ fun StampButton(
                     .fillMaxWidth()
             )
 
-            if (pageInfo?.stampType == null || pageInfo?.stampType == STAMP_TYPE_STAMP) {
+            // stamp 정보가 없으면 default stamp 이미지
+            if (pageInfo?.stampType.isNullOrEmpty() || pageInfo?.stamp.isNullOrEmpty()) {
                 Image(
                     painterResource(id = R.drawable.ic_btn_stamp),
                     contentDescription = null,
                     modifier = Modifier
                         .size(52.dp, 52.dp)
                 )
+            // stamp type이 stamp 일땐 stamp content url 을 그려줌
+            } else if (pageInfo?.stampType == STAMP_TYPE_STAMP && pageInfo?.stamp?.isNotEmpty() == true) {
+                AsyncImage(
+                    model = pageInfo?.stamp,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(52.dp, 52.dp)
+                )
+            // stamp type이 emoji 일땐 emoji 를 그려줌
             } else {
                 Text(
                     text = pageInfo?.stamp ?: "",
                     modifier = Modifier
-                        .wrapContentSize()
-                        .padding(top = 5.dp),
+                        .wrapContentSize(),
                     textAlign = TextAlign.Center,
                     color = Color(0xffa2a958),
                     fontSize = 30.sp

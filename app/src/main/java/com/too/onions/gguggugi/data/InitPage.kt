@@ -6,7 +6,7 @@ import kotlinx.android.parcel.Parcelize
 
 @Parcelize
 data class InitPage (
-    @SerializedName("participantList") val memberList: List<Member> = emptyList(),
+    @SerializedName("participantList") val memberList: List<Friend> = emptyList(),
     @SerializedName("missionList") val contentList: List<Content>? = emptyList(),
     @SerializedName("pageList") val pageList: List<PageInfo>? = emptyList(),
     @SerializedName("firstPageInfo") val firstPageInfo: PageInfo? = null
