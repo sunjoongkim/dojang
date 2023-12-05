@@ -253,7 +253,7 @@ fun ContentListItemSel(
             modifier = Modifier
                 .size(itemSize, itemSize - if (index == overlappedIndex.value) 11.dp else 36.dp)
                 .border(1.dp, Color(0xff123485), RectangleShape)
-                .background(color = if(content.bgType == Define.CONTENT_BG_TYPE_IMAGE) Color.White else Color(content.bgContent.toInt(16)))
+                .background(color = if(content.bgType == Define.CONTENT_BG_TYPE_IMAGE || content.bgContent.isNullOrEmpty()) Color.White else Color(content.bgContent.toInt(16)))
                 .onGloballyPositioned { coordinates ->
                     onGloballyPositioned(index, coordinates)
                 },

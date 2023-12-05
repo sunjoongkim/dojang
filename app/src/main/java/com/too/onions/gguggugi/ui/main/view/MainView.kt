@@ -978,7 +978,9 @@ fun ContentListItem(
     }
 }
 
-fun hexToColor(hex: String): Color {
+fun hexToColor(hex: String?): Color {
+    if (hex.isNullOrEmpty()) return Color.White
+
     val r = Integer.parseInt(hex.substring(0, 2), 16)
     val g = Integer.parseInt(hex.substring(2, 4), 16)
     val b = Integer.parseInt(hex.substring(4, 6), 16)
