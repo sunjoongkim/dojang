@@ -14,7 +14,6 @@ data class Content (
     @SerializedName("pageIdx") val pageIdx: Long = 0,
     @SerializedName("title") val title: String = "",
     @SerializedName("bgType") val bgType: String = "",
-    @SerializedName("bgImgFile") val bgImgFile: String? = "",
     @SerializedName("bgContent") val bgContent: String = "",
     @SerializedName("fileIdx") val fileIdx: Long = 0,
     @SerializedName("description") val description: String = "",

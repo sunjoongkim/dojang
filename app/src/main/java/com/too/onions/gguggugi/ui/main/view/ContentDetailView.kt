@@ -37,6 +37,7 @@ import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import com.too.onions.gguggugi.R
 import com.too.onions.gguggugi.data.Content
+import com.too.onions.gguggugi.define.Define
 import com.too.onions.gguggugi.viewmodel.MainViewModel
 
 @OptIn(ExperimentalPagerApi::class)
@@ -171,7 +172,7 @@ fun ContentPagerItem(content: Content) {
                 contentDescription = null,
                 modifier = Modifier
                     .size(274.dp, 274.dp)
-                    .background(if(content.bgContent.isNullOrEmpty()) Color.White else Color(content.bgContent.toInt(16)))
+                    .background(if(content.bgType == Define.CONTENT_BG_TYPE_IMAGE) Color.White else Color(content.bgContent.toInt(16)))
             )
 
             Spacer(modifier = Modifier.size(15.dp))

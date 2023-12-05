@@ -56,6 +56,7 @@ import coil.compose.AsyncImage
 import com.too.onions.gguggugi.R
 import com.too.onions.gguggugi.data.Content
 import com.too.onions.gguggugi.data.User
+import com.too.onions.gguggugi.define.Define
 import com.too.onions.gguggugi.viewmodel.MainViewModel
 import kotlin.math.roundToInt
 
@@ -252,7 +253,7 @@ fun ContentListItemSel(
             modifier = Modifier
                 .size(itemSize, itemSize - if (index == overlappedIndex.value) 11.dp else 36.dp)
                 .border(1.dp, Color(0xff123485), RectangleShape)
-                .background(color = if(content.bgContent.isNullOrEmpty()) Color.White else Color(content.bgContent.toInt(16)))
+                .background(color = if(content.bgType == Define.CONTENT_BG_TYPE_IMAGE) Color.White else Color(content.bgContent.toInt(16)))
                 .onGloballyPositioned { coordinates ->
                     onGloballyPositioned(index, coordinates)
                 },
