@@ -121,6 +121,14 @@ fun AddContentView(
             val imageUri = checkAndReplaceUri(selectedImageUri.value)
             val imageFile = uriToFile(Uri.parse(imageUri), context)
 
+            val content = Content(
+                pageIdx = currentPage?.idx ?: 0,
+                title = contentName.value,
+                bgType = Define.CONTENT_BG_TYPE_IMAGE,
+                description = contentDescription.value,
+                address = address.value
+            )
+
             viewModel.addContentImage(content, imageFile)
         }
         navController.popBackStack()

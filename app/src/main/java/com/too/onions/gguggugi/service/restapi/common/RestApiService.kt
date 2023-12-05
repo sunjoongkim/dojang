@@ -62,16 +62,16 @@ interface RestApiService {
         @Field("address") address: String?
     ) : Response<ApiResponse>
 
-    @Multipart
+    @FormUrlEncoded
     @POST("/stamp-api/1.0/mission/add")
     suspend fun addContentImage(
         @Header("accessToken") accessToken: String,
         @Part("pageIdx") pageIdx: RequestBody,
         @Part("title") title: RequestBody,
         @Part("bgType") bgType: RequestBody,
-        @Part bgImgFile: MultipartBody.Part,
+        @Part("bgImgFile") bgImgFile: MultipartBody.Part,
         @Part("description") description: RequestBody,
-        @Field("address") address: RequestBody?
+        @Part("address") address: RequestBody?
     ) : Response<ApiResponse>
 
     @POST("/stamp-api/1.0/participant/save/stamp")

@@ -171,7 +171,7 @@ fun ContentPagerItem(content: Content) {
                 contentDescription = null,
                 modifier = Modifier
                     .size(274.dp, 274.dp)
-                    .background(Color(content.bgContent.toInt(16)))
+                    .background(if(content.bgContent.isNullOrEmpty()) Color.White else Color(content.bgContent.toInt(16)))
             )
 
             Spacer(modifier = Modifier.size(15.dp))

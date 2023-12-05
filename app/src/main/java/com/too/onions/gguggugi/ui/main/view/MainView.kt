@@ -952,7 +952,7 @@ fun ContentListItem(
             modifier = Modifier
                 .size(itemSize, itemSize - 36.dp)
                 .border(1.dp, Color(0xff123485), RectangleShape)
-                .background(color = hexToColor(content.bgContent)),
+                .background(color = if(content.bgContent.isNullOrEmpty()) Color.White else hexToColor(content.bgContent)),
             contentScale = ContentScale.Crop
         )
 
