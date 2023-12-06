@@ -168,11 +168,13 @@ fun ContentPagerItem(content: Content) {
         ) {
             Spacer(modifier = Modifier.size(10.dp))
             AsyncImage(
-                model = content.bgContent,
+                model = if (content.bgType == Define.CONTENT_BG_TYPE_IMAGE) content.bgContent else null,
                 contentDescription = null,
                 modifier = Modifier
                     .size(274.dp, 274.dp)
-                    .background(if(content.bgType == Define.CONTENT_BG_TYPE_IMAGE || content.bgContent.isNullOrEmpty()) Color.White else Color(content.bgContent.toInt(16)))
+                    .background(
+                        color = if (content.bgType == Define.CONTENT_BG_TYPE_IMAGE) Color.White else hexToColor(content.bgContent)
+                    )
             )
 
             Spacer(modifier = Modifier.size(15.dp))

@@ -1,8 +1,10 @@
 package com.too.onions.gguggugi.ui.main.view
 
+import android.app.Activity
 import android.content.Intent
 import android.content.res.Configuration
 import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -120,6 +122,7 @@ fun MainView(
     isAddedPage: Boolean?
 ) {
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     val isNeedInit = remember { mutableStateOf(false) }
     val isShowContentDetail = remember { mutableStateOf(false) }
@@ -190,9 +193,19 @@ fun MainView(
         }
     }
 
+    BackHandler(enabled = true) {
+        if (drawerState.isExpanded) {
+            scope.launch {
+                drawerState.close()
+            }
+        } else {
+            (context as Activity).finish()
+        }
+    }
+
     BottomDrawer(
         drawerState = drawerState,
-        gesturesEnabled = true,
+        gesturesEnabled = false,
         scrimColor = Color.Transparent,
         drawerContent = {
             // DrawerView
@@ -952,7 +965,9 @@ fun ContentListItem(
             modifier = Modifier
                 .size(itemSize, itemSize - 36.dp)
                 .border(1.dp, Color(0xff123485), RectangleShape)
-                .background(color = if(content.bgType == Define.CONTENT_BG_TYPE_IMAGE) Color.White else hexToColor(content.bgContent)),
+                .background(
+                    color = if (content.bgType == Define.CONTENT_BG_TYPE_IMAGE) Color.White else hexToColor(content.bgContent)
+                ),
             contentScale = ContentScale.Crop
         )
 
